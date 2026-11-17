@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assistant admin · bnia.lab</title>
+<meta name="description" content="L'assistant administratif des artisans : devis, factures et relances en quelques champs.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0E0E10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230E0E10'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23FF4D00'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FAFAF8;--card:#FFF;--ink:#0E0E10;--soft:#55555C;--line:#E6E5E0;--tint:#F1F0EC;--accent:#FF4D00;--ok:#1F8A4C;--warn:#C2410C;
+--display:'Inter Tight','Helvetica Neue',Arial,sans-serif;--body:'Inter',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.02em;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 110px}
+header{position:sticky;top:0;z-index:20;background:rgba(250,250,248,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+header .in{max-width:860px;margin:0 auto;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.03em;text-decoration:none;color:var(--ink)}
+.logo b{color:var(--accent)}
+.logo span{font-weight:500;color:var(--soft);font-size:15px;margin-left:6px}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.tabs button{flex:1;max-width:150px;border:0;background:none;border-radius:14px;padding:8px 4px;font-size:12.5px;font-weight:500;color:var(--soft);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabs button svg{width:22px;height:22px}
+.tabs button.on{color:var(--ink);background:var(--tint)}
+.tabs button.on svg{color:var(--accent)}
+section{display:none;padding-top:20px}
+section.on{display:block}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.head h2{font-size:26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;padding:11px 18px;font-weight:500;border:1px solid var(--line);background:var(--card);text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn.dark{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.acc{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.sm{padding:7px 13px;font-size:14px}
+.btn.ghost{border-color:transparent;background:none;color:var(--soft)}
+.btn:active{transform:scale(.97)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.stat small{display:block;color:var(--soft);font-size:13px}
+.stat b{font-family:var(--display);font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat.alert b{color:var(--warn)}
+@media(min-width:700px){.stats{grid-template-columns:repeat(4,1fr)}}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}
+.row:hover{border-color:#cfcec8}
+.row .l{min-width:0}
+.row .l b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .l small{color:var(--soft);font-size:13.5px}
+.row .r{text-align:right;flex:none}
+.row .r b{font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--tint);color:var(--soft);margin-top:3px}
+.tag.ok{background:#E3F4EA;color:var(--ok)}
+.tag.warn{background:#FDEBDD;color:var(--warn)}
+.tag.acc{background:#FFE7DC;color:var(--accent)}
+.empty{text-align:center;color:var(--soft);padding:28px 10px;border:1px dashed var(--line);border-radius:18px}
+label{display:block;font-size:13.5px;font-weight:500;color:var(--soft);margin:12px 0 5px}
+input,select,textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 12px;font-size:16px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.g3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:0 10px}
+.seg{display:flex;background:var(--tint);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px;font-size:14px;font-weight:500;color:var(--soft)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.line{border:1px solid var(--line);border-radius:14px;padding:10px 12px 12px;margin-top:10px;position:relative}
+.line label{margin-top:6px}
+.line .x{position:absolute;top:6px;right:6px;border:0;background:none;color:var(--soft);font-size:20px;line-height:1;padding:4px 8px}
+.tot{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;padding:3px 0}
+.tot.big{font-family:var(--display);font-weight:600;font-size:20px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.hint{font-size:13.5px;color:var(--soft);margin:8px 0 0}
+.banner{background:#FFF4EE;border:1px solid #FFD9C7;border-radius:16px;padding:12px 14px;font-size:14.5px;margin-bottom:14px}
+.banner b{color:var(--accent)}
+/* modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(14,14,16,.45);display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:860px;max-height:94vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:24px;max-height:90vh}}
+.sheet .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sheet .top h3{font-size:21px}
+.close{border:0;background:var(--tint);border-radius:50%;width:36px;height:36px;font-size:20px;line-height:1}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-size:14.5px;opacity:0;transition:.25s;z-index:60;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* printable document */
+.doc{background:#fff;color:#111;border:1px solid var(--line);border-radius:12px;padding:28px 24px;font-size:13px;line-height:1.45;margin-top:10px}
+.doc h1{font-size:24px;letter-spacing:-.02em}
+.doc .dh{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.doc .who{max-width:48%}
+.doc .who b{font-size:14px}
+.doc .meta{color:#555}
+.doc table{width:100%;border-collapse:collapse;margin:16px 0}
+.doc th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:2px solid #111;padding:6px 4px}
+.doc td{border-bottom:1px solid #e5e5e5;padding:8px 4px;vertical-align:top}
+.doc .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.doc .totals{margin-left:auto;width:min(280px,100%)}
+.doc .totals div{display:flex;justify-content:space-between;padding:3px 0}
+.doc .totals .ttc{font-weight:700;font-size:15px;border-top:2px solid #111;margin-top:4px;padding-top:6px}
+.doc .legal{margin-top:22px;color:#555;font-size:11.5px}
+.doc .legal p{margin:3px 0}
+.doc .sign{margin-top:22px;border:1px solid #ccc;border-radius:8px;padding:12px;min-height:90px;width:min(300px,100%)}
+.doc .acc{color:var(--accent)}
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%}
+  .doc{border:0;border-radius:0;padding:0;margin:0;font-size:12px}
+  @page{margin:16mm}
+}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <a class="logo" href="../">bnia<b>.</b>lab<span>Assistant admin</span></a>
+  <button class="btn sm dark" onclick="newDevis()">+ Devis</button>
+</div></header>
+
+<div class="wrap">
+
+<!-- ACCUEIL -->
+<section id="s-home" class="on">
+  <div id="setupBanner"></div>
+  <div class="stats" id="stats"></div>
+  <div class="head"><h2>À faire</h2></div>
+  <div class="list" id="todo"></div>
+  <div class="head" style="margin-top:22px"><h2>Derniers documents</h2></div>
+  <div class="list" id="recent"></div>
+</section>
+
+<!-- DEVIS -->
+<section id="s-devis">
+  <div class="head"><h2>Devis</h2><button class="btn acc sm" onclick="newDevis()">+ Nouveau devis</button></div>
+  <div class="list" id="devisList"></div>
+</section>
+
+<!-- FACTURES -->
+<section id="s-factures">
+  <div class="head"><h2>Factures</h2><button class="btn acc sm" onclick="newFacture()">+ Facture directe</button></div>
+  <div class="list" id="factList"></div>
+</section>
+
+<!-- CLIENTS -->
+<section id="s-clients">
+  <div class="head"><h2>Clients</h2><button class="btn acc sm" onclick="editClient()">+ Client</button></div>
+  <div class="list" id="clientList"></div>
+</section>
+
+<!-- REGLAGES -->
+<section id="s-reglages">
+  <div class="head"><h2>Mon entreprise</h2></div>
+  <form class="card" id="profileForm" onsubmit="saveProfile(event)">
+    <p class="hint" style="margin:0">Ces infos apparaissent sur vos devis et factures. Remplies une seule fois.</p>
+    <label>Statut</label>
+    <select name="statut">
+      <option value="micro">Micro-entreprise (TVA non applicable)</option>
+      <option value="ei">Entreprise individuelle avec TVA</option>
+      <option value="societe">Société (SARL, SAS…)</option>
+    </select>
+    <label>Nom ou raison sociale *</label><input name="nom" required placeholder="Dupont Plomberie">
+    <label>Métier</label><input name="metier" placeholder="Plombier chauffagiste">
+    <div class="g2">
+      <div><label>SIRET *</label><input name="siret" required inputmode="numeric" placeholder="123 456 789 00012"></div>
+      <div><label>N° RM (répertoire des métiers)</label><input name="rm" placeholder="RM 17…"></div>
+    </div>
+    <label>Adresse *</label><input name="adresse" required placeholder="12 rue du Port">
+    <div class="g2">
+      <div><label>Code postal *</label><input name="cp" required inputmode="numeric"></div>
+      <div><label>Ville *</label><input name="ville" required></div>
+    </div>
+    <div class="g2">
+      <div><label>Téléphone</label><input name="tel" type="tel"></div>
+      <div><label>E-mail</label><input name="email" type="email"></div>
+    </div>
+    <div id="tvaField"><label>N° TVA intracommunautaire</label><input name="tvaIntra" placeholder="FR…"></div>
+    <div id="capField"><label>Forme et capital (société)</label><input name="capital" placeholder="SARL au capital de 5 000 €"></div>
+    <label>Assurance pro / décennale (assureur et n° de contrat)</label><input name="assureur" placeholder="MAAF, contrat n°…">
+    <label>Couverture géographique de l'assurance</label><input name="assuranceZone" placeholder="France métropolitaine">
+    <div class="g2">
+      <div><label>Délai de paiement (jours)</label><input name="delai" type="number" min="0" max="60" value="30"></div>
+      <div><label>Validité des devis (jours)</label><input name="validite" type="number" min="1" value="30"></div>
+    </div>
+    <label>IBAN (affiché sur les factures)</label><input name="iban" placeholder="FR76 …">
+    <div class="actions"><button class="btn dark">Enregistrer</button></div>
+  </form>
+  <div class="card">
+    <h3 style="font-size:18px">Sauvegarde</h3>
+    <p class="hint">Vos données restent sur cet appareil, rien n'est envoyé sur internet. Faites une sauvegarde régulièrement, et pour passer sur un autre appareil.</p>
+    <div class="actions">
+      <button class="btn sm" onclick="exportData()">Télécharger une sauvegarde</button>
+      <label class="btn sm" style="margin:0;color:var(--ink);font-size:14px">Restaurer<input type="file" accept="application/json" hidden onchange="importData(this)"></label>
+    </div>
+  </div>
+</section>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button data-s="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
+  <button data-s="devis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Devis</button>
+  <button data-s="factures"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Factures</button>
+  <button data-s="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Clients</button>
+  <button data-s="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Réglages</button>
+</nav>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<div id="printArea" hidden></div>
+
+<script>
+/* ---------- données (stockées uniquement sur l'appareil) ---------- */
+const KEY='bnia-admin-v1';
+let db=load();
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.docs)return d}catch(e){}return{profile:{statut:'micro',delai:30,validite:30},clients:[],docs:[],seq:{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast("Impossible d'enregistrer sur cet appareil")}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=n=>(Math.round((+n||0)*100)/100).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+const today=()=>new Date().toISOString().slice(0,10);
+const addDays=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+(+n||0));return x.toISOString().slice(0,10)};
+const fdate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR'):'';
+const daysLate=d=>Math.floor((new Date(today())-new Date(d))/864e5);
+const P=()=>db.profile;
+const isMicro=()=>P().statut==='micro';
+const client=id=>db.clients.find(c=>c.id===id)||{nom:'Client supprimé'};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200)}
+
+/* Numérotation : continue, sans trou, par année (obligation légale pour les factures). */
+function nextNum(type){const y=new Date().getFullYear();const k=type+y;db.seq[k]=(db.seq[k]||0)+1;return(type==='devis'?'D':'F')+'-'+y+'-'+String(db.seq[k]).padStart(3,'0')}
+
+function totals(doc){let ht=0,tva=0;(doc.lignes||[]).forEach(l=>{const m=(+l.q||0)*(+l.pu||0);ht+=m;if(!isMicro())tva+=m*(+l.tva||0)/100});return{ht,tva,ttc:ht+tva}}
+const profileOk=()=>{const p=P();return p.nom&&p.siret&&p.adresse&&p.cp&&p.ville};
+
+/* ---------- navigation ---------- */
+document.getElementById('tabs').onclick=e=>{const b=e.target.closest('button');if(b)go(b.dataset.s)};
+function go(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id==='s-'+s));document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.s===s));window.scrollTo(0,0);render()}
+
+/* ---------- rendu ---------- */
+function statusTag(d){
+  if(d.type==='devis'){const m={brouillon:['Brouillon',''],envoye:['Envoyé','acc'],accepte:['Accepté','ok'],refuse:['Refusé',''],facture:['Facturé','ok']};const[t,c]=m[d.statut]||m.brouillon;
+    if(d.statut==='envoye'&&daysLate(addDays(d.date,d.validite))>0)return'<span class="tag warn">Expiré</span>';return`<span class="tag ${c}">${t}</span>`}
+  if(d.statut==='payee')return'<span class="tag ok">Payée</span>';
+  if(d.statut==='annulee')return'<span class="tag">Annulée</span>';
+  const late=daysLate(d.echeance);if(late>0)return`<span class="tag warn">En retard · ${late} j</span>`;
+  return'<span class="tag acc">À encaisser</span>';
+}
+function rowHtml(d){const t=totals(d);return`<div class="row" onclick="openDoc('${d.id}')"><div class="l"><b>${esc(client(d.clientId).nom)}</b><small>${d.num} · ${esc(d.objet||'Sans objet')}</small></div><div class="r"><b>${eur(t.ttc)}</b><br>${statusTag(d)}</div></div>`}
+const emptyHtml=m=>`<div class="empty">${m}</div>`;
+
+function render(){
+  const y=String(new Date().getFullYear());
+  const facts=db.docs.filter(d=>d.type==='facture'&&d.statut!=='annulee');
+  const encY=facts.filter(d=>d.statut==='payee'&&(d.payeLe||'').startsWith(y)).reduce((s,d)=>s+totals(d).ttc,0);
+  const attente=facts.filter(d=>d.statut!=='payee').reduce((s,d)=>s+totals(d).ttc,0);
+  const devisOuverts=db.docs.filter(d=>d.type==='devis'&&d.statut==='envoye');
+  const retard=facts.filter(d=>d.statut!=='payee'&&daysLate(d.echeance)>0);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><small>Encaissé ${y}</small><b>${eur(encY)}</b></div>
+    <div class="stat"><small>À encaisser</small><b>${eur(attente)}</b></div>
+    <div class="stat"><small>Devis en attente</small><b>${devisOuverts.length}</b></div>
+    <div class="stat ${retard.length?'alert':''}"><small>Factures en retard</small><b>${retard.length}</b></div>`;
+  document.getElementById('setupBanner').innerHTML=profileOk()?'':`<div class="banner"><b>Première étape :</b> renseignez votre entreprise une seule fois, pour qu'elle apparaisse sur vos devis et factures. <a href="#" onclick="go('reglages');return false">Compléter →</a></div>`;
+  // à faire : relances, devis acceptés à facturer, devis envoyés sans réponse depuis 7 j
+  const todo=[];
+  retard.sort((a,b)=>a.echeance<b.echeance?-1:1).forEach(d=>{const n=(d.relances||[]).length;todo.push(`<div class="row" onclick="relance('${d.id}')"><div class="l"><b>Relancer ${esc(client(d.clientId).nom)}</b><small>${d.num} · ${daysLate(d.echeance)} jours de retard · ${n?n+' relance(s) faite(s)':'jamais relancé'}</small></div><div class="r"><b>${eur(totals(d).ttc)}</b><br><span class="tag warn">Relancer</span></div></div>`)});
+  db.docs.filter(d=>d.type==='devis'&&d.statut==='accepte').forEach(d=>todo.push(`<div class="row" onclick="toFacture('${d.id}')"><div class="l"><b>Facturer ${esc(client(d.clientId).nom)}</b><small>Devis ${d.num} accepté</small></div><div class="r"><b>${eur(totals(d).ttc)}</b><br><span class="tag ok">Facturer</span></div></div>`));
+  devisOuverts.filter(d=>daysLate(d.envoyeLe||d.date)>=7&&daysLate(addDays(d.date,d.validite))<=0).forEach(d=>todo.push(`<div class="row" onclick="openDoc('${d.id}')"><div class="l"><b>Pas de réponse : ${esc(client(d.clientId).nom)}</b><small>Devis ${d.num} envoyé il y a ${daysLate(d.envoyeLe||d.date)} jours</small></div><div class="r"><span class="tag acc">Rappeler</span></div></div>`));
+  document.getElementById('todo').innerHTML=todo.join('')||emptyHtml('Rien d\'urgent. 👌');
+  const sorted=[...db.docs].sort((a,b)=>(b.cree||0)-(a.cree||0));
+  document.getElementById('recent').innerHTML=sorted.slice(0,5).map(rowHtml).join('')||emptyHtml('Aucun document. Commencez par <a href="#" onclick="newDevis();return false">un devis</a>.');
+  document.getElementById('devisList').innerHTML=sorted.filter(d=>d.type==='devis').map(rowHtml).join('')||emptyHtml('Aucun devis pour l\'instant.');
+  document.getElementById('factList').innerHTML=sorted.filter(d=>d.type==='facture').map(rowHtml).join('')||emptyHtml('Les factures se créent en un clic depuis un devis accepté.');
+  document.getElementById('clientList').innerHTML=[...db.clients].sort((a,b)=>a.nom.localeCompare(b.nom)).map(c=>{const n=db.docs.filter(d=>d.clientId===c.id).length;return`<div class="row" onclick="editClient('${c.id}')"><div class="l"><b>${esc(c.nom)}</b><small>${c.type==='pro'?'Professionnel':'Particulier'} · ${esc(c.ville||'')}</small></div><div class="r"><small style="color:var(--soft)">${n} doc.</small></div></div>`}).join('')||emptyHtml('Vos clients s\'ajoutent automatiquement quand vous faites un devis.');
+}
+
+/* ---------- modal ---------- */
+function modal(title,html){document.getElementById('sheet').innerHTML=`<div class="top"><h3>${title}</h3><button class="close" onclick="closeModal()" aria-label="Fermer">×</button></div>${html}`;document.getElementById('modal').classList.add('on');document.body.style.overflow='hidden'}
+function closeModal(){document.getElementById('modal').classList.remove('on');document.body.style.overflow=''}
+
+/* ---------- profil ---------- */
+const pf=document.getElementById('profileForm');
+function fillProfile(){Object.entries(P()).forEach(([k,v])=>{if(pf.elements[k])pf.elements[k].value=v});toggleProfileFields()}
+function toggleProfileFields(){const s=pf.elements.statut.value;document.getElementById('tvaField').style.display=s==='micro'?'none':'';document.getElementById('capField').style.display=s==='societe'?'':'none'}
+pf.elements.statut.onchange=toggleProfileFields;
+function saveProfile(e){e.preventDefault();db.profile=Object.fromEntries(new FormData(pf));save();toast('Entreprise enregistrée');go('home')}
+
+/* ---------- clients ---------- */
+function clientFields(c={}){return`
+  <div class="seg" id="ctype"><button type="button" data-v="particulier" class="${c.type!=='pro'?'on':''}">Particulier</button><button type="button" data-v="pro" class="${c.type==='pro'?'on':''}">Professionnel</button></div>
+  <label>Nom *</label><input id="c_nom" value="${esc(c.nom)}" placeholder="M. et Mme Martin">
+  <label>Adresse</label><input id="c_adresse" value="${esc(c.adresse)}">
+  <div class="g2"><div><label>Code postal</label><input id="c_cp" inputmode="numeric" value="${esc(c.cp)}"></div><div><label>Ville</label><input id="c_ville" value="${esc(c.ville)}"></div></div>
+  <div class="g2"><div><label>E-mail</label><input id="c_email" type="email" value="${esc(c.email)}"></div><div><label>Téléphone</label><input id="c_tel" type="tel" value="${esc(c.tel)}"></div></div>
+  <div id="c_prof" style="display:${c.type==='pro'?'':'none'}"><label>SIREN du client</label><input id="c_siren" inputmode="numeric" value="${esc(c.siren)}"></div>`}
+function bindSeg(id,cb){const s=document.getElementById(id);s.onclick=e=>{const b=e.target.closest('button');if(!b)return;s.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cb&&cb(b.dataset.v)}}
+const segVal=id=>document.querySelector('#'+id+' .on').dataset.v;
+function readClient(c){c.type=segVal('ctype');['nom','adresse','cp','ville','email','tel','siren'].forEach(k=>c[k]=document.getElementById('c_'+k).value.trim());return c}
+function editClient(id){const c=id?db.clients.find(x=>x.id===id):{};modal(id?'Client':'Nouveau client',clientFields(c)+`<div class="actions"><button class="btn dark" onclick="saveClient('${id||''}')">Enregistrer</button>${id&&!db.docs.some(d=>d.clientId===id)?`<button class="btn ghost" onclick="delClient('${id}')">Supprimer</button>`:''}</div>`);bindSeg('ctype',v=>document.getElementById('c_prof').style.display=v==='pro'?'':'none')}
+function saveClient(id){let c=id?db.clients.find(x=>x.id===id):{id:uid()};readClient(c);if(!c.nom)return toast('Le nom est obligatoire');if(!id)db.clients.push(c);save();closeModal();render();toast('Client enregistré')}
+function delClient(id){db.clients=db.clients.filter(c=>c.id!==id);save();closeModal();render()}
+
+/* ---------- formulaire devis / facture ---------- */
+let draft=null;
+function newDevis(){if(!profileOk()){toast("Renseignez d'abord votre entreprise");return go('reglages')}draft={type:'devis',lignes:[{d:'',q:1,u:'',pu:'',tva:10}],date:today(),validite:+P().validite||30,acompte:0};docForm()}
+function newFacture(){if(!profileOk()){toast("Renseignez d'abord votre entreprise");return go('reglages')}draft={type:'facture',lignes:[{d:'',q:1,u:'',pu:'',tva:10}],date:today(),dateExec:today(),acompte:0};docForm()}
+function editDoc(id){draft=JSON.parse(JSON.stringify(db.docs.find(d=>d.id===id)));docForm()}
+
+function docForm(){
+  const d=draft,isF=d.type==='facture';
+  const opts=db.clients.map(c=>`<option value="${c.id}" ${c.id===d.clientId?'selected':''}>${esc(c.nom)}</option>`).join('');
+  modal(d.id?(isF?'Modifier la facture':'Modifier le devis'):(isF?'Nouvelle facture':'Nouveau devis'),`
+    <label>Client</label>
+    <select id="f_client" onchange="document.getElementById('newClient').style.display=this.value==='new'?'':'none'">${opts}<option value="new" ${!d.clientId?'selected':''}>+ Nouveau client</option></select>
+    <div id="newClient" class="card" style="margin-top:10px;display:${d.clientId?'none':''}">${clientFields()}</div>
+    <label>Objet des travaux</label><input id="f_objet" value="${esc(d.objet)}" placeholder="Remplacement chauffe-eau">
+    <label>Adresse du chantier (si différente)</label><input id="f_chantier" value="${esc(d.chantier)}">
+    <div id="lines"></div>
+    <button class="btn sm" style="margin-top:10px" onclick="addLine()">+ Ajouter une ligne</button>
+    <div class="g2">
+      <div><label>Date</label><input id="f_date" type="date" value="${d.date}"></div>
+      ${isF?`<div><label>Date des travaux</label><input id="f_exec" type="date" value="${d.dateExec||d.date}"></div>`:`<div><label>Validité (jours)</label><input id="f_validite" type="number" min="1" value="${d.validite}"></div>`}
+    </div>
+    ${isF?'':`<label>Acompte à la signature (%)</label><input id="f_acompte" type="number" min="0" max="100" value="${d.acompte||0}">`}
+    <label>Note (facultatif)</label><textarea id="f_note" placeholder="Délai d'intervention, conditions particulières…">${esc(d.note)}</textarea>
+    <div class="card" style="margin-top:14px" id="liveTot"></div>
+    <div class="actions"><button class="btn acc" onclick="saveDoc()">${d.id?'Enregistrer':(isF?'Créer la facture':'Créer le devis')}</button><button class="btn ghost" onclick="closeModal()">Annuler</button></div>
+    ${isF&&!d.id?'<p class="hint">Une facture créée reçoit un numéro définitif et ne peut plus être supprimée (obligation légale). En cas d\'erreur, elle pourra être annulée.</p>':''}`);
+  if(!d.clientId)bindSeg('ctype',v=>document.getElementById('c_prof').style.display=v==='pro'?'':'none');
+  drawLines();
+}
+function drawLines(){
+  const micro=isMicro();
+  document.getElementById('lines').innerHTML=draft.lignes.map((l,i)=>`
+    <div class="line">${draft.lignes.length>1?`<button class="x" onclick="rmLine(${i})" aria-label="Supprimer la ligne">×</button>`:''}
+      <label>Prestation ou fourniture ${i+1}</label><input value="${esc(l.d)}" placeholder="Main d'œuvre, matériel…" oninput="setL(${i},'d',this.value)">
+      <div class="g3">
+        <div><label>Prix unitaire HT</label><input type="number" step="0.01" inputmode="decimal" value="${l.pu}" oninput="setL(${i},'pu',this.value)"></div>
+        <div><label>Qté</label><input type="number" step="0.01" inputmode="decimal" value="${l.q}" oninput="setL(${i},'q',this.value)"></div>
+        <div><label>Unité</label><input value="${esc(l.u)}" placeholder="h, m², u" oninput="setL(${i},'u',this.value)"></div>
+      </div>
+      ${micro?'':`<label>TVA</label><select onchange="setL(${i},'tva',this.value)">${[20,10,5.5,0].map(t=>`<option value="${t}" ${+l.tva===t?'selected':''}>${String(t).replace('.',',')} %</option>`).join('')}</select>`}
+    </div>`).join('');
+  liveTot();
+}
+function setL(i,k,v){draft.lignes[i][k]=v;liveTot()}
+function addLine(){draft.lignes.push({d:'',q:1,u:'',pu:'',tva:draft.lignes.at(-1)?.tva??10});drawLines()}
+function rmLine(i){draft.lignes.splice(i,1);drawLines()}
+function liveTot(){const t=totals(draft);document.getElementById('liveTot').innerHTML=`<div class="tot"><span>Total HT</span><span>${eur(t.ht)}</span></div>${isMicro()?'<div class="tot"><span>TVA</span><span>non applicable</span></div>':`<div class="tot"><span>TVA</span><span>${eur(t.tva)}</span></div>`}<div class="tot big"><span>${isMicro()?'Total':'Total TTC'}</span><span>${eur(t.ttc)}</span></div>`}
+
+function saveDoc(){
+  const d=draft;
+  let cid=document.getElementById('f_client').value;
+  if(cid==='new'){const c=readClient({id:uid()});if(!c.nom)return toast('Indiquez le nom du client');db.clients.push(c);cid=c.id}
+  d.lignes=d.lignes.filter(l=>l.d.trim()||+l.pu);
+  if(!d.lignes.length){d.lignes=[{d:'',q:1,u:'',pu:'',tva:10}];drawLines();return toast('Ajoutez au moins une ligne')}
+  d.clientId=cid;d.objet=document.getElementById('f_objet').value.trim();d.chantier=document.getElementById('f_chantier').value.trim();d.note=document.getElementById('f_note').value.trim();d.date=document.getElementById('f_date').value||today();
+  if(d.type==='devis'){d.validite=+document.getElementById('f_validite').value||30;d.acompte=+document.getElementById('f_acompte').value||0}
+  else{d.dateExec=document.getElementById('f_exec').value||d.date;d.echeance=addDays(d.date,+P().delai||30)}
+  if(!d.id){d.id=uid();d.cree=Date.now();d.num=nextNum(d.type);d.statut=d.type==='devis'?'brouillon':'envoyee';db.docs.push(d)}
+  else db.docs[db.docs.findIndex(x=>x.id===d.id)]=d;
+  save();render();openDoc(d.id);toast(d.type==='devis'?'Devis prêt':'Facture prête');
+}
+
+/* ---------- document imprimable ---------- */
+function docHtml(d){
+  const p=P(),c=client(d.clientId),t=totals(d),isF=d.type==='facture',micro=isMicro();
+  const nomPro=esc(p.nom)+(p.statut!=='societe'?' <small>(EI)</small>':'');
+  const tvaCol=!micro;
+  const rows=d.lignes.map(l=>`<tr><td>${esc(l.d)}</td><td class="n">${String(+l.q||0).replace('.',',')} ${esc(l.u)}</td><td class="n">${eur(l.pu)}</td>${tvaCol?`<td class="n">${String(+l.tva).replace('.',',')} %</td>`:''}<td class="n">${eur((+l.q||0)*(+l.pu||0))}</td></tr>`).join('');
+  const tvaDetail=tvaCol?[...new Set(d.lignes.map(l=>+l.tva))].map(r=>{const b=d.lignes.filter(l=>+l.tva===r).reduce((s,l)=>s+(+l.q||0)*(+l.pu||0),0);return`<div><span>TVA ${String(r).replace('.',',')} %</span><span>${eur(b*r/100)}</span></div>`}).join(''):'';
+  const legal=[];
+  if(micro)legal.push('TVA non applicable, art. 293 B du CGI.');
+  if(p.assureur)legal.push(`Assurance professionnelle : ${esc(p.assureur)}${p.assuranceZone?' · couverture : '+esc(p.assuranceZone):''}.`);
+  if(isF){
+    legal.push(`À régler au plus tard le ${fdate(d.echeance)}. Pas d'escompte pour paiement anticipé.`);
+    legal.push('En cas de retard, pénalités au taux de 3 fois le taux d\'intérêt légal'+(c.type==='pro'?', et indemnité forfaitaire pour frais de recouvrement de 40 € (art. L441-10 et D441-5 du Code de commerce).':'.'));
+    if(p.iban)legal.push(`Règlement par virement : IBAN ${esc(p.iban)}`);
+  }else{
+    legal.push(`Devis valable ${d.validite} jours, jusqu'au ${fdate(addDays(d.date,d.validite))}.`);
+    if(d.acompte)legal.push(`Acompte de ${d.acompte} % (${eur(t.ttc*d.acompte/100)}) à la signature.`);
+  }
+  if(d.devisNum)legal.push(`Facture établie selon le devis ${esc(d.devisNum)}.`);
+  return`<div class="doc">
+    <div class="dh">
+      <div class="who"><b>${nomPro}</b><br>${p.metier?esc(p.metier)+'<br>':''}${esc(p.adresse)}<br>${esc(p.cp)} ${esc(p.ville)}<br>${p.tel?esc(p.tel)+'<br>':''}${p.email?esc(p.email)+'<br>':''}<span class="meta">SIRET ${esc(p.siret)}${p.rm?' · '+esc(p.rm):''}${p.tvaIntra&&!micro?'<br>TVA '+esc(p.tvaIntra):''}${p.statut==='societe'&&p.capital?'<br>'+esc(p.capital):''}</span></div>
+      <div class="who" style="text-align:right"><h1>${isF?'Facture':'Devis'}</h1><b class="acc">${d.num}</b><br><span class="meta">Date : ${fdate(d.date)}${isF?'<br>Travaux réalisés le : '+fdate(d.dateExec):''}</span><br><br><b>${esc(c.nom)}</b><br>${esc(c.adresse)}<br>${esc(c.cp)} ${esc(c.ville)}${c.type==='pro'&&c.siren?'<br><span class="meta">SIREN '+esc(c.siren)+'</span>':''}</div>
+    </div>
+    ${d.objet?`<p><b>Objet :</b> ${esc(d.objet)}</p>`:''}${d.chantier?`<p><b>Lieu des travaux :</b> ${esc(d.chantier)}</p>`:''}
+    <table><thead><tr><th>Désignation</th><th class="n">Qté</th><th class="n">PU HT</th>${tvaCol?'<th class="n">TVA</th>':''}<th class="n">Total HT</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="totals"><div><span>Total HT</span><span>${eur(t.ht)}</span></div>${tvaDetail}<div class="ttc"><span>${micro?'Net à payer':'Total TTC'}</span><span>${eur(t.ttc)}</span></div></div>
+    ${d.note?`<p style="margin-top:16px">${esc(d.note).replace(/\n/g,'<br>')}</p>`:''}
+    <div class="legal">${legal.map(l=>`<p>${l}</p>`).join('')}</div>
+    ${isF?'':'<div class="sign"><b>Bon pour accord</b><br><small>Devis reçu avant l\'exécution des travaux. Date et signature du client :</small></div>'}
+  </div>`;
+}
+
+function openDoc(id){
+  const d=db.docs.find(x=>x.id===id),isF=d.type==='facture';
+  const btns=[`<button class="btn dark" onclick="printDoc('${id}')">Imprimer / PDF</button>`,`<button class="btn" onclick="mailDoc('${id}')">Envoyer par e-mail</button>`];
+  if(!isF){
+    if(d.statut==='brouillon'||d.statut==='envoye'||d.statut==='refuse')btns.push(`<button class="btn" onclick="editDoc('${id}')">Modifier</button>`);
+    if(d.statut!=='facture'){
+      if(d.statut!=='accepte')btns.push(`<button class="btn" onclick="setStatut('${id}','accepte')">✓ Accepté</button>`);
+      btns.push(`<button class="btn acc" onclick="toFacture('${id}')">Transformer en facture</button>`);
+      if(d.statut==='envoye')btns.push(`<button class="btn ghost" onclick="setStatut('${id}','refuse')">Refusé</button>`);
+    }
+    if(d.statut==='brouillon')btns.push(`<button class="btn ghost" onclick="delDoc('${id}')">Supprimer</button>`);
+  }else if(d.statut!=='payee'&&d.statut!=='annulee'){
+    btns.push(`<button class="btn acc" onclick="setStatut('${id}','payee')">✓ Payée</button>`);
+    if(daysLate(d.echeance)>0)btns.push(`<button class="btn" onclick="relance('${id}')">Relancer</button>`);
+    btns.push(`<button class="btn ghost" onclick="cancelFact('${id}')">Annuler la facture</button>`);
+  }
+  const rel=(d.relances||[]).length?`<p class="hint">Relances : ${d.relances.map(fdate).join(', ')}</p>`:'';
+  modal(`${isF?'Facture':'Devis'} ${d.num} ${statusTag(d)}`,`<div class="actions" style="margin-top:4px">${btns.join('')}</div>${rel}${docHtml(d)}`);
+}
+function printDoc(id){const d=db.docs.find(x=>x.id===id);const a=document.getElementById('printArea');a.innerHTML=docHtml(d);a.hidden=false;const old=document.title;document.title=`${d.type==='facture'?'Facture':'Devis'} ${d.num} - ${client(d.clientId).nom}`;window.print();document.title=old;a.hidden=true}
+function mailDoc(id){
+  const d=db.docs.find(x=>x.id===id),c=client(d.clientId),t=totals(d),p=P(),isF=d.type==='facture';
+  const sub=`${isF?'Facture':'Devis'} ${d.num}${d.objet?' - '+d.objet:''}`;
+  const body=isF?`Bonjour,\n\nVeuillez trouver ci-joint la facture ${d.num} d'un montant de ${eur(t.ttc)}, à régler avant le ${fdate(d.echeance)}.${p.iban?'\n\nIBAN : '+p.iban:''}\n\nMerci pour votre confiance.\n\nCordialement,\n${p.nom}${p.tel?'\n'+p.tel:''}`
+    :`Bonjour,\n\nSuite à notre échange, veuillez trouver ci-joint le devis ${d.num}${d.objet?' pour '+d.objet.toLowerCase():''}, d'un montant de ${eur(t.ttc)}.\n\nIl est valable jusqu'au ${fdate(addDays(d.date,d.validite))}. Pour l'accepter, il suffit de me le retourner signé avec la mention « Bon pour accord ».\n\nJe reste disponible pour toute question.\n\nCordialement,\n${p.nom}${p.tel?'\n'+p.tel:''}`;
+  if(!isF&&d.statut==='brouillon'){d.statut='envoye';d.envoyeLe=today();save();render()}
+  showMail(c.email,sub,body,'Pensez à joindre le PDF (bouton « Imprimer / PDF » → Enregistrer en PDF).');
+}
+function showMail(to,sub,body,hint){
+  modal('E-mail prêt',`<label>À</label><input id="m_to" value="${esc(to)}" placeholder="adresse du client"><label>Objet</label><input id="m_sub" value="${esc(sub)}"><label>Message</label><textarea id="m_body" style="min-height:240px">${esc(body)}</textarea>${hint?`<p class="hint">${hint}</p>`:''}
+  <div class="actions"><button class="btn acc" onclick="location.href='mailto:'+encodeURIComponent(m_to.value)+'?subject='+encodeURIComponent(m_sub.value)+'&body='+encodeURIComponent(m_body.value)">Ouvrir dans ma messagerie</button><button class="btn" onclick="navigator.clipboard.writeText(m_body.value).then(()=>toast('Texte copié'))">Copier le texte</button></div>`);
+}
+function setStatut(id,s){const d=db.docs.find(x=>x.id===id);d.statut=s;if(s==='payee')d.payeLe=today();save();render();openDoc(id);toast(s==='payee'?'Paiement enregistré 💶':'Statut mis à jour')}
+function delDoc(id){if(!confirm('Supprimer ce brouillon ?'))return;db.docs=db.docs.filter(d=>d.id!==id);save();closeModal();render()}
+function cancelFact(id){if(!confirm("Annuler cette facture ? Elle reste dans la liste (numérotation continue). Si le client l'a déjà reçue, il faudra lui envoyer un avoir."))return;setStatut(id,'annulee')}
+function toFacture(id){
+  const dv=db.docs.find(x=>x.id===id);
+  const f={id:uid(),cree:Date.now(),type:'facture',num:nextNum('facture'),clientId:dv.clientId,objet:dv.objet,chantier:dv.chantier,lignes:JSON.parse(JSON.stringify(dv.lignes)),note:'',date:today(),dateExec:today(),echeance:addDays(today(),+P().delai||30),statut:'envoyee',devisId:dv.id,devisNum:dv.num};
+  dv.statut='facture';db.docs.push(f);save();render();openDoc(f.id);toast('Facture créée depuis le devis');
+}
+
+/* ---------- relances : ton qui monte à chaque relance ---------- */
+function relance(id){
+  const d=db.docs.find(x=>x.id===id),c=client(d.clientId),t=totals(d),p=P(),n=(d.relances||[]).length,late=daysLate(d.echeance);
+  const sign=`\n\nCordialement,\n${p.nom}${p.tel?'\n'+p.tel:''}`;
+  const pay=p.iban?`\n\nIBAN : ${p.iban}`:'';
+  let sub,body,level;
+  if(n===0){level='Relance amicale';sub=`Petit rappel - facture ${d.num}`;body=`Bonjour,\n\nSauf erreur de ma part, la facture ${d.num} de ${eur(t.ttc)}, arrivée à échéance le ${fdate(d.echeance)}, n'a pas encore été réglée.\n\nIl s'agit peut-être d'un simple oubli : pourriez-vous procéder au règlement dès que possible ?${pay}\n\nSi le paiement a déjà été effectué, merci de ne pas tenir compte de ce message.${sign}`}
+  else if(n===1){level='Deuxième relance';sub=`Relance - facture ${d.num} impayée`;body=`Bonjour,\n\nMalgré ma précédente relance, la facture ${d.num} de ${eur(t.ttc)} reste impayée, avec ${late} jours de retard.\n\nJe vous remercie de bien vouloir régler cette somme sous 8 jours.${pay}${c.type==='pro'?'\n\nPour rappel, tout retard entraîne des pénalités ainsi qu\'une indemnité forfaitaire de 40 € pour frais de recouvrement.':''}${sign}`}
+  else{level='Mise en demeure';sub=`Mise en demeure de payer - facture ${d.num}`;body=`Madame, Monsieur,\n\nMalgré mes relances, la facture ${d.num} du ${fdate(d.date)}, d'un montant de ${eur(t.ttc)}, échue depuis le ${fdate(d.echeance)}, demeure impayée.\n\nPar la présente, je vous mets en demeure de régler cette somme sous 8 jours à compter de la réception de ce courrier${c.type==='pro'?', majorée des pénalités de retard et de l\'indemnité forfaitaire de 40 €':''}.\n\nÀ défaut, je me verrai contraint d'engager une procédure de recouvrement.${pay}${sign}`}
+  modal(level+' · '+esc(c.nom),`<p class="hint" style="margin-top:0">${d.num} · ${eur(t.ttc)} · ${late} jours de retard · ${n} relance(s) déjà faite(s)</p>
+  <label>À</label><input id="m_to" value="${esc(c.email)}"><label>Objet</label><input id="m_sub" value="${esc(sub)}"><label>Message</label><textarea id="m_body" style="min-height:260px">${esc(body)}</textarea>
+  ${n>=2?'<p class="hint">Pour une mise en demeure, l\'envoi en lettre recommandée avec accusé de réception est recommandé : utilisez « Copier le texte ».</p>':''}
+  <div class="actions"><button class="btn acc" onclick="doRelance('${id}','mail')">Ouvrir dans ma messagerie</button><button class="btn" onclick="doRelance('${id}','copy')">Copier le texte</button></div>`);
+}
+function doRelance(id,how){
+  const d=db.docs.find(x=>x.id===id);(d.relances=d.relances||[]).push(today());save();render();
+  if(how==='mail')location.href='mailto:'+encodeURIComponent(m_to.value)+'?subject='+encodeURIComponent(m_sub.value)+'&body='+encodeURIComponent(m_body.value);
+  else navigator.clipboard.writeText(m_body.value).then(()=>toast('Texte copié · relance notée'));
+}
+
+/* ---------- sauvegarde ---------- */
+function exportData(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}));a.download=`sauvegarde-assistant-${today()}.json`;a.click()}
+function importData(inp){const f=inp.files[0];if(!f)return;f.text().then(t=>{const d=JSON.parse(t);if(!d.docs||!d.profile)throw 0;if(!confirm('Remplacer les données de cet appareil par cette sauvegarde ?'))return;db=d;save();fillProfile();render();toast('Sauvegarde restaurée')}).catch(()=>toast('Fichier de sauvegarde invalide'));inp.value=''}
+
+fillProfile();render();
+</script>
+</body>
+</html>
