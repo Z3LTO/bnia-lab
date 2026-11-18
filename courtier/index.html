@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carnet Courtier</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F2ED;--card:#FFFFFF;--ink:#16202B;--mute:#6B7480;--line:#E3DFD6;
+  --brand:#1F3A5F;--brand2:#2E5A8C;--acc:#E07A2E;--ok:#2F8F5B;--warn:#C2410C;--soft:#EAF0F7;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#11161C;--card:#1A222B;--ink:#EEF1F4;--mute:#9AA4AF;--line:#2A3540;--brand:#8DB4E2;--brand2:#A9C7EC;--soft:#1F2C3A;--acc:#F0954C;--ok:#5CC08A;--warn:#F08A5D}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
+body{padding-bottom:84px}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+header .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:800;letter-spacing:-.02em;font-size:18px}
+.logo span{color:var(--acc)}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--brand)}
+header h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+header p.sub{color:var(--mute);font-size:13px}
+main{padding:14px 16px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.card h2 small{font-weight:600;color:var(--mute);font-size:12px}
+.muted{color:var(--mute);font-size:13px}
+.row{display:flex;gap:8px;align-items:center}
+.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=date],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand2)}
+textarea{min-height:90px;resize:vertical}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer}
+@media (prefers-color-scheme:dark){.btn{color:#11161C}}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--line)}
+.btn.acc{background:var(--acc);color:#fff}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn.block{width:100%;padding:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+@media (prefers-color-scheme:dark){.chip.on{color:#11161C}}
+.item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{flex:1;min-width:0}
+.item .t b{font-weight:700}
+.item.done .t{text-decoration:line-through;color:var(--mute)}
+.ck{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;margin-top:1px;cursor:pointer;display:grid;place-items:center;background:var(--card)}
+.ck.on{background:var(--ok);border-color:var(--ok)}
+.ck.on::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.x{background:none;border:0;color:var(--mute);font-size:18px;line-height:1;cursor:pointer;padding:0 4px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--brand);margin-right:4px}
+.tag.late{background:#FDE7DC;color:var(--warn)}
+.tag.ok{background:#DCF2E5;color:var(--ok)}
+@media (prefers-color-scheme:dark){.tag.late{background:#3A2418}.tag.ok{background:#173326}}
+.slot{border-left:4px solid var(--brand2)}
+.slot.s1{border-left-color:#2E5A8C}.slot.s2{border-left-color:#E07A2E}.slot.s3{border-left-color:#2F8F5B}.slot.s4{border-left-color:#8A5CC2}
+.add{display:flex;gap:6px;margin-top:8px}
+.add input{padding:8px 10px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--mute);padding:4px 6px;cursor:pointer;position:relative;min-width:58px}
+nav button svg{width:22px;height:22px}
+nav button.on{color:var(--brand)}
+nav .badge{position:absolute;top:0;right:8px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kpi b{display:block;font-size:22px;font-weight:800}
+.kpi span{font-size:11px;color:var(--mute);font-weight:700}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.sheet{position:fixed;inset:0;background:rgba(10,14,20,.5);z-index:8;display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .in{background:var(--card);width:100%;max-width:720px;border-radius:18px 18px 0 0;padding:16px;max-height:88vh;overflow:auto}
+pre.out{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:inherit;font-size:13px}
+.when{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.when .chip{text-align:center}
+.cli{cursor:pointer}
+.cli:hover{border-color:var(--brand2)}
+.st{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.empty{text-align:center;color:var(--mute);padding:14px 0;font-size:13px}
+.hidden{display:none!important}
+#login{max-width:420px;margin:30px auto;padding:0 16px}
+#login h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.err{color:var(--warn);font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
+body.out nav,body.out header,body.out main{display:none}
+body:not(.out) #login{display:none}
+.sec{font-size:12px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
+</style>
+</head>
+<body class="out">
+<section id="login">
+  <div class="logo" style="font-size:22px;margin-bottom:22px">Carnet<span>.</span>Courtier</div>
+  <h1 id="lgT">Connexion</h1>
+  <p class="muted" id="lgS">Ton planning, tes notes d'appel et tes rappels, sur tous tes appareils.</p>
+  <form onsubmit="auth(event)" style="margin-top:16px">
+    <label class="f">Email</label><input type="email" id="lgE" autocomplete="email" required>
+    <label class="f">Mot de passe</label><input type="password" id="lgP" autocomplete="current-password" minlength="6" required style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+    <div class="err" id="lgErr"></div>
+    <button class="btn block" id="lgB">Se connecter</button>
+  </form>
+  <button class="btn ghost block" style="margin-top:8px" onclick="mode=mode==='in'?'up':'in';lgUI()" id="lgSw">Créer un compte</button>
+  <p class="muted" style="margin-top:18px;text-align:center">Un outil bnia.lab · version de test</p>
+</section>
+<header>
+  <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="btn ghost sm" onclick="logout()" title="Se déconnecter">Sortir</button></div></div>
+  <h1 id="title">Aujourd'hui</h1>
+  <p class="sub" id="subtitle"></p>
+</header>
+<main id="main"></main>
+
+<nav id="nav">
+  <button data-v="jour" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Journée</button>
+  <button data-v="appel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Appel</button>
+  <button data-v="rappels"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>À faire<span class="badge hidden" id="badge"></span></button>
+  <button data-v="mails"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Mails</button>
+  <button data-v="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>Clients</button>
+</nav>
+
+<div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= Données ================= */
+const KEY='carnet-courtier-v1';
+const PIECES=['Pièce d\'identité','Justificatif de domicile','3 derniers bulletins de salaire','2 derniers avis d\'imposition','3 derniers relevés bancaires','Tableaux d\'amortissement','Offres de prêt','Taxe foncière'];
+const BESOINS=['Rachat crédits conso','Rachat avec immo','Regroupement + trésorerie','Renégociation prêt immo','Autre'];
+const STATUTS=['Nouveau','Pièces en attente','Étude du dossier','Transmis banque','Offre reçue','Signé','Sans suite'];
+const QUAND=[['J+1',1],['J+2',2],['J+3',3],['Date',null]];
+
+const iso=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+const TODAY=iso(new Date());
+const addD=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return iso(x)};
+const fd=(d,o={weekday:'long',day:'numeric',month:'long'})=>new Date(d+'T12:00:00').toLocaleDateString('fr-FR',o);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+
+function demo(){
+  const c1=uid(),c2=uid(),c3=uid();
+  return {
+    trame:[
+      {id:'s1',label:'Matin · Étude de dossiers',h:'9h – 12h'},
+      {id:'s2',label:'Midi · Appels',h:'12h – 14h'},
+      {id:'s3',label:'Après-midi · Administratif',h:'14h – 18h'}
+    ],
+    jours:{[TODAY]:{s1:[{id:uid(),t:'Monter le dossier Martin pour la banque',done:false}],s2:[{id:uid(),t:'Rappeler 3 nouveaux contacts du site',done:false}],s3:[{id:uid(),t:'Relancer les pièces manquantes',done:false}]}},
+    clients:[
+      {id:c1,nom:'Martin',prenom:'Sophie',tel:'06 12 34 56 78',email:'sophie.martin@exemple.fr',besoin:'Rachat crédits conso',statut:'Étude du dossier',revenus:'2 600',mensu:'1 150',credits:'4',pieces:['Tableaux d\'amortissement'],notes:[{d:addD(TODAY,-2),t:'4 crédits conso (auto, 2 renouvelables, perso). Veut baisser ses mensualités sous 700 €. Propriétaire, pas de prêt immo en cours.'}]},
+      {id:c2,nom:'Benali',prenom:'Karim',tel:'07 98 76 54 32',email:'k.benali@exemple.fr',besoin:'Regroupement + trésorerie',statut:'Pièces en attente',revenus:'3 900',mensu:'1 820',credits:'3',pieces:['3 derniers relevés bancaires','2 derniers avis d\'imposition'],notes:[{d:addD(TODAY,-1),t:'Couple, 2 enfants. Prêt immo + 2 conso. Besoin de 8 000 € de trésorerie pour travaux.'}]},
+      {id:c3,nom:'Lefèvre',prenom:'Julien',tel:'06 55 44 33 22',email:'julien.lefevre@exemple.fr',besoin:'Renégociation prêt immo',statut:'Nouveau',revenus:'',mensu:'',credits:'1',pieces:[],notes:[]}
+    ],
+    taches:[
+      {id:uid(),c:c2,t:'Relancer Karim pour les relevés et avis d\'imposition',due:TODAY,done:false},
+      {id:uid(),c:c1,t:'Envoyer le dossier Martin à la banque',due:addD(TODAY,1),done:false},
+      {id:uid(),c:c3,t:'Premier appel Julien Lefèvre (formulaire du site)',due:addD(TODAY,2),done:false},
+      {id:uid(),c:c2,t:'Point avec Karim sur la proposition',due:addD(TODAY,3),done:false}
+    ],
+    mails:{}
+  };
+}
+function vide(){return {trame:demo().trame,jours:{},clients:[],taches:[],mails:{}}}
+const sb=supabase.createClient('https://yeytrhpcwtxmuonkhgth.supabase.co','sb_publishable_Co58ecgAF_F0FJAaDyCRvw_FaryFbWE');
+let S=vide(),USER=null,_sv=null,mode='in';
+function save(){if(!USER)return;clearTimeout(_sv);_sv=setTimeout(async()=>{const{error}=await sb.from('carnets').upsert({user_id:USER.id,data:S,updated_at:new Date().toISOString()});if(error)toast('Pas de connexion : enregistrement impossible pour le moment')},600)}
+async function charger(){
+  const{data,error}=await sb.from('carnets').select('data').eq('user_id',USER.id).maybeSingle();
+  if(error){toast('Erreur de chargement : '+error.message);return}
+  if(data&&data.data&&data.data.trame)S=data.data;
+  else{S=vide();await sb.from('carnets').insert({user_id:USER.id,data:S})}
+  S.jours=S.jours||{};S.clients=S.clients||[];S.taches=S.taches||[];S.mails=S.mails||{};
+  document.body.classList.remove('out');render();
+}
+function lgUI(){const up=mode==='up';$('lgT').textContent=up?'Créer un compte':'Connexion';$('lgB').textContent=up?'Créer mon compte':'Se connecter';$('lgSw').textContent=up?'J\'ai déjà un compte':'Créer un compte';$('lgP').autocomplete=up?'new-password':'current-password';$('lgErr').textContent=''}
+const ERR={'Invalid login credentials':'Email ou mot de passe incorrect.','User already registered':'Un compte existe déjà avec cet email.','Email not confirmed':'Confirme d\'abord ton email (regarde ta boîte de réception).'};
+async function auth(e){
+  e.preventDefault();const email=$('lgE').value.trim(),password=$('lgP').value;$('lgErr').textContent='';$('lgB').disabled=true;
+  try{
+    if(mode==='up'){
+      const{data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href.split('#')[0]}});
+      if(error)throw error;
+      if(!data.session){$('lgErr').style.color='var(--ok)';$('lgErr').textContent='Compte créé. Clique sur le lien reçu par email, puis connecte-toi.';mode='in';setTimeout(lgUI,4000);return}
+    }else{const{error}=await sb.auth.signInWithPassword({email,password});if(error)throw error}
+  }catch(err){$('lgErr').style.color='';$('lgErr').textContent=ERR[err.message]||err.message}
+  finally{$('lgB').disabled=false}
+}
+async function logout(){await sb.auth.signOut()}
+sb.auth.onAuthStateChange((ev,session)=>{
+  const u=session?.user||null;
+  if(u&&(!USER||USER.id!==u.id)){USER=u;charger()}
+  if(!u){USER=null;S=vide();document.body.classList.add('out');lgUI()}
+});
+const cli=id=>S.clients.find(c=>c.id===id);
+const nomC=c=>c?((c.prenom?c.prenom+' ':'')+c.nom):'';
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400)}
+async function copy(txt){try{await navigator.clipboard.writeText(txt);toast('Copié, colle-le dans ton CRM ou ta messagerie')}catch(e){toast('Copie impossible ici : sélectionne le texte et copie-le')}}
+
+/* ================= Navigation ================= */
+let view='jour',jourSel=TODAY,appelPrefill=null,mailCtx={c:null,m:'premier'},clientOpen=null;
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+function go(v){view=v;clientOpen=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();scrollTo(0,0)}
+function head(t,s){$('title').textContent=t;$('subtitle').textContent=s||''}
+function badge(){const n=S.taches.filter(x=>!x.done&&x.due<=TODAY).length;const b=$('badge');b.textContent=n;b.classList.toggle('hidden',!n)}
+$('pillDate').textContent=fd(TODAY,{day:'numeric',month:'short'});
+
+function render(){badge();({jour:vJour,appel:vAppel,rappels:vRappels,mails:vMails,clients:vClients})[view]()}
+
+/* ================= Journée ================= */
+function vJour(){
+  const j=S.jours[jourSel]||(S.jours[jourSel]={});
+  const dus=S.taches.filter(x=>!x.done&&(jourSel===TODAY?x.due<=TODAY:x.due===jourSel));
+  const tot=S.trame.reduce((n,s)=>n+(j[s.id]||[]).length,0), fait=S.trame.reduce((n,s)=>n+(j[s.id]||[]).filter(i=>i.done).length,0);
+  head(jourSel===TODAY?'Aujourd\'hui':fd(jourSel),jourSel===TODAY?fd(TODAY):'Planning préparé à l\'avance');
+  let h=`<div class="row" style="margin-bottom:12px">
+    <button class="btn ghost sm" onclick="jourSel=addD(jourSel,-1);render()">‹ Veille</button>
+    <div class="grow" style="text-align:center;font-weight:700">${esc(fd(jourSel,{weekday:'short',day:'numeric',month:'short'}))}</div>
+    <button class="btn ghost sm" onclick="jourSel=addD(jourSel,1);render()">Lendemain ›</button></div>
+  <div class="kpis"><div class="kpi"><b>${fait}/${tot}</b><span>Planning fait</span></div>
+  <div class="kpi"><b>${dus.length}</b><span>Rappels du jour</span></div>
+  <div class="kpi"><b>${S.mails[jourSel]||0}</b><span>Mails envoyés</span></div></div>`;
+  if(dus.length){h+=`<div class="card"><h2>Rappels à traiter <small>depuis tes notes d'appel</small></h2>${dus.map(tacheHTML).join('')}</div>`}
+  S.trame.forEach((s,i)=>{
+    const L=j[s.id]||[];
+    h+=`<div class="card slot s${i%4+1}"><h2>${esc(s.label)} <small>${esc(s.h)}</small></h2>
+    ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><div class="ck ${it.done?'on':''}" onclick="togJ('${s.id}','${it.id}')"></div><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu sur ce créneau</div>'}
+    <form class="add" onsubmit="addJ(event,'${s.id}')"><input type="text" placeholder="Ajouter une tâche…" name="t"><button class="btn sm">+</button></form></div>`});
+  h+=`<div class="row wrap"><button class="btn ghost grow" onclick="trameSheet()">Modifier ma trame</button>
+  <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>
+  <p class="muted" style="margin-top:10px">La trame (Matin / Midi / Après-midi) reste la même chaque jour. Tu ne remplis que les tâches.</p>`;
+  $('main').innerHTML=h;
+}
+function addJ(e,s){e.preventDefault();const v=e.target.t.value.trim();if(!v)return;const j=S.jours[jourSel]||(S.jours[jourSel]={});(j[s]||(j[s]=[])).push({id:uid(),t:v,done:false});save();render()}
+function togJ(s,id){const it=S.jours[jourSel][s].find(x=>x.id===id);it.done=!it.done;save();render()}
+function delJ(s,id){S.jours[jourSel][s]=S.jours[jourSel][s].filter(x=>x.id!==id);save();render()}
+function planTxt(){const j=S.jours[jourSel]||{};return 'Planning du '+fd(jourSel)+'\n\n'+S.trame.map(s=>s.label+' ('+s.h+')\n'+((j[s.id]||[]).map(i=>(i.done?'✓ ':'• ')+i.t).join('\n')||'—')).join('\n\n')}
+function trameSheet(){
+  openSheet(`<h2 style="font-size:18px;margin-bottom:6px">Ma trame de journée</h2><p class="muted">Les créneaux qui reviennent chaque jour.</p>
+  <div id="trL">${S.trame.map(s=>`<div class="row" style="margin-top:8px"><input type="text" value="${esc(s.label)}" data-id="${s.id}" data-k="label" class="grow"><input type="text" value="${esc(s.h)}" data-id="${s.id}" data-k="h" style="width:110px"><button class="x" onclick="S.trame=S.trame.filter(x=>x.id!=='${s.id}');trameSheet()">×</button></div>`).join('')}</div>
+  <button class="btn ghost sm" style="margin-top:10px" onclick="S.trame.push({id:uid(),label:'Nouveau créneau',h:''});trameSheet()">+ Ajouter un créneau</button>
+  <button class="btn block" style="margin-top:14px" onclick="saveTrame()">Enregistrer</button>`)}
+function saveTrame(){document.querySelectorAll('#trL input').forEach(i=>{const s=S.trame.find(x=>x.id===i.dataset.id);if(s)s[i.dataset.k]=i.value});save();closeSheet();render();toast('Trame enregistrée')}
+
+/* ================= Tâches / rappels ================= */
+function tacheHTML(x){
+  const c=cli(x.c),late=x.due<TODAY;
+  return `<div class="item ${x.done?'done':''}"><div class="ck ${x.done?'on':''}" onclick="togT('${x.id}')"></div>
+  <div class="t"><b>${esc(x.t)}</b><div class="muted">${c?`<span class="tag">${esc(nomC(c))}</span>`:''}${late?'<span class="tag late">En retard</span>':''}${c&&c.tel?esc(c.tel):''}</div></div>
+  ${x.done?'':`<button class="btn ghost sm" onclick="reporter('${x.id}')">+1 j</button>`}</div>`}
+function togT(id){const x=S.taches.find(t=>t.id===id);x.done=!x.done;save();render();if(x.done)toast('Bien joué ✓')}
+function reporter(id){const x=S.taches.find(t=>t.id===id);x.due=addD(x.due<TODAY?TODAY:x.due,1);save();render();toast('Reporté au '+fd(x.due,{weekday:'long'}))}
+function vRappels(){
+  head('À faire','Tes rappels J+1, J+2, J+3, au même endroit');
+  const open=S.taches.filter(x=>!x.done).sort((a,b)=>a.due<b.due?-1:1);
+  const grp=[['Aujourd\'hui',x=>x.due<=TODAY],['Demain · J+1',x=>x.due===addD(TODAY,1)],['J+2 · '+fd(addD(TODAY,2),{weekday:'long'}),x=>x.due===addD(TODAY,2)],['J+3 · '+fd(addD(TODAY,3),{weekday:'long'}),x=>x.due===addD(TODAY,3)],['Plus tard',x=>x.due>addD(TODAY,3)]];
+  let h=`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
+  <input type="text" name="t" placeholder="Ex. : rappeler Mme Martin pour l'offre">
+  <div class="row" style="margin-top:8px"><select name="c" class="grow"><option value="">Sans client</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select>
+  <select name="q" style="width:120px"><option value="0">Aujourd'hui</option><option value="1" selected>J+1</option><option value="2">J+2</option><option value="3">J+3</option><option value="7">J+7</option></select></div>
+  <button class="btn block" style="margin-top:10px">Ajouter</button></form>`;
+  grp.forEach(([t,f])=>{const L=open.filter(f);if(!L.length&&t==='Plus tard')return;h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):'<div class="empty">Rien de prévu</div>'}</div>`});
+  const done=S.taches.filter(x=>x.done).slice(-5).reverse();
+  if(done.length)h+=`<div class="sec">Faits récemment</div><div class="card">${done.map(tacheHTML).join('')}</div>`;
+  $('main').innerHTML=h}
+function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)return toast('Écris le rappel');S.taches.push({id:uid(),c:f.c.value||null,t,due:addD(TODAY,+f.q.value),done:false});save();render();toast('Rappel ajouté')}
+
+/* ================= Note d'appel ================= */
+let A;
+function resetA(c){A={cid:c?c.id:null,prenom:c?.prenom||'',nom:c?.nom||'',tel:c?.tel||'',email:c?.email||'',besoin:c?.besoin||'',revenus:c?.revenus||'',mensu:c?.mensu||'',credits:c?.credits||'',pieces:c?[...(c.pieces||[])]:[],note:'',action:'',q:1,date:addD(TODAY,1)}}
+function vAppel(){
+  if(!A||appelPrefill!==undefined&&appelPrefill!==null){resetA(appelPrefill?cli(appelPrefill):null);appelPrefill=null}
+  head('Note d\'appel',A.cid?'Suivi de '+nomC(cli(A.cid)):'Remplis pendant l\'appel, tout est rangé ensuite');
+  const chips=(arr,key,multi)=>`<div class="chips">${arr.map(v=>`<button type="button" class="chip ${(multi?A[key].includes(v):A[key]===v)?'on':''}" onclick="chip('${key}',${JSON.stringify(v).replace(/"/g,'&quot;')},${multi})">${esc(v)}</button>`).join('')}</div>`;
+  $('main').innerHTML=`
+  ${A.cid?'':`<div class="card"><h2>Client existant ?</h2><select onchange="if(this.value){appelPrefill=this.value;render()}"><option value="">Nouveau client</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select></div>`}
+  <div class="card"><h2>Le client</h2>
+    <div class="row"><input type="text" placeholder="Prénom" value="${esc(A.prenom)}" oninput="A.prenom=this.value"><input type="text" placeholder="Nom" value="${esc(A.nom)}" oninput="A.nom=this.value"></div>
+    <div class="row" style="margin-top:8px"><input type="tel" placeholder="Téléphone" value="${esc(A.tel)}" oninput="A.tel=this.value"><input type="email" placeholder="Email" value="${esc(A.email)}" oninput="A.email=this.value"></div></div>
+  <div class="card"><h2>Son besoin</h2>${chips(BESOINS,'besoin',false)}
+    <label class="f">Situation</label>
+    <div class="row"><input type="text" inputmode="numeric" placeholder="Revenus/mois €" value="${esc(A.revenus)}" oninput="A.revenus=this.value"><input type="text" inputmode="numeric" placeholder="Mensualités €" value="${esc(A.mensu)}" oninput="A.mensu=this.value"><input type="text" inputmode="numeric" placeholder="Nb crédits" value="${esc(A.credits)}" oninput="A.credits=this.value" style="max-width:100px"></div>
+    <p class="muted" id="endet" style="margin-top:6px">${endet()}</p>
+    <label class="f">Ce qu'il a dit</label>
+    <textarea placeholder="Ses mots à lui : ce qu'il veut, ses craintes, sa situation familiale, son projet…" oninput="A.note=this.value">${esc(A.note)}</textarea></div>
+  <div class="card"><h2>Pièces manquantes <small>${A.pieces.length} à demander</small></h2>${chips(PIECES,'pieces',true)}</div>
+  <div class="card"><h2>Prochaine action</h2>
+    <input type="text" placeholder="Ex. : le rappeler pour valider la proposition" value="${esc(A.action)}" oninput="A.action=this.value">
+    <div class="when" style="margin-top:8px">${QUAND.map(([l,n])=>`<button type="button" class="chip ${A.q===n?'on':''}" onclick="A.q=${n};render()">${l}</button>`).join('')}</div>
+    ${A.q===null?`<input type="date" style="margin-top:8px" value="${A.date}" onchange="A.date=this.value">`:`<p class="muted" style="margin-top:6px">Rappel le ${fd(addD(TODAY,A.q))}</p>`}</div>
+  <button class="btn block acc" onclick="saveAppel()">Enregistrer l'appel</button>
+  <button class="btn block ghost" style="margin-top:8px" onclick="resetA();render()">Effacer</button>`}
+function chip(k,v,multi){if(multi){A[k]=A[k].includes(v)?A[k].filter(x=>x!==v):[...A[k],v]}else A[k]=A[k]===v?'':v;render()}
+function num(s){return parseFloat(String(s||'').replace(/\s/g,'').replace(',','.'))||0}
+function endet(){const r=num(A.revenus),m=num(A.mensu);if(!r||!m)return 'Renseigne revenus et mensualités pour voir le taux d\'endettement.';const t=Math.round(m/r*100);return `Taux d'endettement actuel : <b style="color:${t>35?'var(--warn)':'var(--ok)'}">${t} %</b>${t>35?' (au-dessus de 35 %)':''}`}
+document.addEventListener('input',e=>{if(view==='appel'&&$('endet')&&e.target.inputMode==='numeric')$('endet').innerHTML=endet()});
+function saveAppel(){
+  if(!A.nom.trim()&&!A.prenom.trim())return toast('Indique au moins le nom du client');
+  let c=A.cid&&cli(A.cid);
+  if(!c){c={id:uid(),statut:'Nouveau',notes:[]};S.clients.unshift(c)}
+  Object.assign(c,{prenom:A.prenom.trim(),nom:A.nom.trim(),tel:A.tel,email:A.email,besoin:A.besoin,revenus:A.revenus,mensu:A.mensu,credits:A.credits,pieces:A.pieces});
+  if(A.pieces.length&&c.statut==='Nouveau')c.statut='Pièces en attente';
+  if(A.note.trim())c.notes.unshift({d:TODAY,t:A.note.trim()});
+  let due=null;
+  if(A.action.trim()){due=A.q===null?A.date:addD(TODAY,A.q);S.taches.push({id:uid(),c:c.id,t:A.action.trim(),due,done:false})}
+  save();const txt=crmTxt(c,A.note.trim(),A.action.trim(),due);const cid=c.id;resetA();
+  openSheet(`<h2 style="font-size:18px">Appel enregistré ✓</h2><p class="muted" style="margin:4px 0 10px">${due?'Rappel créé pour le '+esc(fd(due))+'. ':''}Voici le résumé prêt à coller dans la fiche CRM :</p>
+  <pre class="out">${esc(txt)}</pre>
+  <div class="row" style="margin-top:12px"><button class="btn grow" onclick="copy(${JSON.stringify(txt).replace(/"/g,'&quot;')})">Copier pour le CRM</button>
+  <button class="btn acc grow" onclick="closeSheet();mailCtx={c:'${cid}',m:'${c.pieces.length?'pieces':'premier'}'};go('mails')">Préparer le mail</button></div>`);
+}
+function crmTxt(c,note,action,due){
+  const r=num(c.revenus),m=num(c.mensu);
+  return [`Appel du ${fd(TODAY,{day:'2-digit',month:'2-digit',year:'numeric'})} · ${nomC(c)}`,
+  c.besoin&&`Besoin : ${c.besoin}`,
+  (c.revenus||c.mensu||c.credits)&&`Situation : revenus ${c.revenus||'?'} €/mois · mensualités ${c.mensu||'?'} € · ${c.credits||'?'} crédit(s)${r&&m?' · endettement '+Math.round(m/r*100)+' %':''}`,
+  note&&`Notes : ${note}`,
+  c.pieces.length&&`Pièces manquantes : ${c.pieces.join(', ')}`,
+  action&&`Prochaine action : ${action}${due?' (le '+fd(due,{day:'2-digit',month:'2-digit'})+')':''}`].filter(Boolean).join('\n')}
+
+/* ================= Mails ================= */
+const MODELES={
+  premier:{n:'Suite à notre appel',s:'Votre projet de rachat de crédits',b:c=>`Bonjour ${c.prenom||''},
+
+Merci pour notre échange de ce jour. Comme convenu, je vais étudier votre situation${c.besoin?' pour votre projet ('+c.besoin.toLowerCase()+')':''} afin de vous proposer une solution adaptée à votre budget.
+${c.pieces.length?`
+Pour avancer, j'ai besoin des documents suivants :
+${c.pieces.map(p=>'- '+p).join('\n')}
+`:''}
+Vous pouvez me les envoyer en réponse à ce mail (photos lisibles acceptées).
+
+Je reste disponible pour toute question.
+
+Bien cordialement,`},
+  pieces:{n:'Relance pièces',s:'Documents manquants pour votre dossier',b:c=>`Bonjour ${c.prenom||''},
+
+Je reviens vers vous au sujet de votre dossier. Il me manque encore les documents suivants pour le présenter aux banques :
+${(c.pieces.length?c.pieces:['(à compléter)']).map(p=>'- '+p).join('\n')}
+
+Dès réception, je finalise l'étude et je vous fais un retour rapidement.
+
+Bien cordialement,`},
+  banque:{n:'Dossier transmis',s:'Votre dossier est entre les mains de la banque',b:c=>`Bonjour ${c.prenom||''},
+
+Bonne nouvelle : votre dossier est complet et je l'ai transmis à nos partenaires bancaires. Le délai de réponse est en général de quelques jours ouvrés.
+
+Je vous tiens informé(e) dès que j'ai un retour.
+
+Bien cordialement,`},
+  offre:{n:'Proposition reçue',s:'Proposition pour votre rachat de crédits',b:c=>`Bonjour ${c.prenom||''},
+
+J'ai reçu une proposition pour votre dossier. Je souhaiterais vous la présenter de vive voix afin de répondre à vos questions.
+
+Quand êtes-vous disponible pour un appel de 15 minutes ?
+
+Bien cordialement,`},
+  relance:{n:'Relance sans réponse',s:'Suite à votre demande',b:c=>`Bonjour ${c.prenom||''},
+
+Je me permets de revenir vers vous suite à votre demande concernant votre projet. Êtes-vous toujours intéressé(e) ?
+
+Si oui, dites-moi simplement quand vous joindre et je vous rappelle.
+
+Bien cordialement,`}
+};
+function vMails(){
+  head('Mails','Choisis un client et un modèle : le mail se remplit tout seul');
+  const c=cli(mailCtx.c)||S.clients[0];if(c)mailCtx.c=c.id;
+  if(!c){head('Mails','');$('main').innerHTML='<div class="card empty">Ajoute d\'abord un client avec une note d\'appel : ses mails se rempliront tout seuls.</div><button class="btn block" onclick="resetA();go(\'appel\')">Nouvelle note d\'appel</button>';return}
+  const M=MODELES[mailCtx.m];
+  const sujet=M.s,corps=c?M.b(c):'';
+  $('main').innerHTML=`
+  <div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><b>${S.mails[TODAY]||0}</b><span>Envoyés aujourd'hui</span></div><div class="kpi"><b>${Object.values(S.mails).reduce((a,b)=>a+b,0)}</b><span>Au total</span></div></div>
+  <div class="card"><label class="f" style="margin-top:0">Client</label>
+  <select onchange="mailCtx.c=this.value;render()">${S.clients.map(x=>`<option value="${x.id}" ${x.id===mailCtx.c?'selected':''}>${esc(nomC(x))}</option>`).join('')}</select>
+  <label class="f">Modèle</label><div class="chips">${Object.entries(MODELES).map(([k,v])=>`<button class="chip ${k===mailCtx.m?'on':''}" onclick="mailCtx.m='${k}';render()">${esc(v.n)}</button>`).join('')}</div></div>
+  <div class="card"><label class="f" style="margin-top:0">À</label><input type="email" id="mTo" value="${esc(c?.email||'')}">
+  <label class="f">Objet</label><input type="text" id="mS" value="${esc(sujet)}">
+  <label class="f">Message</label><textarea id="mB" style="min-height:260px">${esc(corps)}</textarea>
+  <div class="row" style="margin-top:10px"><button class="btn grow" onclick="copy($('mS').value+'\\n\\n'+$('mB').value)">Copier le mail</button>
+  <a class="btn acc grow" style="text-align:center;text-decoration:none" href="#" onclick="this.href='mailto:'+encodeURIComponent($('mTo').value)+'?subject='+encodeURIComponent($('mS').value)+'&body='+encodeURIComponent($('mB').value)">Ouvrir ma messagerie</a></div>
+  <button class="btn ghost block" style="margin-top:8px" onclick="S.mails[TODAY]=(S.mails[TODAY]||0)+1;save();render();toast('Compté dans tes mails du jour')">Je l'ai envoyé</button></div>
+  <p class="muted">Pour l'instant, tu copies le mail ou tu l'ouvres dans ta messagerie. La version finale pourra les envoyer directement depuis ta boîte mail.</p>`}
+
+/* ================= Clients ================= */
+let filtre='';
+function vClients(){
+  if(clientOpen)return vFiche();
+  head('Clients',S.clients.length+' dossiers');
+  const L=S.clients.filter(c=>(nomC(c)+' '+c.tel+' '+c.statut).toLowerCase().includes(filtre.toLowerCase()));
+  $('main').innerHTML=`<input type="text" placeholder="Rechercher un nom, un numéro…" value="${esc(filtre)}" oninput="filtre=this.value;vClientsList()" style="margin-bottom:12px">
+  <div id="cl"></div><button class="btn block" onclick="resetA();go('appel')">+ Nouveau client (note d'appel)</button>`;vClientsList()}
+function vClientsList(){
+  const L=S.clients.filter(c=>(nomC(c)+' '+(c.tel||'')+' '+c.statut).toLowerCase().includes(filtre.toLowerCase()));
+  $('cl').innerHTML=L.map(c=>{const n=S.taches.filter(t=>t.c===c.id&&!t.done).sort((a,b)=>a.due<b.due?-1:1)[0];
+  return `<div class="card cli" onclick="clientOpen='${c.id}';render()"><div class="row"><div class="grow"><b>${esc(nomC(c))}</b><div class="muted">${esc(c.besoin||'Besoin à préciser')}</div></div><span class="st" style="color:${c.statut==='Signé'?'var(--ok)':c.statut==='Sans suite'?'var(--mute)':'var(--brand)'}">${esc(c.statut)}</span></div>
+  ${n?`<div class="muted" style="margin-top:6px">Prochaine action : ${esc(n.t)} · <b>${n.due<=TODAY?'aujourd\'hui':esc(fd(n.due,{weekday:'short',day:'numeric'}))}</b></div>`:''}</div>`}).join('')||'<div class="empty">Aucun client trouvé</div>'}
+function vFiche(){
+  const c=cli(clientOpen);head(nomC(c),c.besoin||'');
+  const T=S.taches.filter(t=>t.c===c.id&&!t.done);
+  $('main').innerHTML=`<button class="btn ghost sm" onclick="clientOpen=null;render()" style="margin-bottom:12px">‹ Tous les clients</button>
+  <div class="card"><h2>Statut du dossier</h2><div class="chips">${STATUTS.map(s=>`<button class="chip ${c.statut===s?'on':''}" onclick="cli('${c.id}').statut='${s.replace(/'/g,"\\'")}';save();render()">${esc(s)}</button>`).join('')}</div></div>
+  <div class="card"><h2>Coordonnées</h2><div>${esc(c.tel||'—')}</div><div class="muted">${esc(c.email||'')}</div>
+  ${c.revenus||c.mensu?`<div style="margin-top:8px" class="muted">Revenus ${esc(c.revenus||'?')} € · mensualités ${esc(c.mensu||'?')} € · ${esc(c.credits||'?')} crédit(s)</div>`:''}</div>
+  ${c.pieces?.length?`<div class="card"><h2>Pièces manquantes</h2>${c.pieces.map(p=>`<div class="item"><div class="ck" onclick="cli('${c.id}').pieces=cli('${c.id}').pieces.filter(x=>x!==${JSON.stringify(p).replace(/"/g,'&quot;')});save();render();toast('Pièce reçue ✓')"></div><div class="t">${esc(p)}</div></div>`).join('')}<p class="muted" style="margin-top:6px">Coche une pièce dès que tu la reçois.</p></div>`:''}
+  <div class="card"><h2>À faire</h2>${T.length?T.map(tacheHTML).join(''):'<div class="empty">Aucune action prévue</div>'}</div>
+  <div class="card"><h2>Historique des appels</h2>${c.notes.length?c.notes.map(n=>`<div class="item"><div class="t"><span class="tag">${esc(fd(n.d,{day:'numeric',month:'short'}))}</span><div style="margin-top:4px">${esc(n.t)}</div></div></div>`).join(''):'<div class="empty">Pas encore de note</div>'}</div>
+  <div class="row"><button class="btn grow" onclick="appelPrefill='${c.id}';A=null;go('appel')">Nouvel appel</button><button class="btn acc grow" onclick="mailCtx={c:'${c.id}',m:'${c.pieces?.length?'pieces':'relance'}'};go('mails')">Écrire un mail</button></div>`}
+
+/* ================= Feuille ================= */
+function openSheet(h){$('sheetIn').innerHTML=h+'<button class="btn ghost block" style="margin-top:10px" onclick="closeSheet()">Fermer</button>';$('sheet').classList.add('on')}
+function closeSheet(){$('sheet').classList.remove('on')}
+$('sheet').onclick=e=>{if(e.target.id==='sheet')closeSheet()};
+</script>
+</body>
+</html>
