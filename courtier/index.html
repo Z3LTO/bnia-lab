@@ -103,6 +103,7 @@ body:not(.out) #login{display:none}
     <button class="btn block" id="lgB">Se connecter</button>
   </form>
   <button class="btn ghost block" style="margin-top:8px" onclick="mode=mode==='in'?'up':'in';lgUI()" id="lgSw">Créer un compte</button>
+  <p class="muted" style="margin-top:18px;text-align:center">Développé par <a href="https://z3lto.github.io/bnia-lab/" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700;text-decoration:none">bnia.lab</a></p>
 </section>
 <header>
   <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="btn ghost sm" onclick="logout()" title="Se déconnecter">Sortir</button></div></div>
@@ -228,8 +229,7 @@ function vJour(){
     ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><div class="ck ${it.done?'on':''}" onclick="togJ('${s.id}','${it.id}')"></div><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu sur ce créneau</div>'}
     <form class="add" onsubmit="addJ(event,'${s.id}')"><input type="text" placeholder="Ajouter une tâche…" name="t"><button class="btn sm">+</button></form></div>`});
   h+=`<div class="row wrap"><button class="btn ghost grow" onclick="trameSheet()">Modifier ma trame</button>
-  <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>
-  <p class="muted" style="margin-top:10px">La trame (Matin / Midi / Après-midi) reste la même chaque jour. Tu ne remplis que les tâches.</p>`;
+  <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>`;
   $('main').innerHTML=h;
 }
 function addJ(e,s){e.preventDefault();const v=e.target.t.value.trim();if(!v)return;const j=S.jours[jourSel]||(S.jours[jourSel]={});(j[s]||(j[s]=[])).push({id:uid(),t:v,done:false});save();render()}
