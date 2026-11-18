@@ -202,7 +202,7 @@ async function copy(txt){try{await navigator.clipboard.writeText(txt);toast('Cop
 /* ================= Navigation ================= */
 let view='jour',jourSel=TODAY,appelPrefill=null,mailCtx={c:null,m:'premier'},clientOpen=null;
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
-function go(v){view=v;clientOpen=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();scrollTo(0,0)}
+function go(v){if(v==='jour'&&view==='jour')semaine=false;view=v;clientOpen=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();scrollTo(0,0)}
 function head(t,s){$('title').textContent=t;$('subtitle').textContent=s||''}
 function badge(){const n=S.taches.filter(x=>!x.done&&x.due<=TODAY).length;const b=$('badge');b.textContent=n;b.classList.toggle('hidden',!n)}
 $('pillDate').textContent=fd(TODAY,{day:'numeric',month:'short'});
@@ -210,12 +210,27 @@ $('pillDate').textContent=fd(TODAY,{day:'numeric',month:'short'});
 function render(){badge();({jour:vJour,appel:vAppel,rappels:vRappels,mails:vMails,clients:vClients})[view]()}
 
 /* ================= Journée ================= */
+let semaine=false;
+const bascule=()=>`<div class="chips" style="margin-bottom:12px"><button class="chip ${semaine?'':'on'}" onclick="semaine=false;render()">Jour</button><button class="chip ${semaine?'on':''}" onclick="semaine=true;render()">Semaine</button></div>`;
+function vSemaine(){
+  const lun=addD(jourSel,-((new Date(jourSel+'T12:00:00').getDay()+6)%7));
+  head('Ma semaine','Du '+fd(lun,{day:'numeric',month:'long'})+' au '+fd(addD(lun,6),{day:'numeric',month:'long'}));
+  let h=bascule()+`<div class="row" style="margin-bottom:12px"><button class="btn ghost sm" onclick="jourSel=addD(jourSel,-7);render()">‹ Sem. préc.</button><div class="grow"></div><button class="btn ghost sm" onclick="jourSel=addD(jourSel,7);render()">Sem. suiv. ›</button></div>`;
+  for(let i=0;i<7;i++){
+    const d=addD(lun,i),j=S.jours[d]||{},R=S.taches.filter(x=>!x.done&&x.due===d);
+    const L=S.trame.map((s,k)=>(j[s.id]||[]).length?`<div class="muted" style="margin-top:4px"><span class="tag">${esc(s.label.split('·')[0].trim())}</span>${(j[s.id]).map(it=>`<span style="${it.done?'text-decoration:line-through':''}">${esc(it.t)}</span>`).join(' · ')}</div>`:'').join('');
+    h+=`<div class="card cli" onclick="jourSel='${d}';semaine=false;render()" style="${d===TODAY?'border-color:var(--brand2)':''}"><h2>${esc(fd(d,{weekday:'long',day:'numeric'}))}${d===TODAY?' <small>aujourd\'hui</small>':''}</h2>
+    ${L||(R.length?'':'<div class="muted">Rien de prévu</div>')}
+    ${R.length?`<div class="muted" style="margin-top:4px"><span class="tag late" style="background:#FFF1E6;color:var(--acc)">${R.length} rappel${R.length>1?'s':''}</span>${R.map(x=>esc(x.t)).join(' · ')}</div>`:''}</div>`}
+  $('main').innerHTML=h+'<p class="muted" style="text-align:center">Touche un jour pour le remplir.</p>';
+}
 function vJour(){
+  if(semaine)return vSemaine();
   const j=S.jours[jourSel]||(S.jours[jourSel]={});
   const dus=S.taches.filter(x=>!x.done&&(jourSel===TODAY?x.due<=TODAY:x.due===jourSel));
   const tot=S.trame.reduce((n,s)=>n+(j[s.id]||[]).length,0), fait=S.trame.reduce((n,s)=>n+(j[s.id]||[]).filter(i=>i.done).length,0);
   head(jourSel===TODAY?'Aujourd\'hui':fd(jourSel),jourSel===TODAY?fd(TODAY):'Planning préparé à l\'avance');
-  let h=`<div class="row" style="margin-bottom:12px">
+  let h=bascule()+`<div class="row" style="margin-bottom:12px">
     <button class="btn ghost sm" onclick="jourSel=addD(jourSel,-1);render()">‹ Veille</button>
     <div class="grow" style="text-align:center;font-weight:700">${esc(fd(jourSel,{weekday:'short',day:'numeric',month:'short'}))}</div>
     <button class="btn ghost sm" onclick="jourSel=addD(jourSel,1);render()">Lendemain ›</button></div>
