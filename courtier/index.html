@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light;
-  --bg:#FAFBFD;--card:#FFFFFF;--ink:#1B2430;--mute:#7A8491;--line:#E6EAF0;
+  --bg:#E7EAEF;--card:#FFFFFF;--ink:#1A2230;--mute:#6E7886;--line:#D9DEE6;
   --brand:#2F6FB3;--brand2:#5B9BD8;--acc:#E07A2E;--ok:#2F8F5B;--warn:#C2410C;--soft:#EDF4FC;
   --r:14px;
 }
@@ -284,12 +284,19 @@ function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)re
 /* ================= Note d'appel ================= */
 let A;
 function resetA(c){A={cid:c?c.id:null,prenom:c?.prenom||'',nom:c?.nom||'',tel:c?.tel||'',email:c?.email||'',besoin:c?.besoin||'',revenus:c?.revenus||'',mensu:c?.mensu||'',credits:c?.credits||'',pieces:c?[...(c.pieces||[])]:[],note:'',action:'',q:1,date:addD(TODAY,1)}}
+const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function sugg(v){
+  const q=norm(v.trim()),el=$('cSug');
+  if(q.length<3){el.innerHTML='';return}
+  const L=S.clients.filter(c=>norm(nomC(c)+' '+(c.nom||'')+' '+(c.tel||'').replace(/\s/g,'')).includes(q.replace(/\s/g,q.match(/\d/)?'':' '))).slice(0,6);
+  el.innerHTML=L.length?L.map(c=>`<div class="item cli" onclick="appelPrefill='${c.id}';render()"><div class="t"><b>${esc(nomC(c))}</b><div class="muted">${esc(c.tel||'')}${c.besoin?' · '+esc(c.besoin):''}</div></div><span class="tag">${esc(c.statut)}</span></div>`).join(''):'<div class="muted" style="margin-top:8px">Aucun client trouvé : remplis la fiche ci-dessous pour le créer.</div>';
+}
 function vAppel(){
   if(!A||appelPrefill!==undefined&&appelPrefill!==null){resetA(appelPrefill?cli(appelPrefill):null);appelPrefill=null}
   head('Note d\'appel',A.cid?'Suivi de '+nomC(cli(A.cid)):'Remplis pendant l\'appel, tout est rangé ensuite');
   const chips=(arr,key,multi)=>`<div class="chips">${arr.map(v=>`<button type="button" class="chip ${(multi?A[key].includes(v):A[key]===v)?'on':''}" onclick="chip('${key}',${JSON.stringify(v).replace(/"/g,'&quot;')},${multi})">${esc(v)}</button>`).join('')}</div>`;
   $('main').innerHTML=`
-  ${A.cid?'':`<div class="card"><h2>Client existant ?</h2><select onchange="if(this.value){appelPrefill=this.value;render()}"><option value="">Nouveau client</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select></div>`}
+  ${A.cid?'':`<div class="card"><h2>Client existant ?</h2><input type="text" id="cS" placeholder="Tape 3 lettres du nom ou du téléphone…" oninput="sugg(this.value)" autocomplete="off"><div id="cSug"></div></div>`}
   <div class="card"><h2>Le client</h2>
     <div class="row"><input type="text" placeholder="Prénom" value="${esc(A.prenom)}" oninput="A.prenom=this.value"><input type="text" placeholder="Nom" value="${esc(A.nom)}" oninput="A.nom=this.value"></div>
     <div class="row" style="margin-top:8px"><input type="tel" placeholder="Téléphone" value="${esc(A.tel)}" oninput="A.tel=this.value"><input type="email" placeholder="Email" value="${esc(A.email)}" oninput="A.email=this.value"></div></div>
