@@ -163,7 +163,11 @@ function demo(){
   };
 }
 function vide(){return {trame:demo().trame,jours:{},clients:[],taches:[],mails:{}}}
-const sb=supabase.createClient('https://yeytrhpcwtxmuonkhgth.supabase.co','sb_publishable_Co58ecgAF_F0FJAaDyCRvw_FaryFbWE');
+const supabase = createClient(
+  'https://cxdcmaguipvztmctxkkh.supabase.co',
+  'sb_publishable_hRiEUv_4zV-tsojFGQTfMw_yaF0acgF',
+  { db: { schema: 'courtier' } }
+);
 let S=vide(),USER=null,_sv=null,mode='in';
 function save(){if(!USER)return;clearTimeout(_sv);_sv=setTimeout(async()=>{const{error}=await sb.from('carnets').upsert({user_id:USER.id,data:S,updated_at:new Date().toISOString()});if(error)toast('Pas de connexion : enregistrement impossible pour le moment')},600)}
 async function charger(){
