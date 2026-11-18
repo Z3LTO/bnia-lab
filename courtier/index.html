@@ -8,16 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#F4F2ED;--card:#FFFFFF;--ink:#16202B;--mute:#6B7480;--line:#E3DFD6;
-  --brand:#1F3A5F;--brand2:#2E5A8C;--acc:#E07A2E;--ok:#2F8F5B;--warn:#C2410C;--soft:#EAF0F7;
+:root{color-scheme:light;
+  --bg:#FAFBFD;--card:#FFFFFF;--ink:#1B2430;--mute:#7A8491;--line:#E6EAF0;
+  --brand:#2F6FB3;--brand2:#5B9BD8;--acc:#E07A2E;--ok:#2F8F5B;--warn:#C2410C;--soft:#EDF4FC;
   --r:14px;
 }
-@media (prefers-color-scheme:dark){
-  :root{--bg:#11161C;--card:#1A222B;--ink:#EEF1F4;--mute:#9AA4AF;--line:#2A3540;--brand:#8DB4E2;--brand2:#A9C7EC;--soft:#1F2C3A;--acc:#F0954C;--ok:#5CC08A;--warn:#F08A5D}
-}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
+html,body{overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
 body{padding-bottom:84px}
 button,input,select,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line)}
@@ -40,15 +37,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand2)}
 textarea{min-height:90px;resize:vertical}
 label.f{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
 .btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer}
-@media (prefers-color-scheme:dark){.btn{color:#11161C}}
 .btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--line)}
 .btn.acc{background:var(--acc);color:#fff}
 .btn.sm{padding:6px 10px;font-size:13px}
 .btn.block{width:100%;padding:13px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
-@media (prefers-color-scheme:dark){.chip.on{color:#11161C}}
 .item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:0}
 .item .t{flex:1;min-width:0}
@@ -61,7 +56,6 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:10
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--brand);margin-right:4px}
 .tag.late{background:#FDE7DC;color:var(--warn)}
 .tag.ok{background:#DCF2E5;color:var(--ok)}
-@media (prefers-color-scheme:dark){.tag.late{background:#3A2418}.tag.ok{background:#173326}}
 .slot{border-left:4px solid var(--brand2)}
 .slot.s1{border-left-color:#2E5A8C}.slot.s2{border-left-color:#E07A2E}.slot.s3{border-left-color:#2F8F5B}.slot.s4{border-left-color:#8A5CC2}
 .add{display:flex;gap:6px;margin-top:8px}
@@ -72,7 +66,7 @@ nav button svg{width:22px;height:22px}
 nav button.on{color:var(--brand)}
 nav .badge{position:absolute;top:0;right:8px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
 .kpi b{display:block;font-size:22px;font-weight:800}
 .kpi span{font-size:11px;color:var(--mute);font-weight:700}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
@@ -88,7 +82,8 @@ pre.out{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);b
 .st{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
 .empty{text-align:center;color:var(--mute);padding:14px 0;font-size:13px}
 .hidden{display:none!important}
-#login{max-width:420px;margin:30px auto;padding:0 16px}
+body.out{padding-bottom:0;height:100dvh;overflow:hidden;position:fixed;inset:0}
+#login{max-width:420px;margin:0 auto;padding:0 16px;height:100dvh;display:flex;flex-direction:column;justify-content:center}
 #login h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
 .err{color:var(--warn);font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
 body.out nav,body.out header,body.out main{display:none}
@@ -286,7 +281,7 @@ function vAppel(){
     <div class="row" style="margin-top:8px"><input type="tel" placeholder="Téléphone" value="${esc(A.tel)}" oninput="A.tel=this.value"><input type="email" placeholder="Email" value="${esc(A.email)}" oninput="A.email=this.value"></div></div>
   <div class="card"><h2>Son besoin</h2>${chips(BESOINS,'besoin',false)}
     <label class="f">Situation</label>
-    <div class="row"><input type="text" inputmode="numeric" placeholder="Revenus/mois €" value="${esc(A.revenus)}" oninput="A.revenus=this.value"><input type="text" inputmode="numeric" placeholder="Mensualités €" value="${esc(A.mensu)}" oninput="A.mensu=this.value"><input type="text" inputmode="numeric" placeholder="Nb crédits" value="${esc(A.credits)}" oninput="A.credits=this.value" style="max-width:100px"></div>
+    <div class="row"><input type="text" inputmode="numeric" placeholder="Revenus €" value="${esc(A.revenus)}" oninput="A.revenus=this.value"><input type="text" inputmode="numeric" placeholder="Mensual. €" value="${esc(A.mensu)}" oninput="A.mensu=this.value"><input type="text" inputmode="numeric" placeholder="Crédits" value="${esc(A.credits)}" oninput="A.credits=this.value" style="max-width:100px"></div>
     <p class="muted" id="endet" style="margin-top:6px">${endet()}</p>
     <label class="f">Ce qu'il a dit</label>
     <textarea placeholder="Ses mots à lui : ce qu'il veut, ses craintes, sa situation familiale, son projet…" oninput="A.note=this.value">${esc(A.note)}</textarea></div>
