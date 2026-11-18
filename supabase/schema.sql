@@ -430,3 +430,14 @@ grant select on public.factures_totaux, public.devis_totaux to authenticated;
 revoke all on public.entreprises, public.membres, public.clients, public.devis, public.factures,
   public.lignes, public.relances, public.compteurs, public.factures_totaux, public.devis_totaux from anon;
 revoke all on public.compteurs from authenticated;
+
+-- ---------- Durcissement (avertissements Supabase) ----------
+alter function public.trg_facture_figee() set search_path = public;
+alter function public.trg_lignes_facture_figees() set search_path = public;
+alter function public.trg_devis_facture_fige() set search_path = public;
+revoke execute on function public.trg_numero_devis() from public, anon, authenticated;
+revoke execute on function public.trg_numero_facture() from public, anon, authenticated;
+revoke execute on function public.est_membre(uuid) from public, anon;
+revoke execute on function public.est_directeur(uuid) from public, anon;
+grant execute on function public.est_membre(uuid) to authenticated;
+grant execute on function public.est_directeur(uuid) to authenticated;
