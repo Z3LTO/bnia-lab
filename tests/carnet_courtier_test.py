@@ -19,7 +19,7 @@ window.supabase={createClient:(url,key,opt)=>{window._opt=opt;let cb=null,sessio
  return{from:tbl,auth:{
    onAuthStateChange:f=>{cb=f;fire()},
    signInWithPassword:async({email,password})=>{const u=DB.users[email];if(!u||u.pw!==password)return{error:{message:'Invalid login credentials'}};session={user:{id:u.id,email}};fire();return{}},
-   signUp:async({email,password})=>{if(DB.users[email])return{error:{message:'User already registered'}};DB.users[email]={id:'n'+Date.now(),pw:password};return{data:{session:null}}},
+   signUp:async({email,password,options})=>{window._signupApp=options&&options.data&&options.data.app;if(DB.users[email])return{error:{message:'User already registered'}};DB.users[email]={id:'n'+Date.now(),pw:password};return{data:{session:null}}},
    signOut:async()=>{session=null;fire()}}}}};
 """
 
@@ -51,6 +51,7 @@ async def main():
             await pg.click('#lgSw'); ok(await pg.inner_text('#lgB') == 'Créer mon compte', 'bascule inscription')
             await pg.fill('#lgE', 'nouveau@test.fr'); await pg.fill('#lgP', 'abcdef'); await pg.click('#lgB'); await pg.wait_for_timeout(100)
             ok('Compte créé' in await pg.inner_text('#lgErr'), 'inscription confirmée')
+            ok(await pg.evaluate("_signupApp")=='Carnet Courtier', "nom de l'appli envoyé pour le mail")
             await pg.evaluate("mode='in';lgUI()")
             # compte non membre
             await pg.fill('#lgE', 'attente@test.fr'); await pg.fill('#lgP', 'secret2'); await pg.click('#lgB'); await pg.wait_for_timeout(200)

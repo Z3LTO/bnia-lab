@@ -221,7 +221,7 @@ async function auth(e){
   e.preventDefault();const email=$('lgE').value.trim(),password=$('lgP').value;$('lgErr').textContent='';$('lgB').disabled=true;
   try{
     if(mode==='up'){
-      const{data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href.split('#')[0]}});
+      const{data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href.split('#')[0],data:{app:'Carnet Courtier'}}});
       if(error)throw error;
       if(!data.session){$('lgErr').style.color='var(--ok)';$('lgErr').textContent='Compte créé. Clique sur le lien reçu par email, puis connecte-toi.';mode='in';setTimeout(lgUI,4000);return}
     }else{const{error}=await sb.auth.signInWithPassword({email,password});if(error)throw error}
