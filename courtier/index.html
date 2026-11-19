@@ -3,110 +3,139 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F1C2E">
 <title>Carnet Courtier</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light;
-  --bg:#E7EAEF;--card:#FFFFFF;--ink:#1A2230;--mute:#6E7886;--line:#D9DEE6;
-  --brand:#2F6FB3;--brand2:#5B9BD8;--acc:#E07A2E;--ok:#2F8F5B;--warn:#C2410C;--soft:#EDF4FC;
-  --r:14px;
+  --bg:#E9ECF1;--card:#FFFFFF;--ink:#152033;--mute:#687387;--line:#E1E5EC;
+  --navy:#0F1C2E;--navy2:#1B2D47;--brand:#1F3B63;--brand2:#3E6297;--acc:#C47A3A;--acc2:#A9632A;
+  --ok:#2E7D5B;--warn:#B4472A;--soft:#E9EEF6;
+  --r:16px;--sh:0 1px 2px rgba(15,28,46,.05),0 6px 18px rgba(15,28,46,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45}
-body{padding-bottom:84px}
+html,body{overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body{padding-bottom:88px}
 button,input,select,textarea{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line)}
-header .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.logo{font-weight:800;letter-spacing:-.02em;font-size:18px}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:14px 16px 16px;box-shadow:0 4px 18px rgba(15,28,46,.18)}
+header .top{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:720px;margin:0 auto}
+header h1,header p.sub{max-width:720px;margin-left:auto;margin-right:auto}
+.logo{font-weight:800;letter-spacing:-.02em;font-size:17px}
 .logo span{color:var(--acc)}
-.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--soft);color:var(--brand)}
-header h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
-header p.sub{color:var(--mute);font-size:13px}
-main{padding:14px 16px;max-width:720px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
-.card h2{font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.pill{font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px;background:var(--soft);color:var(--brand)}
+header .pill{background:rgba(255,255,255,.12);color:#fff}
+header .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.28)}
+header h1{font-size:24px;font-weight:800;letter-spacing:-.025em;margin-top:10px}
+header p.sub{color:rgba(255,255,255,.68);font-size:13px}
+main{padding:16px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:12px;box-shadow:var(--sh)}
+.card h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .card h2 small{font-weight:600;color:var(--mute);font-size:12px}
 .muted{color:var(--mute);font-size:13px}
 .row{display:flex;gap:8px;align-items:center}
 .wrap{flex-wrap:wrap}
 .grow{flex:1;min-width:0}
-input[type=text],input[type=tel],input[type=email],input[type=number],input[type=date],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--brand2)}
-textarea{min-height:90px;resize:vertical}
-label.f{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
-.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;background:var(--brand);color:#fff;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--line)}
-.btn.acc{background:var(--acc);color:#fff}
-.btn.sm{padding:6px 10px;font-size:13px}
-.btn.block{width:100%;padding:13px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.chip{text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+/* 16px : en dessous, l'iPhone zoome sur le champ */
+input[type=text],input[type=tel],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{width:100%;min-width:0;background:#F5F7FA;border:1px solid var(--line);border-radius:11px;padding:11px 12px;outline:none;font-size:16px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--brand2);background:#fff;box-shadow:0 0 0 3px rgba(62,98,151,.14)}
+::placeholder{color:#9AA3B2}
+textarea{min-height:96px;resize:vertical}
+label.f{display:block;font-size:11px;font-weight:800;color:var(--mute);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:700;background:var(--brand);color:#fff;transition:transform .08s,filter .15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6}
+.btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--line)}
+.btn.acc{background:linear-gradient(160deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 14px rgba(196,122,58,.3)}
+.btn.sm{padding:7px 11px;font-size:13px}
+.btn.block{display:block;width:100%;padding:14px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.chip{text-align:center;border:1px solid var(--line);background:#F5F7FA;border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink);transition:background .15s}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
-.item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.seg{display:flex;background:#DCE1E9;border-radius:12px;padding:3px;margin:0 auto 14px;max-width:260px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:7px 0;font-weight:700;font-size:13px;color:var(--mute)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,28,46,.12)}
+.item{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:0}
-.item .t{flex:1;min-width:0}
+.item .t{flex:1;min-width:0;overflow-wrap:anywhere}
 .item .t b{font-weight:700}
 .item.done .t{text-decoration:line-through;color:var(--mute)}
-.ck{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;margin-top:1px;cursor:pointer;display:grid;place-items:center;background:var(--card)}
+.ck{width:24px;height:24px;border-radius:8px;border:2px solid #C9D0DB;flex:none;margin-top:0;display:grid;place-items:center;background:#fff;padding:0}
 .ck.on{background:var(--ok);border-color:var(--ok)}
 .ck.on::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
-.x{background:none;border:0;color:var(--mute);font-size:18px;line-height:1;cursor:pointer;padding:0 4px}
-.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--brand);margin-right:4px}
-.tag.late{background:#FDE7DC;color:var(--warn)}
-.tag.ok{background:#DCF2E5;color:var(--ok)}
+.x{background:none;border:0;color:#A3ABB8;font-size:20px;line-height:1;padding:0 4px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--brand);margin:0 4px 2px 0}
+.tag.late{background:#F8E5DE;color:var(--warn)}
+.tag.rap{background:#F6EADF;color:var(--acc2)}
 .slot{border-left:4px solid var(--brand2)}
-.slot.s1{border-left-color:#2E5A8C}.slot.s2{border-left-color:#E07A2E}.slot.s3{border-left-color:#2F8F5B}.slot.s4{border-left-color:#8A5CC2}
-.add{display:flex;gap:6px;margin-top:8px}
-.add input{padding:8px 10px}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--mute);padding:4px 6px;cursor:pointer;position:relative;min-width:58px}
+.slot.s1{border-left-color:var(--brand)}.slot.s2{border-left-color:var(--acc)}.slot.s3{border-left-color:var(--ok)}.slot.s4{border-left-color:#7A5AA8}
+.add{display:flex;gap:6px;margin-top:10px}
+.add input{padding:9px 11px}
+.add .btn{min-width:44px;font-size:18px;padding:0 12px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:#8A93A3;padding:5px 8px;position:relative;min-width:60px;border-radius:12px}
 nav button svg{width:22px;height:22px}
-nav button.on{color:var(--brand)}
-nav .badge{position:absolute;top:0;right:8px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px}
+nav button.on{color:var(--brand);background:var(--soft)}
+nav .badge{position:absolute;top:1px;right:10px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px;line-height:16px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
-.kpi b{display:block;font-size:22px;font-weight:800}
+.kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;box-shadow:var(--sh)}
+.kpi b{display:block;font-size:22px;font-weight:800;color:var(--brand);letter-spacing:-.02em}
 .kpi span{font-size:11px;color:var(--mute);font-weight:700}
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(15,28,46,.3)}
 .toast.on{opacity:1;transform:translateX(-50%)}
-.sheet{position:fixed;inset:0;background:rgba(10,14,20,.5);z-index:8;display:none;align-items:flex-end;justify-content:center}
+.sheet{position:fixed;inset:0;background:rgba(15,28,46,.55);z-index:8;display:none;align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
-.sheet .in{background:var(--card);width:100%;max-width:720px;border-radius:18px 18px 0 0;padding:16px;max-height:88vh;overflow:auto}
-pre.out{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:inherit;font-size:13px}
+.sheet .in{background:var(--card);width:100%;max-width:720px;border-radius:20px 20px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+pre.out{white-space:pre-wrap;overflow-wrap:anywhere;background:#F5F7FA;border:1px solid var(--line);border-radius:11px;padding:12px;font-family:inherit;font-size:13px}
 .when{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.when .chip{text-align:center}
+.when .chip{text-align:center;padding:8px 0}
 .cli{cursor:pointer}
-.cli:hover{border-color:var(--brand2)}
-.st{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.cli:hover{border-color:#C9D3E2}
+.st{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--brand);white-space:nowrap}
+.st.ok{background:#DFF0E7;color:var(--ok)}.st.off{background:#ECEEF2;color:var(--mute)}
 .empty{text-align:center;color:var(--mute);padding:14px 0;font-size:13px}
 .hidden{display:none!important}
-body.out{padding-bottom:0;height:100dvh;overflow:hidden;position:fixed;inset:0}
-#login{max-width:420px;margin:0 auto;padding:0 16px;height:100dvh;display:flex;flex-direction:column;justify-content:center}
-#login h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+body.out{padding-bottom:0;height:100dvh;overflow:hidden;position:fixed;inset:0;background:radial-gradient(120% 80% at 50% 0%,var(--navy2),var(--navy))}
+#login{max-width:420px;margin:0 auto;padding:24px 16px;height:100dvh;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
+#login .box{background:#fff;border-radius:20px;padding:22px 18px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+#login h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+#login .logo{color:#fff;font-size:24px;text-align:center;margin-bottom:20px}
+#login .by{color:rgba(255,255,255,.6);margin-top:18px;text-align:center;font-size:13px}
+#login .by a{color:#fff;font-weight:700;text-decoration:none}
 .err{color:var(--warn);font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
 body.out nav,body.out header,body.out main{display:none}
 body:not(.out) #login{display:none}
-.sec{font-size:12px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
+.sec{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.07em;margin:18px 2px 8px}
+.today{border-color:var(--brand2);box-shadow:0 0 0 1px var(--brand2),var(--sh)}
 </style>
 </head>
 <body class="out">
 <section id="login">
-  <div class="logo" style="font-size:22px;margin-bottom:22px">Carnet<span>.</span>Courtier</div>
-  <h1 id="lgT">Connexion</h1>
-  <p class="muted" id="lgS">Ton planning, tes notes d'appel et tes rappels, sur tous tes appareils.</p>
-  <form onsubmit="auth(event)" style="margin-top:16px">
-    <label class="f">Email</label><input type="email" id="lgE" autocomplete="email" required>
-    <label class="f">Mot de passe</label><input type="password" id="lgP" autocomplete="current-password" minlength="6" required style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px">
-    <div class="err" id="lgErr"></div>
-    <button class="btn block" id="lgB">Se connecter</button>
-  </form>
-  <button class="btn ghost block" style="margin-top:8px" onclick="mode=mode==='in'?'up':'in';lgUI()" id="lgSw">Créer un compte</button>
-  <p class="muted" style="margin-top:18px;text-align:center">Développé par <a href="https://z3lto.github.io/bnia-lab/" target="_blank" rel="noopener" style="color:var(--brand);font-weight:700;text-decoration:none">bnia.lab</a></p>
+  <div class="logo">Carnet<span>.</span>Courtier</div>
+  <div class="box" id="lgBox">
+    <h1 id="lgT">Connexion</h1>
+    <p class="muted" id="lgS">Ton planning, tes notes d'appel et tes rappels, sur tous tes appareils.</p>
+    <form onsubmit="auth(event)" style="margin-top:12px">
+      <label class="f" for="lgE">Email</label><input type="email" id="lgE" autocomplete="email" required>
+      <label class="f" for="lgP">Mot de passe</label><input type="password" id="lgP" autocomplete="current-password" minlength="6" required>
+      <div class="err" id="lgErr" role="alert"></div>
+      <button class="btn block" id="lgB">Se connecter</button>
+    </form>
+    <button class="btn ghost block" style="margin-top:8px" onclick="mode=mode==='in'?'up':'in';lgUI()" id="lgSw">Créer un compte</button>
+  </div>
+  <div class="box hidden" id="lgWait">
+    <h1>Compte en attente</h1>
+    <p class="muted" style="margin-top:6px">Ton compte est bien créé, mais il n'a pas encore accès au carnet. Demande à la personne qui t'a invité de l'activer, puis reconnecte-toi.</p>
+    <p class="muted" id="lgWaitE" style="margin-top:10px;font-weight:700"></p>
+    <button class="btn ghost block" style="margin-top:14px" onclick="logout()">Se déconnecter</button>
+  </div>
+  <p class="by">Développé par <a href="https://z3lto.github.io/bnia-lab/" target="_blank" rel="noopener">bnia.lab</a></p>
 </section>
 <header>
-  <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="btn ghost sm" onclick="logout()" title="Se déconnecter">Sortir</button></div></div>
+  <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="btn ghost sm" onclick="logout()" aria-label="Se déconnecter">Sortir</button></div></div>
   <h1 id="title">Aujourd'hui</h1>
   <p class="sub" id="subtitle"></p>
 </header>
@@ -163,18 +192,17 @@ function demo(){
   };
 }
 function vide(){return {trame:demo().trame,jours:{},clients:[],taches:[],mails:{}}}
-const supabase = createClient(
-  'https://cxdcmaguipvztmctxkkh.supabase.co',
-  'sb_publishable_hRiEUv_4zV-tsojFGQTfMw_yaF0acgF',
-  { db: { schema: 'courtier' } }
-);
+const sb=supabase.createClient('https://cxdcmaguipvztmctxkkh.supabase.co','sb_publishable_hRiEUv_4zV-tsojFGQTfMw_yaF0acgF',{db:{schema:'courtier'}});
 let S=vide(),USER=null,_sv=null,mode='in';
 function save(){if(!USER)return;clearTimeout(_sv);_sv=setTimeout(async()=>{const{error}=await sb.from('carnets').upsert({user_id:USER.id,data:S,updated_at:new Date().toISOString()});if(error)toast('Pas de connexion : enregistrement impossible pour le moment')},600)}
 async function charger(){
+  const{data:m,error:me}=await sb.from('membres').select('role').eq('user_id',USER.id).maybeSingle();
+  if(me){toast('Erreur de connexion : '+me.message);return}
+  if(!m){$('lgBox').classList.add('hidden');$('lgWait').classList.remove('hidden');$('lgWaitE').textContent=USER.email||'';return}
   const{data,error}=await sb.from('carnets').select('data').eq('user_id',USER.id).maybeSingle();
   if(error){toast('Erreur de chargement : '+error.message);return}
   if(data&&data.data&&data.data.trame)S=data.data;
-  else{S=vide();await sb.from('carnets').insert({user_id:USER.id,data:S})}
+  else{S=vide();const{error:ie}=await sb.from('carnets').insert({user_id:USER.id,data:S});if(ie){toast('Impossible de créer ton carnet : '+ie.message);return}}
   S.jours=S.jours||{};S.clients=S.clients||[];S.taches=S.taches||[];S.mails=S.mails||{};
   document.body.classList.remove('out');render();
 }
@@ -195,7 +223,7 @@ async function logout(){await sb.auth.signOut()}
 sb.auth.onAuthStateChange((ev,session)=>{
   const u=session?.user||null;
   if(u&&(!USER||USER.id!==u.id)){USER=u;charger()}
-  if(!u){USER=null;S=vide();document.body.classList.add('out');lgUI()}
+  if(!u){USER=null;S=vide();document.body.classList.add('out');$('lgBox').classList.remove('hidden');$('lgWait').classList.add('hidden');lgUI()}
 });
 const cli=id=>S.clients.find(c=>c.id===id);
 const nomC=c=>c?((c.prenom?c.prenom+' ':'')+c.nom):'';
@@ -215,17 +243,17 @@ function render(){badge();({jour:vJour,appel:vAppel,rappels:vRappels,mails:vMail
 
 /* ================= Journée ================= */
 let semaine=false;
-const bascule=()=>`<div class="chips" style="margin-bottom:12px"><button class="chip ${semaine?'':'on'}" onclick="semaine=false;render()">Jour</button><button class="chip ${semaine?'on':''}" onclick="semaine=true;render()">Semaine</button></div>`;
+const bascule=()=>`<div class="seg"><button class="${semaine?'':'on'}" onclick="semaine=false;render()">Jour</button><button class="${semaine?'on':''}" onclick="semaine=true;render()">Semaine</button></div>`;
 function vSemaine(){
   const lun=addD(jourSel,-((new Date(jourSel+'T12:00:00').getDay()+6)%7));
   head('Ma semaine','Du '+fd(lun,{day:'numeric',month:'long'})+' au '+fd(addD(lun,6),{day:'numeric',month:'long'}));
   let h=bascule()+`<div class="row" style="margin-bottom:12px"><button class="btn ghost sm" onclick="jourSel=addD(jourSel,-7);render()">‹ Sem. préc.</button><div class="grow"></div><button class="btn ghost sm" onclick="jourSel=addD(jourSel,7);render()">Sem. suiv. ›</button></div>`;
   for(let i=0;i<7;i++){
-    const d=addD(lun,i),j=S.jours[d]||{},R=S.taches.filter(x=>!x.done&&x.due===d);
+    const d=addD(lun,i),j=S.jours[d]||{},R=S.taches.filter(x=>!x.done&&(d===TODAY?x.due<=d:x.due===d));
     const L=S.trame.map((s,k)=>(j[s.id]||[]).length?`<div class="muted" style="margin-top:4px"><span class="tag">${esc(s.label.split('·')[0].trim())}</span>${(j[s.id]).map(it=>`<span style="${it.done?'text-decoration:line-through':''}">${esc(it.t)}</span>`).join(' · ')}</div>`:'').join('');
-    h+=`<div class="card cli" onclick="jourSel='${d}';semaine=false;render()" style="${d===TODAY?'border-color:var(--brand2)':''}"><h2>${esc(fd(d,{weekday:'long',day:'numeric'}))}${d===TODAY?' <small>aujourd\'hui</small>':''}</h2>
+    h+=`<div class="card cli ${d===TODAY?'today':''}" onclick="jourSel='${d}';semaine=false;render()"><h2>${esc(fd(d,{weekday:'long',day:'numeric'}))}${d===TODAY?' <small>aujourd\'hui</small>':''}</h2>
     ${L||(R.length?'':'<div class="muted">Rien de prévu</div>')}
-    ${R.length?`<div class="muted" style="margin-top:4px"><span class="tag late" style="background:#FFF1E6;color:var(--acc)">${R.length} rappel${R.length>1?'s':''}</span>${R.map(x=>esc(x.t)).join(' · ')}</div>`:''}</div>`}
+    ${R.length?`<div class="muted" style="margin-top:4px"><span class="tag rap">${R.length} rappel${R.length>1?'s':''}</span>${R.map(x=>esc(x.t)).join(' · ')}</div>`:''}</div>`}
   $('main').innerHTML=h+'<p class="muted" style="text-align:center">Touche un jour pour le remplir.</p>';
 }
 function vJour(){
@@ -245,7 +273,7 @@ function vJour(){
   S.trame.forEach((s,i)=>{
     const L=j[s.id]||[];
     h+=`<div class="card slot s${i%4+1}"><h2>${esc(s.label)} <small>${esc(s.h)}</small></h2>
-    ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><div class="ck ${it.done?'on':''}" onclick="togJ('${s.id}','${it.id}')"></div><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu sur ce créneau</div>'}
+    ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><button class="ck ${it.done?'on':''}" aria-label="Cocher" onclick="togJ('${s.id}','${it.id}')"></button><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu sur ce créneau</div>'}
     <form class="add" onsubmit="addJ(event,'${s.id}')"><input type="text" placeholder="Ajouter une tâche…" name="t"><button class="btn sm">+</button></form></div>`});
   h+=`<div class="row wrap"><button class="btn ghost grow" onclick="trameSheet()">Modifier ma trame</button>
   <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>`;
@@ -265,7 +293,7 @@ function saveTrame(){document.querySelectorAll('#trL input').forEach(i=>{const s
 /* ================= Tâches / rappels ================= */
 function tacheHTML(x){
   const c=cli(x.c),late=x.due<TODAY;
-  return `<div class="item ${x.done?'done':''}"><div class="ck ${x.done?'on':''}" onclick="togT('${x.id}')"></div>
+  return `<div class="item ${x.done?'done':''}"><button class="ck ${x.done?'on':''}" aria-label="Cocher" onclick="togT('${x.id}')"></button>
   <div class="t"><b>${esc(x.t)}</b><div class="muted">${c?`<span class="tag">${esc(nomC(c))}</span>`:''}${late?'<span class="tag late">En retard</span>':''}${c&&c.tel?esc(c.tel):''}</div></div>
   ${x.done?'':`<button class="btn ghost sm" onclick="reporter('${x.id}')">+1 j</button>`}</div>`}
 function togT(id){const x=S.taches.find(t=>t.id===id);x.done=!x.done;save();render();if(x.done)toast('Bien joué ✓')}
@@ -288,7 +316,7 @@ function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)re
 /* ================= Note d'appel ================= */
 let A;
 function resetA(c){A={cid:c?c.id:null,prenom:c?.prenom||'',nom:c?.nom||'',tel:c?.tel||'',email:c?.email||'',besoin:c?.besoin||'',revenus:c?.revenus||'',mensu:c?.mensu||'',credits:c?.credits||'',pieces:c?[...(c.pieces||[])]:[],note:'',action:'',q:1,date:addD(TODAY,1)}}
-const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f'’-]/g,'').toLowerCase();
 function sugg(v){
   const q=norm(v.trim()),el=$('cSug');
   if(q.length<3){el.innerHTML='';return}
@@ -319,7 +347,7 @@ function vAppel(){
   <button class="btn block ghost" style="margin-top:8px" onclick="resetA();render()">Effacer</button>`}
 function chip(k,v,multi){if(multi){A[k]=A[k].includes(v)?A[k].filter(x=>x!==v):[...A[k],v]}else A[k]=A[k]===v?'':v;render()}
 function num(s){return parseFloat(String(s||'').replace(/\s/g,'').replace(',','.'))||0}
-function endet(){const r=num(A.revenus),m=num(A.mensu);if(!r||!m)return 'Renseigne revenus et mensualités pour voir le taux d\'endettement.';const t=Math.round(m/r*100);return `Taux d'endettement actuel : <b style="color:${t>35?'var(--warn)':'var(--ok)'}">${t} %</b>${t>35?' (au-dessus de 35 %)':''}`}
+function endet(){const r=num(A.revenus),m=num(A.mensu);if(!r||!m)return 'Renseigne revenus et mensualités pour voir le taux d\'endettement.';const t=Math.round(m/r*100);return `Taux d'endettement actuel : <b style="color:${t>35?'var(--warn)':'var(--ok)'}">${t}&nbsp;%</b>${t>35?' (au-dessus de 35&nbsp;%)':''}`}
 document.addEventListener('input',e=>{if(view==='appel'&&$('endet')&&e.target.inputMode==='numeric')$('endet').innerHTML=endet()});
 function saveAppel(){
   if(!A.nom.trim()&&!A.prenom.trim())return toast('Indique au moins le nom du client');
@@ -330,17 +358,18 @@ function saveAppel(){
   if(A.note.trim())c.notes.unshift({d:TODAY,t:A.note.trim()});
   let due=null;
   if(A.action.trim()){due=A.q===null?A.date:addD(TODAY,A.q);S.taches.push({id:uid(),c:c.id,t:A.action.trim(),due,done:false})}
-  save();const txt=crmTxt(c,A.note.trim(),A.action.trim(),due);const cid=c.id;resetA();
+  save();const txt=crmTxt(c,A.note.trim(),A.action.trim(),due);window._crm=txt;const cid=c.id;resetA();
   openSheet(`<h2 style="font-size:18px">Appel enregistré ✓</h2><p class="muted" style="margin:4px 0 10px">${due?'Rappel créé pour le '+esc(fd(due))+'. ':''}Voici le résumé prêt à coller dans la fiche CRM :</p>
   <pre class="out">${esc(txt)}</pre>
-  <div class="row" style="margin-top:12px"><button class="btn grow" onclick="copy(${JSON.stringify(txt).replace(/"/g,'&quot;')})">Copier pour le CRM</button>
+  <div class="row" style="margin-top:12px"><button class="btn grow" onclick="copy(window._crm)">Copier pour le CRM</button>
   <button class="btn acc grow" onclick="closeSheet();mailCtx={c:'${cid}',m:'${c.pieces.length?'pieces':'premier'}'};go('mails')">Préparer le mail</button></div>`);
 }
+const sit=c=>[c.revenus&&`revenus ${c.revenus} €/mois`,c.mensu&&`mensualités ${c.mensu} €`,c.credits&&`${c.credits} crédit${+c.credits>1?'s':''}`].filter(Boolean).join(' · ');
 function crmTxt(c,note,action,due){
   const r=num(c.revenus),m=num(c.mensu);
   return [`Appel du ${fd(TODAY,{day:'2-digit',month:'2-digit',year:'numeric'})} · ${nomC(c)}`,
   c.besoin&&`Besoin : ${c.besoin}`,
-  (c.revenus||c.mensu||c.credits)&&`Situation : revenus ${c.revenus||'?'} €/mois · mensualités ${c.mensu||'?'} € · ${c.credits||'?'} crédit(s)${r&&m?' · endettement '+Math.round(m/r*100)+' %':''}`,
+  sit(c)&&`Situation : ${sit(c)}${r&&m?' · endettement '+Math.round(m/r*100)+' %':''}`,
   note&&`Notes : ${note}`,
   c.pieces.length&&`Pièces manquantes : ${c.pieces.join(', ')}`,
   action&&`Prochaine action : ${action}${due?' (le '+fd(due,{day:'2-digit',month:'2-digit'})+')':''}`].filter(Boolean).join('\n')}
@@ -404,7 +433,7 @@ function vMails(){
   <label class="f">Objet</label><input type="text" id="mS" value="${esc(sujet)}">
   <label class="f">Message</label><textarea id="mB" style="min-height:260px">${esc(corps)}</textarea>
   <div class="row" style="margin-top:10px"><button class="btn grow" onclick="copy($('mS').value+'\\n\\n'+$('mB').value)">Copier le mail</button>
-  <a class="btn acc grow" style="text-align:center;text-decoration:none" href="#" onclick="this.href='mailto:'+encodeURIComponent($('mTo').value)+'?subject='+encodeURIComponent($('mS').value)+'&body='+encodeURIComponent($('mB').value)">Ouvrir ma messagerie</a></div>
+  <a class="btn acc grow" style="text-align:center;text-decoration:none" href="#" onclick="this.href='mailto:'+encodeURIComponent($('mTo').value)+'?subject='+encodeURIComponent($('mS').value)+'&body='+encodeURIComponent($('mB').value)">Messagerie</a></div>
   <button class="btn ghost block" style="margin-top:8px" onclick="S.mails[TODAY]=(S.mails[TODAY]||0)+1;save();render();toast('Compté dans tes mails du jour')">Je l'ai envoyé</button></div>
   <p class="muted">Pour l'instant, tu copies le mail ou tu l'ouvres dans ta messagerie. La version finale pourra les envoyer directement depuis ta boîte mail.</p>`}
 
@@ -419,7 +448,7 @@ function vClients(){
 function vClientsList(){
   const L=S.clients.filter(c=>(nomC(c)+' '+(c.tel||'')+' '+c.statut).toLowerCase().includes(filtre.toLowerCase()));
   $('cl').innerHTML=L.map(c=>{const n=S.taches.filter(t=>t.c===c.id&&!t.done).sort((a,b)=>a.due<b.due?-1:1)[0];
-  return `<div class="card cli" onclick="clientOpen='${c.id}';render()"><div class="row"><div class="grow"><b>${esc(nomC(c))}</b><div class="muted">${esc(c.besoin||'Besoin à préciser')}</div></div><span class="st" style="color:${c.statut==='Signé'?'var(--ok)':c.statut==='Sans suite'?'var(--mute)':'var(--brand)'}">${esc(c.statut)}</span></div>
+  return `<div class="card cli" onclick="clientOpen='${c.id}';render()"><div class="row"><div class="grow"><b>${esc(nomC(c))}</b><div class="muted">${esc(c.besoin||'Besoin à préciser')}</div></div><span class="st ${c.statut==='Signé'?'ok':c.statut==='Sans suite'?'off':''}">${esc(c.statut)}</span></div>
   ${n?`<div class="muted" style="margin-top:6px">Prochaine action : ${esc(n.t)} · <b>${n.due<=TODAY?'aujourd\'hui':esc(fd(n.due,{weekday:'short',day:'numeric'}))}</b></div>`:''}</div>`}).join('')||'<div class="empty">Aucun client trouvé</div>'}
 function vFiche(){
   const c=cli(clientOpen);head(nomC(c),c.besoin||'');
@@ -427,8 +456,8 @@ function vFiche(){
   $('main').innerHTML=`<button class="btn ghost sm" onclick="clientOpen=null;render()" style="margin-bottom:12px">‹ Tous les clients</button>
   <div class="card"><h2>Statut du dossier</h2><div class="chips">${STATUTS.map(s=>`<button class="chip ${c.statut===s?'on':''}" onclick="cli('${c.id}').statut='${s.replace(/'/g,"\\'")}';save();render()">${esc(s)}</button>`).join('')}</div></div>
   <div class="card"><h2>Coordonnées</h2><div>${esc(c.tel||'—')}</div><div class="muted">${esc(c.email||'')}</div>
-  ${c.revenus||c.mensu?`<div style="margin-top:8px" class="muted">Revenus ${esc(c.revenus||'?')} € · mensualités ${esc(c.mensu||'?')} € · ${esc(c.credits||'?')} crédit(s)</div>`:''}</div>
-  ${c.pieces?.length?`<div class="card"><h2>Pièces manquantes</h2>${c.pieces.map(p=>`<div class="item"><div class="ck" onclick="cli('${c.id}').pieces=cli('${c.id}').pieces.filter(x=>x!==${JSON.stringify(p).replace(/"/g,'&quot;')});save();render();toast('Pièce reçue ✓')"></div><div class="t">${esc(p)}</div></div>`).join('')}<p class="muted" style="margin-top:6px">Coche une pièce dès que tu la reçois.</p></div>`:''}
+  ${sit(c)?`<div style="margin-top:8px" class="muted">${esc(sit(c))}</div>`:''}</div>
+  ${c.pieces?.length?`<div class="card"><h2>Pièces manquantes</h2>${c.pieces.map(p=>`<div class="item"><button class="ck" aria-label="Pièce reçue" onclick="cli('${c.id}').pieces=cli('${c.id}').pieces.filter(x=>x!==${JSON.stringify(p).replace(/"/g,'&quot;')});save();render();toast('Pièce reçue ✓')"></button><div class="t">${esc(p)}</div></div>`).join('')}<p class="muted" style="margin-top:6px">Coche une pièce dès que tu la reçois.</p></div>`:''}
   <div class="card"><h2>À faire</h2>${T.length?T.map(tacheHTML).join(''):'<div class="empty">Aucune action prévue</div>'}</div>
   <div class="card"><h2>Historique des appels</h2>${c.notes.length?c.notes.map(n=>`<div class="item"><div class="t"><span class="tag">${esc(fd(n.d,{day:'numeric',month:'short'}))}</span><div style="margin-top:4px">${esc(n.t)}</div></div></div>`).join(''):'<div class="empty">Pas encore de note</div>'}</div>
   <div class="row"><button class="btn grow" onclick="appelPrefill='${c.id}';A=null;go('appel')">Nouvel appel</button><button class="btn acc grow" onclick="mailCtx={c:'${c.id}',m:'${c.pieces?.length?'pieces':'relance'}'};go('mails')">Écrire un mail</button></div>`}
