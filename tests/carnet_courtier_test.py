@@ -62,10 +62,18 @@ async def main():
             await pg.fill('#lgE', 'ami@test.fr'); await pg.fill('#lgP', 'secret1'); await pg.click('#lgB'); await pg.wait_for_timeout(300)
             ok(await pg.evaluate("!document.body.classList.contains('out')"), 'membre connecté')
             ok(await pg.evaluate("'u1' in DB.carnets"), 'carnet créé en base au premier login')
+            # accueil guidé
+            ok(await pg.is_visible('.welcome'), 'carte de bienvenue au premier lancement')
+            await pg.click("text=C'est parti"); ok(not await pg.is_visible('.welcome'), 'bienvenue masquée')
+            ok(await pg.is_visible('.hint'), 'astuce de la journée affichée')
+            await pg.click('.hint .x'); ok(not await pg.is_visible('.hint'), 'astuce masquée')
+            await pg.wait_for_timeout(700)
+            ok('"bienvenue":1' in await pg.evaluate("DB.carnets.u1"), 'choix gardé en base')
             # journée
             await pg.fill('.slot.s1 .add input', 'Étudier dossier Dupont'); await pg.click('.slot.s1 .add .btn'); await pg.wait_for_timeout(50)
             ok('Étudier dossier Dupont' in await pg.inner_text('.slot.s1'), 'ajout tâche dans un créneau')
             await pg.click('.slot.s1 .ck'); ok(await pg.inner_text('.kpi b') == '1/1', 'tâche cochée, compteur à jour')
+            ok('bravo' in await pg.inner_text('#toast'), 'félicitation quand la journée est bouclée')
             await pg.wait_for_timeout(700)
             ok('Dupont' in await pg.evaluate("DB.carnets.u1"), 'journée enregistrée en base')
             await pg.screenshot(path=str(OUT / 'jour.png'))
@@ -105,7 +113,7 @@ async def main():
             body = await pg.input_value('#mB')
             ok('Bonjour Léa' in body and "Pièce d'identité" in body, 'mail prérempli (prénom + pièces)')
             ok(await pg.input_value('#mTo') == 'lea@exemple.fr', 'destinataire rempli')
-            await pg.click("text=Je l'ai envoyé"); ok(await pg.inner_text('.kpi b') == '1', 'compteur de mails')
+            await pg.click("button:has-text(\"Je l'ai envoyé\")"); ok(await pg.inner_text('.kpi b') == '1', 'compteur de mails')
             await pg.screenshot(path=str(OUT / 'mails.png'), full_page=True)
             # clients
             await pg.click('nav button[data-v=clients]'); await pg.click('.card.cli')

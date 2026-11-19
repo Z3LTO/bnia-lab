@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0F1C2E">
+<meta name="theme-color" content="#3A2A23">
 <title>Carnet Courtier</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light;
-  --bg:#E9ECF1;--card:#FFFFFF;--ink:#152033;--mute:#687387;--line:#E1E5EC;
-  --navy:#0F1C2E;--navy2:#1B2D47;--brand:#1F3B63;--brand2:#3E6297;--acc:#C47A3A;--acc2:#A9632A;
-  --ok:#2E7D5B;--warn:#B4472A;--soft:#E9EEF6;
-  --r:16px;--sh:0 1px 2px rgba(15,28,46,.05),0 6px 18px rgba(15,28,46,.06);
+  --bg:#F5EEE6;--card:#FFFFFF;--ink:#2E2420;--mute:#8A7A6E;--line:#EADDD0;
+  --navy:#3A2A23;--navy2:#62412F;--brand:#B4583A;--brand2:#D07A55;--acc:#D9963A;--acc2:#BC7A22;
+  --ok:#5E8A5A;--warn:#B5452F;--soft:#F7E8DD;
+  --r:16px;--sh:0 1px 2px rgba(74,46,30,.05),0 6px 18px rgba(74,46,30,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
@@ -21,7 +21,7 @@ body{padding-bottom:88px}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--brand2);outline-offset:2px}
-header{position:sticky;top:0;z-index:5;background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:14px 16px 16px;box-shadow:0 4px 18px rgba(15,28,46,.18)}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:14px 16px 16px;box-shadow:0 4px 18px rgba(74,46,30,.18)}
 header .top{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:720px;margin:0 auto}
 header h1,header p.sub{max-width:720px;margin-left:auto;margin-right:auto}
 .logo{font-weight:800;letter-spacing:-.02em;font-size:17px}
@@ -40,9 +40,9 @@ main{padding:16px;max-width:720px;margin:0 auto}
 .wrap{flex-wrap:wrap}
 .grow{flex:1;min-width:0}
 /* 16px : en dessous, l'iPhone zoome sur le champ */
-input[type=text],input[type=tel],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{width:100%;min-width:0;background:#F5F7FA;border:1px solid var(--line);border-radius:11px;padding:11px 12px;outline:none;font-size:16px;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus,textarea:focus{border-color:var(--brand2);background:#fff;box-shadow:0 0 0 3px rgba(62,98,151,.14)}
-::placeholder{color:#9AA3B2}
+input[type=text],input[type=tel],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{width:100%;min-width:0;background:#FBF7F2;border:1px solid var(--line);border-radius:11px;padding:11px 12px;outline:none;font-size:16px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--brand2);background:#fff;box-shadow:0 0 0 3px rgba(180,88,58,.14)}
+::placeholder{color:#B3A397}
 textarea{min-height:96px;resize:vertical}
 label.f{display:block;font-size:11px;font-weight:800;color:var(--mute);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.06em}
 .btn{border:0;border-radius:11px;padding:11px 14px;font-weight:700;background:var(--brand);color:#fff;transition:transform .08s,filter .15s}
@@ -53,30 +53,30 @@ label.f{display:block;font-size:11px;font-weight:800;color:var(--mute);margin:12
 .btn.sm{padding:7px 11px;font-size:13px}
 .btn.block{display:block;width:100%;padding:14px}
 .chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
-.chip{text-align:center;border:1px solid var(--line);background:#F5F7FA;border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink);transition:background .15s}
+.chip{text-align:center;border:1px solid var(--line);background:#FBF7F2;border-radius:99px;padding:8px 13px;font-size:13px;font-weight:600;color:var(--ink);transition:background .15s}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
-.seg{display:flex;background:#DCE1E9;border-radius:12px;padding:3px;margin:0 auto 14px;max-width:260px}
+.seg{display:flex;background:#EDE1D5;border-radius:12px;padding:3px;margin:0 auto 14px;max-width:260px}
 .seg button{flex:1;border:0;background:none;border-radius:9px;padding:7px 0;font-weight:700;font-size:13px;color:var(--mute)}
-.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,28,46,.12)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(74,46,30,.12)}
 .item{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-of-type{border-top:0}
 .item .t{flex:1;min-width:0;overflow-wrap:anywhere}
 .item .t b{font-weight:700}
 .item.done .t{text-decoration:line-through;color:var(--mute)}
-.ck{width:24px;height:24px;border-radius:8px;border:2px solid #C9D0DB;flex:none;margin-top:0;display:grid;place-items:center;background:#fff;padding:0}
+.ck{width:24px;height:24px;border-radius:8px;border:2px solid #DCCBBB;flex:none;margin-top:0;display:grid;place-items:center;background:#fff;padding:0}
 .ck.on{background:var(--ok);border-color:var(--ok)}
 .ck.on::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
-.x{background:none;border:0;color:#A3ABB8;font-size:20px;line-height:1;padding:0 4px}
+.x{background:none;border:0;color:#B3A397;font-size:20px;line-height:1;padding:0 4px}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--brand);margin:0 4px 2px 0}
 .tag.late{background:#F8E5DE;color:var(--warn)}
 .tag.rap{background:#F6EADF;color:var(--acc2)}
 .slot{border-left:4px solid var(--brand2)}
-.slot.s1{border-left-color:var(--brand)}.slot.s2{border-left-color:var(--acc)}.slot.s3{border-left-color:var(--ok)}.slot.s4{border-left-color:#7A5AA8}
+.slot.s1{border-left-color:var(--brand)}.slot.s2{border-left-color:var(--acc)}.slot.s3{border-left-color:var(--ok)}.slot.s4{border-left-color:#8E5A7A}
 .add{display:flex;gap:6px;margin-top:10px}
 .add input{padding:9px 11px}
 .add .btn{min-width:44px;font-size:18px;padding:0 12px}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:#8A93A3;padding:5px 8px;position:relative;min-width:60px;border-radius:12px}
+nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:#A08F82;padding:5px 8px;position:relative;min-width:60px;border-radius:12px}
 nav button svg{width:22px;height:22px}
 nav button.on{color:var(--brand);background:var(--soft)}
 nav .badge{position:absolute;top:1px;right:10px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px;line-height:16px}
@@ -84,18 +84,18 @@ nav .badge{position:absolute;top:1px;right:10px;background:var(--acc);color:#fff
 .kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;box-shadow:var(--sh)}
 .kpi b{display:block;font-size:22px;font-weight:800;color:var(--brand);letter-spacing:-.02em}
 .kpi span{font-size:11px;color:var(--mute);font-weight:700}
-.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(15,28,46,.3)}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(74,46,30,.3)}
 .toast.on{opacity:1;transform:translateX(-50%)}
-.sheet{position:fixed;inset:0;background:rgba(15,28,46,.55);z-index:8;display:none;align-items:flex-end;justify-content:center}
+.sheet{position:fixed;inset:0;background:rgba(74,46,30,.55);z-index:8;display:none;align-items:flex-end;justify-content:center}
 .sheet.on{display:flex}
 .sheet .in{background:var(--card);width:100%;max-width:720px;border-radius:20px 20px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
-pre.out{white-space:pre-wrap;overflow-wrap:anywhere;background:#F5F7FA;border:1px solid var(--line);border-radius:11px;padding:12px;font-family:inherit;font-size:13px}
+pre.out{white-space:pre-wrap;overflow-wrap:anywhere;background:#FBF7F2;border:1px solid var(--line);border-radius:11px;padding:12px;font-family:inherit;font-size:13px}
 .when{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .when .chip{text-align:center;padding:8px 0}
 .cli{cursor:pointer}
-.cli:hover{border-color:#C9D3E2}
+.cli:hover{border-color:#E2CDBB}
 .st{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--brand);white-space:nowrap}
-.st.ok{background:#DFF0E7;color:var(--ok)}.st.off{background:#ECEEF2;color:var(--mute)}
+.st.ok{background:#E4EEDF;color:var(--ok)}.st.off{background:#EFE8E1;color:var(--mute)}
 .empty{text-align:center;color:var(--mute);padding:14px 0;font-size:13px}
 .hidden{display:none!important}
 body.out{padding-bottom:0;height:100dvh;overflow:hidden;position:fixed;inset:0;background:radial-gradient(120% 80% at 50% 0%,var(--navy2),var(--navy))}
@@ -108,6 +108,15 @@ body.out{padding-bottom:0;height:100dvh;overflow:hidden;position:fixed;inset:0;b
 .err{color:var(--warn);font-size:13px;font-weight:600;margin-top:8px;min-height:18px}
 body.out nav,body.out header,body.out main{display:none}
 body:not(.out) #login{display:none}
+.hint{display:flex;gap:10px;align-items:flex-start;background:#FFF6E8;border:1px solid #F0DCC0;border-radius:14px;padding:11px 12px;margin-bottom:12px;font-size:13px;line-height:1.45;color:#6B4F3A}
+.hint .x{color:#C4A88E;margin-top:-2px}
+.welcome{background:linear-gradient(140deg,#FFF4E6,#FBE2D2);border:1px solid #F0D3BE;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+.welcome h2{font-size:18px;font-weight:800;margin-bottom:4px}
+.welcome ol{list-style:none;margin:12px 0 14px;display:grid;gap:9px}
+.welcome li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.num{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--soft);color:var(--brand);font-size:12px;font-weight:800;margin-right:8px;vertical-align:1px}
+.welcome .num{background:#fff;margin-right:0}
+.help{font-size:12.5px;color:var(--mute);margin:-4px 0 10px}
 .sec{font-size:11px;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.07em;margin:18px 2px 8px}
 .today{border-color:var(--brand2);box-shadow:0 0 0 1px var(--brand2),var(--sh)}
 </style>
@@ -117,7 +126,7 @@ body:not(.out) #login{display:none}
   <div class="logo">Carnet<span>.</span>Courtier</div>
   <div class="box" id="lgBox">
     <h1 id="lgT">Connexion</h1>
-    <p class="muted" id="lgS">Ton planning, tes notes d'appel et tes rappels, sur tous tes appareils.</p>
+    <p class="muted" id="lgS">Content de te revoir ! Retrouve ton planning, tes notes d'appel et tes rappels.</p>
     <form onsubmit="auth(event)" style="margin-top:12px">
       <label class="f" for="lgE">Email</label><input type="email" id="lgE" autocomplete="email" required>
       <label class="f" for="lgP">Mot de passe</label><input type="password" id="lgP" autocomplete="current-password" minlength="6" required>
@@ -206,7 +215,7 @@ async function charger(){
   S.jours=S.jours||{};S.clients=S.clients||[];S.taches=S.taches||[];S.mails=S.mails||{};
   document.body.classList.remove('out');render();
 }
-function lgUI(){const up=mode==='up';$('lgT').textContent=up?'Créer un compte':'Connexion';$('lgB').textContent=up?'Créer mon compte':'Se connecter';$('lgSw').textContent=up?'J\'ai déjà un compte':'Créer un compte';$('lgP').autocomplete=up?'new-password':'current-password';$('lgErr').textContent=''}
+function lgUI(){const up=mode==='up';$('lgT').textContent=up?'Créer un compte':'Connexion';$('lgB').textContent=up?'Créer mon compte':'Se connecter';$('lgSw').textContent=up?'J\'ai déjà un compte':'Créer un compte';$('lgP').autocomplete=up?'new-password':'current-password';$('lgS').textContent=up?'Ça prend 30 secondes. Choisis un mot de passe d\'au moins 6 caractères.':'Content de te revoir ! Retrouve ton planning, tes notes d\'appel et tes rappels.';$('lgErr').textContent=''}
 const ERR={'Invalid login credentials':'Email ou mot de passe incorrect.','User already registered':'Un compte existe déjà avec cet email.','Email not confirmed':'Confirme d\'abord ton email (regarde ta boîte de réception).'};
 async function auth(e){
   e.preventDefault();const email=$('lgE').value.trim(),password=$('lgP').value;$('lgErr').textContent='';$('lgB').disabled=true;
@@ -235,6 +244,9 @@ async function copy(txt){try{await navigator.clipboard.writeText(txt);toast('Cop
 let view='jour',jourSel=TODAY,appelPrefill=null,mailCtx={c:null,m:'premier'},clientOpen=null;
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 function go(v){if(v==='jour'&&view==='jour')semaine=false;view=v;clientOpen=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();scrollTo(0,0)}
+const astuce=(k,txt)=>S.vu&&S.vu[k]?'':`<div class="hint"><span aria-hidden="true">💡</span><div class="grow">${txt}</div><button class="x" aria-label="Masquer l'astuce" onclick="vu('${k}')">×</button></div>`;
+function vu(k){(S.vu||(S.vu={}))[k]=1;save();render()}
+const salut=()=>{const h=new Date().getHours();return h<5||h>=18?'Bonsoir':h<12?'Bonjour':'Bon après-midi'};
 function head(t,s){$('title').textContent=t;$('subtitle').textContent=s||''}
 function badge(){const n=S.taches.filter(x=>!x.done&&x.due<=TODAY).length;const b=$('badge');b.textContent=n;b.classList.toggle('hidden',!n)}
 $('pillDate').textContent=fd(TODAY,{day:'numeric',month:'short'});
@@ -261,26 +273,32 @@ function vJour(){
   const j=S.jours[jourSel]||(S.jours[jourSel]={});
   const dus=S.taches.filter(x=>!x.done&&(jourSel===TODAY?x.due<=TODAY:x.due===jourSel));
   const tot=S.trame.reduce((n,s)=>n+(j[s.id]||[]).length,0), fait=S.trame.reduce((n,s)=>n+(j[s.id]||[]).filter(i=>i.done).length,0);
-  head(jourSel===TODAY?'Aujourd\'hui':fd(jourSel),jourSel===TODAY?fd(TODAY):'Planning préparé à l\'avance');
+  head(jourSel===TODAY?salut()+' 👋':fd(jourSel),jourSel===TODAY?fd(TODAY)+' · voici ta journée':'Tu prépares ce jour à l\'avance');
   let h=bascule()+`<div class="row" style="margin-bottom:12px">
     <button class="btn ghost sm" onclick="jourSel=addD(jourSel,-1);render()">‹ Veille</button>
     <div class="grow" style="text-align:center;font-weight:700">${esc(fd(jourSel,{weekday:'short',day:'numeric',month:'short'}))}</div>
     <button class="btn ghost sm" onclick="jourSel=addD(jourSel,1);render()">Lendemain ›</button></div>
-  <div class="kpis"><div class="kpi"><b>${fait}/${tot}</b><span>Planning fait</span></div>
+  <div class="kpis"><div class="kpi"><b>${tot?fait+'/'+tot:'—'}</b><span>Planning fait</span></div>
   <div class="kpi"><b>${dus.length}</b><span>Rappels du jour</span></div>
   <div class="kpi"><b>${S.mails[jourSel]||0}</b><span>Mails envoyés</span></div></div>`;
+  if(!(S.vu&&S.vu.bienvenue))h+=`<div class="welcome"><h2>Bienvenue dans ton carnet</h2><p class="muted">Tout ce que tu notais sur papier, au même endroit. Ça marche en 3 gestes :</p>
+  <ol><li><span class="num">1</span><span><b>Chaque matin</b>, ajoute tes tâches dans les créneaux ci-dessous.</span></li>
+  <li><span class="num">2</span><span><b>Pendant un appel</b>, ouvre l'onglet <b>Appel</b> et remplis la fiche.</span></li>
+  <li><span class="num">3</span><span><b>Tes rappels</b> J+1, J+2, J+3 arrivent ensuite tout seuls dans <b>À faire</b>.</span></li></ol>
+  <button class="btn block" onclick="vu('bienvenue')">C'est parti</button></div>`;
+  else h+=astuce('jour','Coche une tâche dès qu\'elle est faite. <b>Veille / Lendemain</b> te permet de préparer les jours suivants.');
   if(dus.length){h+=`<div class="card"><h2>Rappels à traiter <small>depuis tes notes d'appel</small></h2>${dus.map(tacheHTML).join('')}</div>`}
   S.trame.forEach((s,i)=>{
     const L=j[s.id]||[];
     h+=`<div class="card slot s${i%4+1}"><h2>${esc(s.label)} <small>${esc(s.h)}</small></h2>
-    ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><button class="ck ${it.done?'on':''}" aria-label="Cocher" onclick="togJ('${s.id}','${it.id}')"></button><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu sur ce créneau</div>'}
+    ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><button class="ck ${it.done?'on':''}" aria-label="Cocher" onclick="togJ('${s.id}','${it.id}')"></button><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu pour l\'instant</div>'}
     <form class="add" onsubmit="addJ(event,'${s.id}')"><input type="text" placeholder="Ajouter une tâche…" name="t"><button class="btn sm">+</button></form></div>`});
   h+=`<div class="row wrap"><button class="btn ghost grow" onclick="trameSheet()">Modifier ma trame</button>
   <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>`;
   $('main').innerHTML=h;
 }
 function addJ(e,s){e.preventDefault();const v=e.target.t.value.trim();if(!v)return;const j=S.jours[jourSel]||(S.jours[jourSel]={});(j[s]||(j[s]=[])).push({id:uid(),t:v,done:false});save();render()}
-function togJ(s,id){const it=S.jours[jourSel][s].find(x=>x.id===id);it.done=!it.done;save();render()}
+function togJ(s,id){const it=S.jours[jourSel][s].find(x=>x.id===id);it.done=!it.done;save();render();const all=S.trame.flatMap(t=>S.jours[jourSel][t.id]||[]);if(it.done&&all.every(i=>i.done))toast('Journée bouclée, bravo ! 🎉')}
 function delJ(s,id){S.jours[jourSel][s]=S.jours[jourSel][s].filter(x=>x.id!==id);save();render()}
 function planTxt(){const j=S.jours[jourSel]||{};return 'Planning du '+fd(jourSel)+'\n\n'+S.trame.map(s=>s.label+' ('+s.h+')\n'+((j[s.id]||[]).map(i=>(i.done?'✓ ':'• ')+i.t).join('\n')||'—')).join('\n\n')}
 function trameSheet(){
@@ -302,12 +320,12 @@ function vRappels(){
   head('À faire','Tes rappels J+1, J+2, J+3, au même endroit');
   const open=S.taches.filter(x=>!x.done).sort((a,b)=>a.due<b.due?-1:1);
   const grp=[['Aujourd\'hui',x=>x.due<=TODAY],['Demain · J+1',x=>x.due===addD(TODAY,1)],['J+2 · '+fd(addD(TODAY,2),{weekday:'long'}),x=>x.due===addD(TODAY,2)],['J+3 · '+fd(addD(TODAY,3),{weekday:'long'}),x=>x.due===addD(TODAY,3)],['Plus tard',x=>x.due>addD(TODAY,3)]];
-  let h=`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
+  let h=astuce('rappels','Les rappels créés pendant tes appels se rangent ici tout seuls. <b>+1 j</b> reporte au lendemain, la case les marque comme faits.')+`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
   <input type="text" name="t" placeholder="Ex. : rappeler Mme Martin pour l'offre">
   <div class="row" style="margin-top:8px"><select name="c" class="grow"><option value="">Sans client</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select>
   <select name="q" style="width:120px"><option value="0">Aujourd'hui</option><option value="1" selected>J+1</option><option value="2">J+2</option><option value="3">J+3</option><option value="7">J+7</option></select></div>
   <button class="btn block" style="margin-top:10px">Ajouter</button></form>`;
-  grp.forEach(([t,f])=>{const L=open.filter(f);if(!L.length&&t==='Plus tard')return;h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):'<div class="empty">Rien de prévu</div>'}</div>`});
+  grp.forEach(([t,f])=>{const L=open.filter(f);if(!L.length&&t==='Plus tard')return;h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):`<div class="empty">${t==='Aujourd\'hui'?'Rien d\'urgent aujourd\'hui 🎉':'Rien de prévu'}</div>`}</div>`});
   const done=S.taches.filter(x=>x.done).slice(-5).reverse();
   if(done.length)h+=`<div class="sec">Faits récemment</div><div class="card">${done.map(tacheHTML).join('')}</div>`;
   $('main').innerHTML=h}
@@ -325,21 +343,21 @@ function sugg(v){
 }
 function vAppel(){
   if(!A||appelPrefill!==undefined&&appelPrefill!==null){resetA(appelPrefill?cli(appelPrefill):null);appelPrefill=null}
-  head('Note d\'appel',A.cid?'Suivi de '+nomC(cli(A.cid)):'Remplis pendant l\'appel, tout est rangé ensuite');
+  head('Note d\'appel',A.cid?'Suivi de '+nomC(cli(A.cid)):'Remplis pendant l\'appel, tout est rangé ensuite');const H=(n,t,x)=>`<h2><span><span class="num">${n}</span>${t}</span>${x||''}</h2>`;
   const chips=(arr,key,multi)=>`<div class="chips">${arr.map(v=>`<button type="button" class="chip ${(multi?A[key].includes(v):A[key]===v)?'on':''}" onclick="chip('${key}',${JSON.stringify(v).replace(/"/g,'&quot;')},${multi})">${esc(v)}</button>`).join('')}</div>`;
   $('main').innerHTML=`
-  ${A.cid?'':`<div class="card"><h2>Client existant ?</h2><input type="text" id="cS" placeholder="Tape 3 lettres du nom ou du téléphone…" oninput="sugg(this.value)" autocomplete="off"><div id="cSug"></div></div>`}
-  <div class="card"><h2>Le client</h2>
+  ${A.cid?'':`${astuce('appel','Seul le <b>nom</b> est obligatoire. En enregistrant, tu obtiens un résumé prêt à coller dans ton CRM et le rappel se crée tout seul.')}<div class="card"><h2>Client déjà connu ?</h2><p class="help">Retrouve sa fiche en tapant 3 lettres, sinon remplis directement la suite.</p><input type="text" id="cS" placeholder="Tape 3 lettres du nom ou du téléphone…" oninput="sugg(this.value)" autocomplete="off"><div id="cSug"></div></div>`}
+  <div class="card">${H(1,'Le client')}
     <div class="row"><input type="text" placeholder="Prénom" value="${esc(A.prenom)}" oninput="A.prenom=this.value"><input type="text" placeholder="Nom" value="${esc(A.nom)}" oninput="A.nom=this.value"></div>
     <div class="row" style="margin-top:8px"><input type="tel" placeholder="Téléphone" value="${esc(A.tel)}" oninput="A.tel=this.value"><input type="email" placeholder="Email" value="${esc(A.email)}" oninput="A.email=this.value"></div></div>
-  <div class="card"><h2>Son besoin</h2>${chips(BESOINS,'besoin',false)}
+  <div class="card">${H(2,'Son besoin')}<p class="help">Touche ce qui correspond. Le taux d'endettement se calcule tout seul.</p>${chips(BESOINS,'besoin',false)}
     <label class="f">Situation</label>
     <div class="row"><input type="text" inputmode="numeric" placeholder="Revenus €" value="${esc(A.revenus)}" oninput="A.revenus=this.value"><input type="text" inputmode="numeric" placeholder="Mensual. €" value="${esc(A.mensu)}" oninput="A.mensu=this.value"><input type="text" inputmode="numeric" placeholder="Crédits" value="${esc(A.credits)}" oninput="A.credits=this.value" style="max-width:100px"></div>
     <p class="muted" id="endet" style="margin-top:6px">${endet()}</p>
     <label class="f">Ce qu'il a dit</label>
     <textarea placeholder="Ses mots à lui : ce qu'il veut, ses craintes, sa situation familiale, son projet…" oninput="A.note=this.value">${esc(A.note)}</textarea></div>
-  <div class="card"><h2>Pièces manquantes <small>${A.pieces.length} à demander</small></h2>${chips(PIECES,'pieces',true)}</div>
-  <div class="card"><h2>Prochaine action</h2>
+  <div class="card">${H(3,'Pièces manquantes',`<small>${A.pieces.length} à demander</small>`)}<p class="help">Coche ce qu'il te manque : la liste ira dans le mail de relance.</p>${chips(PIECES,'pieces',true)}</div>
+  <div class="card">${H(4,'Prochaine action')}<p class="help">Qu'est-ce que tu dois faire ensuite, et quand ?</p>
     <input type="text" placeholder="Ex. : le rappeler pour valider la proposition" value="${esc(A.action)}" oninput="A.action=this.value">
     <div class="when" style="margin-top:8px">${QUAND.map(([l,n])=>`<button type="button" class="chip ${A.q===n?'on':''}" onclick="A.q=${n};render()">${l}</button>`).join('')}</div>
     ${A.q===null?`<input type="date" style="margin-top:8px" value="${A.date}" onchange="A.date=this.value">`:`<p class="muted" style="margin-top:6px">Rappel le ${fd(addD(TODAY,A.q))}</p>`}</div>
@@ -421,12 +439,12 @@ Bien cordialement,`}
 function vMails(){
   head('Mails','Choisis un client et un modèle : le mail se remplit tout seul');
   const c=cli(mailCtx.c)||S.clients[0];if(c)mailCtx.c=c.id;
-  if(!c){head('Mails','');$('main').innerHTML='<div class="card empty">Ajoute d\'abord un client avec une note d\'appel : ses mails se rempliront tout seuls.</div><button class="btn block" onclick="resetA();go(\'appel\')">Nouvelle note d\'appel</button>';return}
+  if(!c){head('Mails','');$('main').innerHTML='<div class="welcome"><h2>Tes mails en 2 secondes</h2><p class="muted" style="margin-top:4px">Dès ton premier client enregistré, choisis un modèle : le prénom et les pièces manquantes se remplissent tout seuls.</p></div><button class="btn block" onclick="resetA();go(\'appel\')">Nouvelle note d\'appel</button>';return}
   const M=MODELES[mailCtx.m];
   const sujet=M.s,corps=c?M.b(c):'';
   $('main').innerHTML=`
   <div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><b>${S.mails[TODAY]||0}</b><span>Envoyés aujourd'hui</span></div><div class="kpi"><b>${Object.values(S.mails).reduce((a,b)=>a+b,0)}</b><span>Au total</span></div></div>
-  <div class="card"><label class="f" style="margin-top:0">Client</label>
+  ${astuce('mails','Le prénom et les pièces manquantes se remplissent tout seuls. Relis, copie ou ouvre ta messagerie, puis touche <b>Je l\'ai envoyé</b> pour compter tes mails du jour.')}<div class="card"><label class="f" style="margin-top:0">Client</label>
   <select onchange="mailCtx.c=this.value;render()">${S.clients.map(x=>`<option value="${x.id}" ${x.id===mailCtx.c?'selected':''}>${esc(nomC(x))}</option>`).join('')}</select>
   <label class="f">Modèle</label><div class="chips">${Object.entries(MODELES).map(([k,v])=>`<button class="chip ${k===mailCtx.m?'on':''}" onclick="mailCtx.m='${k}';render()">${esc(v.n)}</button>`).join('')}</div></div>
   <div class="card"><label class="f" style="margin-top:0">À</label><input type="email" id="mTo" value="${esc(c?.email||'')}">
@@ -443,7 +461,7 @@ function vClients(){
   if(clientOpen)return vFiche();
   head('Clients',S.clients.length+' dossiers');
   const L=S.clients.filter(c=>(nomC(c)+' '+c.tel+' '+c.statut).toLowerCase().includes(filtre.toLowerCase()));
-  $('main').innerHTML=`<input type="text" placeholder="Rechercher un nom, un numéro…" value="${esc(filtre)}" oninput="filtre=this.value;vClientsList()" style="margin-bottom:12px">
+  $('main').innerHTML=(S.clients.length?astuce('clients','Touche un client pour voir son dossier, cocher les pièces reçues et changer son statut.'):'<div class="welcome"><h2>Pas encore de client</h2><p class="muted" style="margin-top:4px">Ta première note d\'appel créera sa fiche automatiquement.</p></div>')+`<input type="text" placeholder="Rechercher un nom, un numéro…" value="${esc(filtre)}" oninput="filtre=this.value;vClientsList()" style="margin-bottom:12px">
   <div id="cl"></div><button class="btn block" onclick="resetA();go('appel')">+ Nouveau client (note d'appel)</button>`;vClientsList()}
 function vClientsList(){
   const L=S.clients.filter(c=>(nomC(c)+' '+(c.tel||'')+' '+c.statut).toLowerCase().includes(filtre.toLowerCase()));
