@@ -137,6 +137,10 @@ async def main():
             await pg.screenshot(path=str(OUT / 'semaine.png'), full_page=True)
             await pg.click('.seg button >> text=Jour'); ok(await pg.is_visible('.slot'), 'retour vue jour')
             ok('Demain · ' in await pg.evaluate("go('rappels'),document.querySelector('main').textContent"), 'rappels regroupés par date')
+            await pg.click('#tBtn'); ok(await pg.evaluate("document.documentElement.dataset.theme")=='dark', 'mode sombre activé')
+            await pg.screenshot(path=str(OUT / 'sombre.png'))
+            ok(await pg.evaluate("localStorage.getItem('cc-theme')")=='dark', 'choix du thème gardé')
+            await pg.click('#tBtn'); ok(await pg.evaluate("document.documentElement.dataset.theme")=='light', 'retour au mode clair')
             # rechargement : les données reviennent de la base
             await pg.wait_for_timeout(700)
             saved = await pg.evaluate("DB.carnets.u1")
