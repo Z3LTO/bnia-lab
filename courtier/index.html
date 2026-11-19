@@ -80,6 +80,10 @@ nav button{background:none;border:0;display:flex;flex-direction:column;align-ite
 nav button svg{width:22px;height:22px}
 nav button.on{color:var(--brand);background:var(--soft)}
 nav .badge{position:absolute;top:1px;right:10px;background:var(--acc);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:16px;line-height:16px}
+.daynav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.daynav .btn{width:44px;font-size:20px;padding:5px 0}
+.dlab{flex:1;border:0;background:none;font-weight:800;font-size:16px;color:var(--ink)}
+.when .chip small{font-weight:600;color:inherit;opacity:.75}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .kpi{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;box-shadow:var(--sh)}
 .kpi b{display:block;font-size:22px;font-weight:800;color:var(--brand);letter-spacing:-.02em}
@@ -167,7 +171,6 @@ const KEY='carnet-courtier-v1';
 const PIECES=['Pièce d\'identité','Justificatif de domicile','3 derniers bulletins de salaire','2 derniers avis d\'imposition','3 derniers relevés bancaires','Tableaux d\'amortissement','Offres de prêt','Taxe foncière'];
 const BESOINS=['Rachat crédits conso','Rachat avec immo','Regroupement + trésorerie','Renégociation prêt immo','Autre'];
 const STATUTS=['Nouveau','Pièces en attente','Étude du dossier','Transmis banque','Offre reçue','Signé','Sans suite'];
-const QUAND=[['J+1',1],['J+2',2],['J+3',3],['Date',null]];
 
 const iso=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
 const TODAY=iso(new Date());
@@ -246,6 +249,8 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v)
 function go(v){if(v==='jour'&&view==='jour')semaine=false;view=v;clientOpen=null;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();scrollTo(0,0)}
 const astuce=(k,txt)=>S.vu&&S.vu[k]?'':`<div class="hint"><span aria-hidden="true">💡</span><div class="grow">${txt}</div><button class="x" aria-label="Masquer l'astuce" onclick="vu('${k}')">×</button></div>`;
 function vu(k){(S.vu||(S.vu={}))[k]=1;save();render()}
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+const prochains=()=>{const r=[];let d=TODAY;while(r.length<3){d=addD(d,1);if(new Date(d+'T12:00:00').getDay())r.push(d)}return r};// 3 prochains jours, sans le dimanche
 const salut=()=>{const h=new Date().getHours();return h<5||h>=18?'Bonsoir':h<12?'Bonjour':'Bon après-midi'};
 function head(t,s){$('title').textContent=t;$('subtitle').textContent=s||''}
 function badge(){const n=S.taches.filter(x=>!x.done&&x.due<=TODAY).length;const b=$('badge');b.textContent=n;b.classList.toggle('hidden',!n)}
@@ -272,35 +277,25 @@ function vJour(){
   if(semaine)return vSemaine();
   const j=S.jours[jourSel]||(S.jours[jourSel]={});
   const dus=S.taches.filter(x=>!x.done&&(jourSel===TODAY?x.due<=TODAY:x.due===jourSel));
-  const tot=S.trame.reduce((n,s)=>n+(j[s.id]||[]).length,0), fait=S.trame.reduce((n,s)=>n+(j[s.id]||[]).filter(i=>i.done).length,0);
-  head(jourSel===TODAY?salut()+' 👋':fd(jourSel),jourSel===TODAY?fd(TODAY)+' · voici ta journée':'Tu prépares ce jour à l\'avance');
-  let h=bascule()+`<div class="row" style="margin-bottom:12px">
-    <button class="btn ghost sm" onclick="jourSel=addD(jourSel,-1);render()">‹ Veille</button>
-    <div class="grow" style="text-align:center;font-weight:700">${esc(fd(jourSel,{weekday:'short',day:'numeric',month:'short'}))}</div>
-    <button class="btn ghost sm" onclick="jourSel=addD(jourSel,1);render()">Lendemain ›</button></div>
-  <div class="kpis"><div class="kpi"><b>${tot?fait+'/'+tot:'—'}</b><span>Planning fait</span></div>
-  <div class="kpi"><b>${dus.length}</b><span>Rappels du jour</span></div>
-  <div class="kpi"><b>${S.mails[jourSel]||0}</b><span>Mails envoyés</span></div></div>`;
+  head(jourSel===TODAY?salut()+' 👋':fd(jourSel),jourSel===TODAY?cap(fd(TODAY)):'Tu prépares ce jour à l\'avance');
+  let h=bascule()+`<div class="daynav"><button class="btn ghost sm" aria-label="Jour précédent" onclick="jourSel=addD(jourSel,-1);render()">‹</button><button class="dlab" onclick="jourSel=TODAY;render()">${jourSel===TODAY?'Aujourd\'hui':esc(cap(fd(jourSel)))}</button><button class="btn ghost sm" aria-label="Jour suivant" onclick="jourSel=addD(jourSel,1);render()">›</button></div>`;
   if(!(S.vu&&S.vu.bienvenue))h+=`<div class="welcome"><h2>Bienvenue dans ton carnet</h2><p class="muted">Tout ce que tu notais sur papier, au même endroit. Ça marche en 3 gestes :</p>
   <ol><li><span class="num">1</span><span><b>Chaque matin</b>, ajoute tes tâches dans les créneaux ci-dessous.</span></li>
   <li><span class="num">2</span><span><b>Pendant un appel</b>, ouvre l'onglet <b>Appel</b> et remplis la fiche.</span></li>
-  <li><span class="num">3</span><span><b>Tes rappels</b> J+1, J+2, J+3 arrivent ensuite tout seuls dans <b>À faire</b>.</span></li></ol>
+  <li><span class="num">3</span><span><b>Tes rappels</b> se rangent ensuite tout seuls à leur date dans <b>À faire</b>.</span></li></ol>
   <button class="btn block" onclick="vu('bienvenue')">C'est parti</button></div>`;
-  else h+=astuce('jour','Coche une tâche dès qu\'elle est faite. <b>Veille / Lendemain</b> te permet de préparer les jours suivants.');
-  if(dus.length){h+=`<div class="card"><h2>Rappels à traiter <small>depuis tes notes d'appel</small></h2>${dus.map(tacheHTML).join('')}</div>`}
+  if(dus.length){h+=`<div class="card"><h2>À rappeler ${jourSel===TODAY?'aujourd\'hui':'ce jour'}</h2>${dus.map(tacheHTML).join('')}</div>`}
   S.trame.forEach((s,i)=>{
     const L=j[s.id]||[];
     h+=`<div class="card slot s${i%4+1}"><h2>${esc(s.label)} <small>${esc(s.h)}</small></h2>
     ${L.length?L.map(it=>`<div class="item ${it.done?'done':''}"><button class="ck ${it.done?'on':''}" aria-label="Cocher" onclick="togJ('${s.id}','${it.id}')"></button><div class="t">${esc(it.t)}</div><button class="x" onclick="delJ('${s.id}','${it.id}')" aria-label="Supprimer">×</button></div>`).join(''):'<div class="empty">Rien de prévu pour l\'instant</div>'}
     <form class="add" onsubmit="addJ(event,'${s.id}')"><input type="text" placeholder="Ajouter une tâche…" name="t"><button class="btn sm">+</button></form></div>`});
-  h+=`<div class="row wrap"><button class="btn ghost grow" onclick="trameSheet()">Modifier ma trame</button>
-  <button class="btn ghost grow" onclick="copy(planTxt())">Copier le planning</button></div>`;
+  h+=`<div style="text-align:center"><button class="btn ghost sm" onclick="trameSheet()">Modifier mes créneaux</button></div>`;
   $('main').innerHTML=h;
 }
 function addJ(e,s){e.preventDefault();const v=e.target.t.value.trim();if(!v)return;const j=S.jours[jourSel]||(S.jours[jourSel]={});(j[s]||(j[s]=[])).push({id:uid(),t:v,done:false});save();render()}
 function togJ(s,id){const it=S.jours[jourSel][s].find(x=>x.id===id);it.done=!it.done;save();render();const all=S.trame.flatMap(t=>S.jours[jourSel][t.id]||[]);if(it.done&&all.every(i=>i.done))toast('Journée bouclée, bravo ! 🎉')}
 function delJ(s,id){S.jours[jourSel][s]=S.jours[jourSel][s].filter(x=>x.id!==id);save();render()}
-function planTxt(){const j=S.jours[jourSel]||{};return 'Planning du '+fd(jourSel)+'\n\n'+S.trame.map(s=>s.label+' ('+s.h+')\n'+((j[s.id]||[]).map(i=>(i.done?'✓ ':'• ')+i.t).join('\n')||'—')).join('\n\n')}
 function trameSheet(){
   openSheet(`<h2 style="font-size:18px;margin-bottom:6px">Ma trame de journée</h2><p class="muted">Les créneaux qui reviennent chaque jour.</p>
   <div id="trL">${S.trame.map(s=>`<div class="row" style="margin-top:8px"><input type="text" value="${esc(s.label)}" data-id="${s.id}" data-k="label" class="grow"><input type="text" value="${esc(s.h)}" data-id="${s.id}" data-k="h" style="width:110px"><button class="x" onclick="S.trame=S.trame.filter(x=>x.id!=='${s.id}');trameSheet()">×</button></div>`).join('')}</div>
@@ -309,34 +304,34 @@ function trameSheet(){
 function saveTrame(){document.querySelectorAll('#trL input').forEach(i=>{const s=S.trame.find(x=>x.id===i.dataset.id);if(s)s[i.dataset.k]=i.value});save();closeSheet();render();toast('Trame enregistrée')}
 
 /* ================= Tâches / rappels ================= */
-function tacheHTML(x){
+function tacheHTML(x,avec){
   const c=cli(x.c),late=x.due<TODAY;
   return `<div class="item ${x.done?'done':''}"><button class="ck ${x.done?'on':''}" aria-label="Cocher" onclick="togT('${x.id}')"></button>
-  <div class="t"><b>${esc(x.t)}</b><div class="muted">${c?`<span class="tag">${esc(nomC(c))}</span>`:''}${late?'<span class="tag late">En retard</span>':''}${c&&c.tel?esc(c.tel):''}</div></div>
-  ${x.done?'':`<button class="btn ghost sm" onclick="reporter('${x.id}')">+1 j</button>`}</div>`}
+  <div class="t"><b>${esc(x.t)}</b><div class="muted">${c?`<span class="tag">${esc(nomC(c))}</span>`:''}${late?'<span class="tag late">En retard</span>':''}${avec==='date'&&x.due>TODAY?`<span class="tag rap">${esc(fd(x.due,{weekday:'short',day:'numeric',month:'short'}))}</span>`:''}${c&&c.tel?esc(c.tel):''}</div></div>
+  ${x.done?'':`<button class="btn ghost sm" onclick="reporter('${x.id}')">Reporter</button>`}</div>`}
 function togT(id){const x=S.taches.find(t=>t.id===id);x.done=!x.done;save();render();if(x.done)toast('Bien joué ✓')}
-function reporter(id){const x=S.taches.find(t=>t.id===id);x.due=addD(x.due<TODAY?TODAY:x.due,1);save();render();toast('Reporté au '+fd(x.due,{weekday:'long'}))}
+function reporter(id){const x=S.taches.find(t=>t.id===id);x.due=addD(x.due<TODAY?TODAY:x.due,1);save();render();toast('Reporté au '+fd(x.due))}
 function vRappels(){
-  head('À faire','Tes rappels J+1, J+2, J+3, au même endroit');
+  head('À faire','Tes rappels, classés par date');
   const open=S.taches.filter(x=>!x.done).sort((a,b)=>a.due<b.due?-1:1);
-  const grp=[['Aujourd\'hui',x=>x.due<=TODAY],['Demain · J+1',x=>x.due===addD(TODAY,1)],['J+2 · '+fd(addD(TODAY,2),{weekday:'long'}),x=>x.due===addD(TODAY,2)],['J+3 · '+fd(addD(TODAY,3),{weekday:'long'}),x=>x.due===addD(TODAY,3)],['Plus tard',x=>x.due>addD(TODAY,3)]];
-  let h=astuce('rappels','Les rappels créés pendant tes appels se rangent ici tout seuls. <b>+1 j</b> reporte au lendemain, la case les marque comme faits.')+`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
+  const grp=[['Aujourd\'hui',x=>x.due<=TODAY],...[...new Set(open.map(x=>x.due).filter(d=>d>TODAY))].map(d=>[(d===addD(TODAY,1)?'Demain · ':'')+cap(fd(d)),x=>x.due===d])];
+  let h=astuce('rappels','Les rappels créés pendant tes appels se rangent ici à leur date. <b>Reporter</b> décale d\'un jour, la case marque comme fait.')+`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
   <input type="text" name="t" placeholder="Ex. : rappeler Mme Martin pour l'offre">
   <div class="row" style="margin-top:8px"><select name="c" class="grow" onchange="$('nvC').classList.toggle('hidden',this.value!=='+')"><option value="">Sans client</option><option value="+">+ Nouveau client…</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select>
-  <select name="q" style="width:120px"><option value="0">Aujourd'hui</option><option value="1" selected>J+1</option><option value="2">J+2</option><option value="3">J+3</option><option value="7">J+7</option></select></div>
+  <input type="date" name="d" aria-label="Date du rappel" value="${prochains()[0]}" min="${TODAY}" style="width:155px"></div>
   <div id="nvC" class="row hidden" style="margin-top:8px"><input type="text" name="np" placeholder="Prénom"><input type="text" name="nn" placeholder="Nom"><input type="tel" name="nt" placeholder="Téléphone"></div>
   <button class="btn block" style="margin-top:10px">Ajouter</button></form>`;
-  grp.forEach(([t,f])=>{const L=open.filter(f);if(!L.length&&t==='Plus tard')return;h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):`<div class="empty">${t==='Aujourd\'hui'?'Rien d\'urgent aujourd\'hui 🎉':'Rien de prévu'}</div>`}</div>`});
+  grp.forEach(([t,f])=>{const L=open.filter(f);h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):`<div class="empty">${t==='Aujourd\'hui'?'Rien d\'urgent aujourd\'hui 🎉':'Rien de prévu'}</div>`}</div>`});
   const done=S.taches.filter(x=>x.done).slice(-5).reverse();
   if(done.length)h+=`<div class="sec">Faits récemment</div><div class="card">${done.map(tacheHTML).join('')}</div>`;
   $('main').innerHTML=h}
 function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)return toast('Écris le rappel');let c=f.c.value||null;
   if(c==='+'){const nom=f.nn.value.trim(),prenom=f.np.value.trim();if(!nom&&!prenom)return toast('Indique le nom du nouveau client');c=uid();S.clients.unshift({id:c,prenom,nom,tel:f.nt.value.trim(),email:'',besoin:'',statut:'Nouveau',pieces:[],notes:[]})}
-  S.taches.push({id:uid(),c,t,due:addD(TODAY,+f.q.value),done:false});save();render();toast('Rappel ajouté')}
+  S.taches.push({id:uid(),c,t,due:f.d.value||TODAY,done:false});save();render();toast('Rappel ajouté')}
 
 /* ================= Note d'appel ================= */
 let A;
-function resetA(c){A={cid:c?c.id:null,prenom:c?.prenom||'',nom:c?.nom||'',tel:c?.tel||'',email:c?.email||'',besoin:c?.besoin||'',revenus:c?.revenus||'',mensu:c?.mensu||'',credits:c?.credits||'',pieces:c?[...(c.pieces||[])]:[],note:'',action:'',q:1,date:addD(TODAY,1)}}
+function resetA(c){A={cid:c?c.id:null,prenom:c?.prenom||'',nom:c?.nom||'',tel:c?.tel||'',email:c?.email||'',besoin:c?.besoin||'',revenus:c?.revenus||'',mensu:c?.mensu||'',credits:c?.credits||'',pieces:c?[...(c.pieces||[])]:[],note:'',action:'',autre:false,date:prochains()[0]}}
 const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f'’-]/g,'').toLowerCase();
 function sugg(v){
   const q=norm(v.trim()),el=$('cSug');
@@ -362,8 +357,8 @@ function vAppel(){
   <div class="card">${H(3,'Pièces manquantes',`<small>${A.pieces.length} à demander</small>`)}<p class="help">Coche ce qu'il te manque : la liste ira dans le mail de relance.</p>${chips(PIECES,'pieces',true)}</div>
   <div class="card">${H(4,'Prochaine action')}<p class="help">Qu'est-ce que tu dois faire ensuite, et quand ?</p>
     <input type="text" placeholder="Ex. : le rappeler pour valider la proposition" value="${esc(A.action)}" oninput="A.action=this.value">
-    <div class="when" style="margin-top:8px">${QUAND.map(([l,n])=>`<button type="button" class="chip ${A.q===n?'on':''}" onclick="A.q=${n};render()">${l}</button>`).join('')}</div>
-    ${A.q===null?`<input type="date" style="margin-top:8px" value="${A.date}" onchange="A.date=this.value">`:`<p class="muted" style="margin-top:6px">Rappel le ${fd(addD(TODAY,A.q))}</p>`}</div>
+    <div class="when" style="margin-top:8px">${prochains().map(d=>`<button type="button" class="chip ${!A.autre&&A.date===d?'on':''}" onclick="A.autre=false;A.date='${d}';render()">${cap(fd(d,{weekday:'short'}))}<br><small>${fd(d,{day:'numeric',month:'short'})}</small></button>`).join('')}<button type="button" class="chip ${A.autre?'on':''}" onclick="A.autre=true;render()">Autre<br><small>date</small></button></div>
+    ${A.autre?`<input type="date" style="margin-top:8px" value="${A.date}" min="${TODAY}" onchange="A.date=this.value;$('quand').textContent=this.value?'Rappel le '+fd(this.value):''">`:''}<p class="muted" id="quand" style="margin-top:6px">Rappel le ${esc(fd(A.date))}</p></div>
   <button class="btn block acc" onclick="saveAppel()">Enregistrer l'appel</button>
   <button class="btn block ghost" style="margin-top:8px" onclick="resetA();render()">Effacer</button>`}
 function chip(k,v,multi){if(multi){A[k]=A[k].includes(v)?A[k].filter(x=>x!==v):[...A[k],v]}else A[k]=A[k]===v?'':v;render()}
@@ -378,7 +373,7 @@ function saveAppel(){
   if(A.pieces.length&&c.statut==='Nouveau')c.statut='Pièces en attente';
   if(A.note.trim())c.notes.unshift({d:TODAY,t:A.note.trim()});
   let due=null;
-  if(A.action.trim()){due=A.q===null?A.date:addD(TODAY,A.q);S.taches.push({id:uid(),c:c.id,t:A.action.trim(),due,done:false})}
+  if(A.action.trim()){due=A.date||TODAY;S.taches.push({id:uid(),c:c.id,t:A.action.trim(),due,done:false})}
   save();const txt=crmTxt(c,A.note.trim(),A.action.trim(),due);window._crm=txt;const cid=c.id;resetA();
   openSheet(`<h2 style="font-size:18px">Appel enregistré ✓</h2><p class="muted" style="margin:4px 0 10px">${due?'Rappel créé pour le '+esc(fd(due))+'. ':''}Voici le résumé prêt à coller dans la fiche CRM :</p>
   <pre class="out">${esc(txt)}</pre>
@@ -479,7 +474,7 @@ function vFiche(){
   <div class="card"><h2>Coordonnées</h2><div>${esc(c.tel||'—')}</div><div class="muted">${esc(c.email||'')}</div>
   ${sit(c)?`<div style="margin-top:8px" class="muted">${esc(sit(c))}</div>`:''}</div>
   ${c.pieces?.length?`<div class="card"><h2>Pièces manquantes</h2>${c.pieces.map(p=>`<div class="item"><button class="ck" aria-label="Pièce reçue" onclick="cli('${c.id}').pieces=cli('${c.id}').pieces.filter(x=>x!==${JSON.stringify(p).replace(/"/g,'&quot;')});save();render();toast('Pièce reçue ✓')"></button><div class="t">${esc(p)}</div></div>`).join('')}<p class="muted" style="margin-top:6px">Coche une pièce dès que tu la reçois.</p></div>`:''}
-  <div class="card"><h2>À faire</h2>${T.length?T.map(tacheHTML).join(''):'<div class="empty">Aucune action prévue</div>'}</div>
+  <div class="card"><h2>À faire</h2>${T.length?T.map(x=>tacheHTML(x,'date')).join(''):'<div class="empty">Aucune action prévue</div>'}</div>
   <div class="card"><h2>Historique des appels</h2>${c.notes.length?c.notes.map(n=>`<div class="item"><div class="t"><span class="tag">${esc(fd(n.d,{day:'numeric',month:'short'}))}</span><div style="margin-top:4px">${esc(n.t)}</div></div></div>`).join(''):'<div class="empty">Pas encore de note</div>'}</div>
   <div class="row"><button class="btn grow" onclick="appelPrefill='${c.id}';A=null;go('appel')">Nouvel appel</button><button class="btn acc grow" onclick="mailCtx={c:'${c.id}',m:'${c.pieces?.length?'pieces':'relance'}'};go('mails')">Écrire un mail</button></div>`}
 
