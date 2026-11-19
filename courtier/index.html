@@ -322,14 +322,17 @@ function vRappels(){
   const grp=[['Aujourd\'hui',x=>x.due<=TODAY],['Demain · J+1',x=>x.due===addD(TODAY,1)],['J+2 · '+fd(addD(TODAY,2),{weekday:'long'}),x=>x.due===addD(TODAY,2)],['J+3 · '+fd(addD(TODAY,3),{weekday:'long'}),x=>x.due===addD(TODAY,3)],['Plus tard',x=>x.due>addD(TODAY,3)]];
   let h=astuce('rappels','Les rappels créés pendant tes appels se rangent ici tout seuls. <b>+1 j</b> reporte au lendemain, la case les marque comme faits.')+`<form class="card" onsubmit="addT(event)"><h2>Nouveau rappel</h2>
   <input type="text" name="t" placeholder="Ex. : rappeler Mme Martin pour l'offre">
-  <div class="row" style="margin-top:8px"><select name="c" class="grow"><option value="">Sans client</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select>
+  <div class="row" style="margin-top:8px"><select name="c" class="grow" onchange="$('nvC').classList.toggle('hidden',this.value!=='+')"><option value="">Sans client</option><option value="+">+ Nouveau client…</option>${S.clients.map(c=>`<option value="${c.id}">${esc(nomC(c))}</option>`).join('')}</select>
   <select name="q" style="width:120px"><option value="0">Aujourd'hui</option><option value="1" selected>J+1</option><option value="2">J+2</option><option value="3">J+3</option><option value="7">J+7</option></select></div>
+  <div id="nvC" class="row hidden" style="margin-top:8px"><input type="text" name="np" placeholder="Prénom"><input type="text" name="nn" placeholder="Nom"><input type="tel" name="nt" placeholder="Téléphone"></div>
   <button class="btn block" style="margin-top:10px">Ajouter</button></form>`;
   grp.forEach(([t,f])=>{const L=open.filter(f);if(!L.length&&t==='Plus tard')return;h+=`<div class="sec">${esc(t)} · ${L.length}</div><div class="card">${L.length?L.map(tacheHTML).join(''):`<div class="empty">${t==='Aujourd\'hui'?'Rien d\'urgent aujourd\'hui 🎉':'Rien de prévu'}</div>`}</div>`});
   const done=S.taches.filter(x=>x.done).slice(-5).reverse();
   if(done.length)h+=`<div class="sec">Faits récemment</div><div class="card">${done.map(tacheHTML).join('')}</div>`;
   $('main').innerHTML=h}
-function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)return toast('Écris le rappel');S.taches.push({id:uid(),c:f.c.value||null,t,due:addD(TODAY,+f.q.value),done:false});save();render();toast('Rappel ajouté')}
+function addT(e){e.preventDefault();const f=e.target,t=f.t.value.trim();if(!t)return toast('Écris le rappel');let c=f.c.value||null;
+  if(c==='+'){const nom=f.nn.value.trim(),prenom=f.np.value.trim();if(!nom&&!prenom)return toast('Indique le nom du nouveau client');c=uid();S.clients.unshift({id:c,prenom,nom,tel:f.nt.value.trim(),email:'',besoin:'',statut:'Nouveau',pieces:[],notes:[]})}
+  S.taches.push({id:uid(),c,t,due:addD(TODAY,+f.q.value),done:false});save();render();toast('Rappel ajouté')}
 
 /* ================= Note d'appel ================= */
 let A;
