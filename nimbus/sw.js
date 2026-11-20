@@ -1,7 +1,7 @@
 // Service worker : fonctionnement hors-ligne de l'interface + réception des photos partagées (Android)
-const CACHE = 'nimbus-v3';
+const CACHE = 'nimbus-v4';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './providers.js', './crypto.js', './db.js', './config.js', './vendor/megajs.mjs',
-  './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
+  './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/nimbus-apple-180.png', './icons/nimbus-32.png'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', e => e.waitUntil((async () => {
