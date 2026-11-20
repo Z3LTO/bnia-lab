@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' https:; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#0b0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Nimbus réunit tous tes clouds gratuits (Google Drive, OneDrive, Dropbox…) dans un seul coffre chiffré.">
+  <title>Nimbus — tous tes clouds en un coffre</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="lock" class="screen hidden"></div>
+
+  <div id="app" class="hidden">
+    <header class="top">
+      <div class="brand"><span class="logo-s">☁</span> Nimbus</div>
+      <div class="space" id="spaceSummary"></div>
+      <button id="btnSync" class="icon" title="Synchroniser" aria-label="Synchroniser">⟳</button>
+      <button id="btnLock" class="icon" title="Verrouiller" aria-label="Verrouiller">🔒</button>
+    </header>
+
+    <main>
+      <section id="viewFiles" class="view">
+        <nav id="crumbs" class="crumbs"></nav>
+        <div id="grid" class="grid"></div>
+        <div id="empty" class="empty hidden">
+          <div class="bigicon">☁</div>
+          <p>Ton coffre est vide.</p>
+          <p class="hint">Appuie sur <b>＋</b> pour envoyer tes photos et vidéos.<br>Sur PC, tu peux aussi les glisser ici.</p>
+        </div>
+      </section>
+      <section id="viewClouds" class="view hidden"></section>
+    </main>
+
+    <div id="progress" class="progress hidden">
+      <div class="ptext" id="ptext"></div>
+      <div class="bar"><i id="pbar"></i></div>
+    </div>
+    <button id="fab" class="fab" aria-label="Ajouter">＋</button>
+    <nav class="tabs">
+      <button data-view="files" class="active">📁<span>Fichiers</span></button>
+      <button data-view="clouds">☁<span>Clouds</span></button>
+    </nav>
+  </div>
+
+  <div id="sheet" class="sheet hidden"></div>
+  <div id="viewer" class="modal hidden"></div>
+  <div id="drop" class="drop hidden"><div>📥 Dépose tes fichiers ici</div></div>
+  <div id="toasts"></div>
+
+  <input type="file" id="inMedia" accept="image/*,video/*" multiple hidden>
+  <input type="file" id="inFiles" multiple hidden>
+  <input type="file" id="inDir" webkitdirectory multiple hidden>
+</body>
+</html>
