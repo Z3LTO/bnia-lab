@@ -382,7 +382,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const KEY='tampon.profil.v2';
 const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}};
 const save=p=>{try{localStorage.setItem(KEY,JSON.stringify(p))}catch(e){}};
-const wipe=()=>{try{localStorage.removeItem(KEY)}catch(e){}};
+const wipe=()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('tampon.donnees.v1')}catch(e){}};
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)};
 let profile=load();
 
@@ -485,26 +485,15 @@ let state=null,nextId=100,nextFact=42,nextDevis=19;
 const hhmm=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const dOff=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x};
 function initState(p){
-  nextFact=42;nextDevis=19;
-  const docs=[
-    {id:'D-2026-018',type:'devis',client:{nom:'M. Henri Garnier',adr:'45 rue du Palais\n17000 La Rochelle'},date:dOff(0),ech:dOff(30),lignes:[['Prestation principale',1,2900],['Préparation et évacuation',1,380],['Déplacement',1,200]],statut:'Brouillon'},
-    {id:'F-2026-041',type:'facture',client:{nom:'Mme Claire Lefèvre',adr:'8 avenue Carnot\n17000 La Rochelle'},date:dOff(-42),ech:dOff(-12),lignes:[['Prestation d’octobre',1,1240]],statut:'En retard'},
-    {id:'F-2026-040',type:'facture',client:{nom:'M. Paul Roux',adr:'3 rue Gargoulleau\n17000 La Rochelle'},date:dOff(-27),ech:dOff(3),lignes:[['Intervention et conseil',2,210]],statut:'En attente'},
-    {id:'F-2026-039',type:'facture',client:{nom:'SCI Les Tamaris',adr:'21 quai Duperré\n17000 La Rochelle'},date:dOff(-35),ech:dOff(-5),lignes:[['Prestation de septembre',1,650]],statut:'Payée'},
-    {id:'R-88412',type:'recue',num:'88412',fournisseur:{nom:'Point.P',adr:'Zone commerciale de Beaulieu\n17138 Puilboreau'},client:{nom:p.entreprise,adr:''},date:dOff(-14),ech:dOff(16),lignes:[['Fournitures et petit matériel',1,312.40]],statut:'À vérifier'},
-  ];
-  state={docs};
-  const ttc41=totals(docs[1]).ttc,ttc18=totals(docs[0]).ttc;
-  state.todo=[
-    {id:1,urgent:1,why:'Paiement en retard de 12 jours',t:`Relancer Mme Lefèvre, qui vous doit ${eur0(ttc41)}`,view:'Voir le message et la facture',go:'Envoyer la relance',doc:'F-2026-041',after:'Relancée',
-      mail:{to:'claire.lefevre@exemple.fr',objet:'Facture F-2026-041 en attente de règlement',body:`Bonjour Madame Lefèvre,\n\nSauf erreur de ma part, la facture F-2026-041 de ${eur(ttc41)} n'a pas encore été réglée. Je vous la renvoie en pièce jointe.\n\nSi le paiement est déjà parti, merci de ne pas tenir compte de ce message.\n\nBien cordialement,\n${p.prenom}\n${p.entreprise}`}},
-    {id:2,why:'Demandé par M. Garnier vendredi',t:`Envoyer le devis de ${eur0(ttc18)} à M. Garnier`,view:'Voir le devis',go:'Envoyer le devis',doc:'D-2026-018',after:'Envoyé'},
-    {id:3,why:'Une facture reçue deux fois',t:'Supprimer un doublon de facture Point.P (312,40 €)',view:'Voir la facture reçue',go:'Garder un seul exemplaire',doc:'R-88412',after:'Classée',note:'Point.P vous a envoyé cette facture le 3 et le 10 novembre. Tampon garde la première dans vos documents et supprime la copie.'},
-  ];
-  state.done=[{t:'08:02',x:'9 factures reçues par email rangées dans vos documents'},{t:'08:04',x:'Paiement de 650 € reçu, facture F-2026-039 marquée comme payée'}];
-  state.answer=null;
+  nextFact=1;nextDevis=1;
+  const SK='tampon.donnees.v1';let saved=null;try{saved=JSON.parse(localStorage.getItem(SK)||'null')}catch(e){}
+  if(saved&&saved.docs){saved.docs.forEach(d=>{d.date=new Date(d.date);d.ech=new Date(d.ech)});nextFact=saved.nextFact||1;nextDevis=saved.nextDevis||1;nextId=saved.nextId||100;
+    const today=new Date().toDateString();if(saved.day!==today)saved.done=[];
+    state={docs:saved.docs,todo:saved.todo||[],done:saved.done||[],answer:null};return state}
+  state={docs:[],todo:[],done:[],answer:null};
   return state;
 }
+function persist(){if(!state)return;try{localStorage.setItem('tampon.donnees.v1',JSON.stringify({docs:state.docs,todo:state.todo,done:state.done,nextFact,nextDevis,nextId,day:new Date().toDateString()}))}catch(e){}}
 function renderDay(){
   if(!state)state=initState(profile);const p=profile;
   const now=new Date();const h=now.getHours();
@@ -513,11 +502,12 @@ function renderDay(){
   const jour=now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   $('#helloSub').textContent=jour.charAt(0).toUpperCase()+jour.slice(1)+' · '+(n?`${n} chose${n>1?'s':''} à valider`:'rien à valider');
   $('#todoCount').textContent=n;$('#todoCount').hidden=!n;
-  $('#todo').innerHTML=n?state.todo.map(t=>`<article class="card ${t.urgent?'urgent':''}" data-id="${t.id}"><div class="why"><span class="dot"></span>${esc(t.why)}</div><h3>${esc(t.t)}</h3>${t.note?`<p class="note">${esc(t.note)}</p>`:''}<button type="button" class="docbtn" data-act="view">${ICON_DOC}<span>${esc(t.view)}</span><span class="arr">›</span></button><div class="acts"><button class="btn primary" type="button" data-act="ok">${esc(t.go)}</button><button class="btn" type="button" data-act="later">Pas maintenant</button></div></article>`).join(''):`<div class="allgood"><span class="stampmark" aria-hidden="true">OK</span>Tout est à jour. Profitez de votre soirée.</div>`;
+  $('#todo').innerHTML=n?state.todo.map(t=>`<article class="card ${t.urgent?'urgent':''}" data-id="${t.id}"><div class="why"><span class="dot"></span>${esc(t.why)}</div><h3>${esc(t.t)}</h3>${t.note?`<p class="note">${esc(t.note)}</p>`:''}<button type="button" class="docbtn" data-act="view">${ICON_DOC}<span>${esc(t.view)}</span><span class="arr">›</span></button><div class="acts"><button class="btn primary" type="button" data-act="ok">${esc(t.go)}</button><button class="btn" type="button" data-act="later">Pas maintenant</button></div></article>`).join(''):(state.docs.length?`<div class="allgood"><span class="stampmark" aria-hidden="true">OK</span>Tout est à jour. Profitez de votre soirée.</div>`:`<div class="allgood" style="flex-direction:column;align-items:flex-start;gap:6px"><b>Rien à valider pour l’instant.</b><span style="font-weight:500">Créez votre première facture ou votre premier devis en l’écrivant ci-dessus, par exemple : « Fais une facture de 850 € pour M. Dupont ».</span></div>`);
   $('#next').innerHTML=echeances(p).map(e=>`<div class="row"><div class="date"><b>${e.d.getDate()}</b><span>${MOIS[e.d.getMonth()]}</span></div><div class="tx"><b>${esc(e.t)}</b><span>${esc(e.s)}</span></div><span class="when ${e.j<=15?'soon':''}">${dansJ(e.j)}</span></div>`).join('');
   $('#doneCount').textContent=state.done.length;
   $('#done').innerHTML=state.done.slice().reverse().map(d=>`<div class="row"><span class="t">${d.t}</span><span class="tx">${esc(d.x)}</span></div>`).join('');
-  $('#ideas').innerHTML=['Fais une facture de 850 € pour M. Garnier','Qui ne m’a pas payé ?','Quelle est ma prochaine date limite ?'].map(s=>`<button type="button">${esc(s)}</button>`).join('');
+  $('#ideas').innerHTML=['Fais une facture de 850 € pour M. Dupont','Fais un devis de 1 200 € pour Mme Durand, pose de parquet','Quelle est ma prochaine date limite ?'].map(s=>`<button type="button">${esc(s)}</button>`).join('');
+  persist();
   const a=$('#answer');a.hidden=!state.answer;if(state.answer)a.innerHTML=`<b>Tampon</b>${esc(state.answer.x)}${state.answer.doc?` <button type="button" class="link" data-open="${state.answer.doc}">${esc(state.answer.label)}</button>`:''}`;
 }
 const ICON_DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>';
@@ -541,16 +531,16 @@ function reply(q){
   const amt=(q.match(/(\d[\d\s]*(?:[,.]\d+)?)\s*(?:€|euros?)/i)||[])[1];const who=((q.match(/pour\s+([^,!?]+)/i)||[])[1]||'').trim().replace(/\.$/,'')||null;
   if(/(factur|devis)/.test(l)&&amt){
     const isDevis=/devis/.test(l)&&!/factur/.test(l);const m=parseFloat(amt.replace(/\s/g,'').replace(',','.'));
-    const id=isDevis?'D-2026-0'+(nextDevis++):newFact();
+    const id=isDevis?newDevis():newFact();
     const objet=(q.match(/,\s*(.+)$/)||[])[1];
     const doc={id,type:isDevis?'devis':'facture',client:{nom:who||'Client à préciser',adr:''},date:dOff(0),ech:dOff(30),lignes:[[objet?objet.charAt(0).toUpperCase()+objet.slice(1):'Prestation',1,m]],statut:'Brouillon'};
     state.docs.unshift(doc);const T=totals(doc).ttc;
     state.todo.unshift({id:nextId++,why:'Vous venez de le demander',t:`Envoyer ${isDevis?'le devis':'la facture'} de ${eur0(T)}${who?' à '+who:''}`,view:isDevis?'Voir le devis':'Voir la facture',go:isDevis?'Envoyer le devis':'Envoyer la facture',doc:id,after:'Envoyé'});
     return {x:`C'est prêt : ${isDevis?'le devis':'la facture'} ${id} de ${eur0(T)}${who?' pour '+who:''}. ${isDevis?'Vérifiez-le':'Vérifiez-la'} avant l'envoi : ${isDevis?'il':'elle'} est dans « À valider ».`,doc:id,label:isDevis?'Voir le devis':'Voir la facture'};
   }
-  if(/pay|relanc|doit|argent/.test(l))return {x:'Deux clients ne vous ont pas encore payé : Mme Lefèvre (facture F-2026-041, en retard de 12 jours) et M. Roux (F-2026-040, à payer d’ici 3 jours). La relance de Mme Lefèvre est prête juste en dessous.'};
+  if(/pay|relanc|doit|argent/.test(l)){const due=state.docs.filter(d=>d.type==='facture'&&['Envoyé','En retard','Relancée','En attente'].includes(d.statut));return {x:due.length?`${due.length} facture${due.length>1?'s':''} pas encore payée${due.length>1?'s':''} : `+due.map(d=>`${d.id} (${d.client.nom}, ${eur0(totals(d).ttc)})`).join(', ')+'.':'Aucune facture envoyée n’attend de paiement pour l’instant.'}}
   if(/date|limite|déclar|declar|urssaf|tva|impôt|impot|échéance/.test(l)){const e=echeances(p)[0];return {x:e?`${e.t}, avant le ${e.d.getDate()} ${MOISL[e.d.getMonth()]} (${dansJ(e.j)}). Je vous le rappellerai une semaine avant.`:'Aucune date limite proche.'}}
-  if(/rang|class|justif|document/.test(l)){state.done.push({t:hhmm(),x:'4 nouvelles factures rangées dans vos documents'});return {x:'C’est fait : j’ai rangé 4 nouvelles factures dans vos documents.'}}
+  if(/rang|class|justif|document/.test(l))return {x:'Dès que vos emails seront connectés, je rangerai automatiquement les factures que vous recevez dans vos documents.'};
   if(/devis/.test(l))return {x:'Avec plaisir. Dites-moi pour qui, combien et pour quoi. Par exemple : « devis de 1 200 € pour Mme Durand, pose de parquet ».'};
   return {x:'Dans cette démo, je sais faire une facture ou un devis, vous dire qui ne vous a pas payé, donner votre prochaine date limite et ranger vos documents. Essayez une des idées ci-dessus.'};
 }
@@ -564,6 +554,7 @@ function renderDocs(){
   if(!state)state=initState(profile);
   const F=[['tout','Tout'],['facture','Factures'],['devis','Devis'],['recue','Reçues']];
   $('#docFilters').innerHTML=F.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${docFilter===k}">${l}</button>`).join('');
+  persist();
   const list=state.docs.filter(d=>docFilter==='tout'||d.type===docFilter);
   $('#docList').innerHTML=list.length?list.map(d=>{const T=totals(d);const who=d.type==='recue'?d.fournisseur.nom:d.client.nom;return `<button type="button" class="drow" data-open="${d.id}"><span class="dic ${d.type}">${d.type==='devis'?'DEV':d.type==='recue'?'REÇ':'FAC'}</span><span class="tx"><b>${esc(TYPES[d.type])} ${esc(d.num||d.id)}</b><span>${esc(who)} · ${esc(fdate(d.date))}</span></span><span class="amt"><b>${eur(T.ttc)}</b><span class="chip ${STATUT_CHIP[d.statut]||'mute'}">${esc(d.statut)}</span></span></button>`}).join(''):'<div class="row"><span class="tx">Aucun document ici pour l’instant.</span></div>';
 }
@@ -614,7 +605,9 @@ function docActions(d,o){
   }
   return a.length?`<div class="vactions">${a.map(([k,l],i)=>`<button type="button" class="btn sm ${k==='paid'||k==='convert'||k==='send'?'primary':''}" data-va="${k}">${l}</button>`).join('')}</div>`:'';
 }
-function newFact(){return 'F-2026-0'+(nextFact++)}
+const pad=n=>String(n).padStart(3,'0');
+function newFact(){return `F-${new Date().getFullYear()}-${pad(nextFact++)}`}
+function newDevis(){return `D-${new Date().getFullYear()}-${pad(nextDevis++)}`}
 function syncTask(d){state.todo.forEach(t=>{if(t.doc===d.id){t.t=t.t.replace(/de [\d\s]+(,\d+)? €/,'de '+eur0(totals(d).ttc));if(d.type!=='recue'&&!/Relancer/.test(t.t))t.t=t.t.replace(/ à .+$/,' à '+d.client.nom)}})}
 function refreshAll(){renderDay();if(location.hash==='#documents')renderDocs()}
 $('#vBody').addEventListener('click',e=>{
@@ -630,7 +623,7 @@ $('#vBody').addEventListener('click',e=>{
   if(k==='convert'){const id=newFact();const f={id,type:'facture',client:JSON.parse(JSON.stringify(d.client)),date:dOff(0),ech:dOff(30),lignes:JSON.parse(JSON.stringify(d.lignes)),statut:'Brouillon',devis:d.id};d.facture=id;d.statut='Accepté';state.todo=state.todo.filter(t=>t.doc!==d.id);state.docs.unshift(f);
     state.todo.unshift({id:nextId++,why:`Créée à partir du devis ${d.id}`,t:`Envoyer la facture de ${eur0(totals(f).ttc)} à ${f.client.nom}`,view:'Voir la facture',go:'Envoyer la facture',doc:id,after:'Envoyé'});
     state.done.push({t:hhmm(),x:`Devis ${d.id} transformé en facture ${id}`});refreshAll();openViewer({doc:id});toast(`Facture ${id} créée`);return}
-  if(k==='dup'){const nd=JSON.parse(JSON.stringify(d));nd.client=nd.client||{};nd.id=d.type==='devis'?'D-2026-0'+(nextDevis++):newFact();nd.date=dOff(0);nd.ech=dOff(30);nd.statut='Brouillon';delete nd.facture;delete nd.devis;state.docs.unshift(nd);refreshAll();openViewer({doc:nd.id,edit:true});toast('Copie créée : modifiez-la');return}
+  if(k==='dup'){const nd=JSON.parse(JSON.stringify(d));nd.client=nd.client||{};nd.id=d.type==='devis'?newDevis():newFact();nd.date=dOff(0);nd.ech=dOff(30);nd.statut='Brouillon';delete nd.facture;delete nd.devis;state.docs.unshift(nd);refreshAll();openViewer({doc:nd.id,edit:true});toast('Copie créée : modifiez-la');return}
   if(k==='send'){d.statut='Envoyé';state.todo=state.todo.filter(t=>t.doc!==d.id);state.done.push({t:hhmm(),x:`${TYPES[d.type]} ${d.id} envoyé${d.type==='facture'?'e':''} à ${d.client.nom}`});openViewer(vCur);refreshAll();toast('Envoyé au client');return}
 });
 function closeViewer(){$('#viewer').hidden=true;document.body.style.overflow='';vCur=null;if(lastFocus&&lastFocus.focus)lastFocus.focus()}
