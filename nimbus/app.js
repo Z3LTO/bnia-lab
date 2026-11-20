@@ -75,7 +75,7 @@ function pickAccount(size, exclude) {
 }
 async function connect(type, acc) {
   const P = PROVIDERS[type];
-  if (!P.configured()) return toast(`${P.name} n'est pas encore activé sur ce site (Client ID manquant dans config.js).`, 'err');
+  if (!P.configured()) { $('#sheet').classList.add('hidden'); return toast(`La connexion ${P.name} arrive très bientôt. En attendant, commence avec MEGA (20 Go gratuits).`, 'err'); }
   if (P.credentials) return credForm(type, acc);
   await startAuth(type, acc);
 }
@@ -117,6 +117,29 @@ function credForm(type, existing, mfa = false) {
       err.textContent = x.message; btn.disabled = false; btn.textContent = 'Connecter';
     }
   };
+}
+
+// Choix affiché quand on touche un cloud : déjà un compte → connexion ; sinon → inscription guidée
+function pickSheet(type) {
+  const P = PROVIDERS[type], g = GUIDE[type], sh = $('#sheet');
+  sh.innerHTML = `<div class="sheet-panel pick" style="--pc:${P.color}">
+    <div class="pick-head"><span class="plogo">${P.letter}</span><div><b>${P.name}</b><div class="hint">${P.freeHint}</div></div></div>
+    <div class="pick-block">
+      <h3>Déjà un compte ${P.brand} ?</h3>
+      <p class="hint">${P.hasIt} Connecte-toi directement, en un clic.</p>
+      <button class="btn primary" data-connect="${type}">Me connecter</button>
+    </div>
+    <div class="pick-or"><span>ou</span></div>
+    <div class="pick-block">
+      <h3>Pas encore de compte ?</h3>
+      <p class="hint">⏱ ${g.time}. 💡 ${g.need}</p>
+      <button class="btn" data-signup="${type}">Créer mon compte gratuit</button>
+      <details class="howto"><summary>Voir les étapes</summary><ol>${g.steps.map(x => `<li>${x}</li>`).join('')}</ol></details>
+    </div>
+    <button class="sheet-btn cancel" data-close>Annuler</button>
+  </div>`;
+  sh.classList.remove('hidden');
+  sh.onclick = e => { if (e.target === sh || e.target.closest('[data-close]')) sh.classList.add('hidden'); };
 }
 
 /* ───────── coffre (chiffrement) ───────── */
@@ -489,7 +512,7 @@ function renderFiles() {
 function providerCards(withSignup) {
   return Object.values(PROVIDERS).map((P, n) => {
     const mine = S.accounts.filter(a => a.provider === P.type), g = GUIDE[P.type];
-    const off = P.configured() ? '' : ' disabled title="Pas encore activé : ajoute le Client ID dans config.js"';
+    const off = '';
     return `<div class="pcard${mine.length ? ' done' : ''}" style="--pc:${P.color}">
       <div class="plogo">${mine.length ? '✓' : P.letter}</div>
       <div class="pbody">
@@ -582,7 +605,7 @@ function showLock({ needHome = null, busy = '' } = {}) {
     : `<div class="card">
         <h2>Connecte-toi</h2>
         <p class="hint">Pas de compte à créer ni de mot de passe à inventer : utilise un compte que tu as déjà. Ce sera ton <b>compte principal</b>.</p>
-        <div class="login-btns">${Object.values(PROVIDERS).map(P => `<button class="btn login" style="--pc:${P.color}" data-connect="${P.type}"${P.configured() ? '' : ' disabled title="Bientôt disponible"'}><span class="plogo">${P.letter}</span>Continuer avec ${P.brand}</button>`).join('')}</div>
+        <div class="login-btns">${Object.values(PROVIDERS).map(P => `<button class="btn login" style="--pc:${P.color}" data-pick="${P.type}"><span class="plogo">${P.letter}</span>Continuer avec ${P.brand}</button>`).join('')}</div>
         <p class="hint center">Tu as une adresse Gmail ? Choisis Google.</p>
       </div>
       <div class="card">
@@ -692,14 +715,15 @@ function bind() {
 
   // clics « connecter / créer / retirer » (écran de verrouillage et vue Clouds)
   document.body.addEventListener('click', async e => {
-    const t = e.target.closest('[data-connect],[data-signup],[data-reconnect],[data-remove],#doneOnboarding');
+    const t = e.target.closest('[data-pick],[data-connect],[data-signup],[data-reconnect],[data-remove],#doneOnboarding');
     if (!t || t.disabled) return;
     if (t.id === 'doneOnboarding') { await idb.set('kv', 'onboarded', true); setView('files'); $('#fab').click(); return; }
+    if (t.dataset.pick) return pickSheet(t.dataset.pick);
     if (t.dataset.connect) return connect(t.dataset.connect);
     if (t.dataset.signup) {
       const P = PROVIDERS[t.dataset.signup];
       window.open(P.signup, '_blank', 'noopener');
-      t.textContent = 'Compte créé ? Connecter →';
+      t.textContent = "C'est fait ? Me connecter →";
       t.classList.add('primary');
       t.removeAttribute('data-signup'); t.dataset.connect = P.type;
       return;

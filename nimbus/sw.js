@@ -1,5 +1,5 @@
 // Service worker : fonctionnement hors-ligne de l'interface + réception des photos partagées (Android)
-const CACHE = 'nimbus-v2';
+const CACHE = 'nimbus-v3';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './providers.js', './crypto.js', './db.js', './config.js', './vendor/megajs.mjs',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 
