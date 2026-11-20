@@ -122,3 +122,14 @@ main { max-width: 1100px; margin: 0 auto; padding: .5rem 1rem calc(150px + var(-
 .toast { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--ok); padding: .7rem .9rem; border-radius: 12px; font-size: .88rem; box-shadow: 0 8px 24px #0008; animation: pop .2s; }
 .toast.err { border-left-color: var(--err); }
 @keyframes pop { from { opacity: 0; transform: translateY(-6px); } }
+
+/* guide d'inscription */
+.step { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--line); font-size: .7rem; color: var(--mut); }
+.pcard.done { opacity: .85; }
+.pcard.done .plogo { background: var(--ok); }
+.howto { margin: .45rem 0 .1rem; font-size: .86rem; }
+.howto summary { cursor: pointer; color: var(--acc); font-weight: 600; }
+.howto ol { margin: .4rem 0 0; padding-left: 1.2rem; color: var(--txt); }
+.howto li { margin: .2rem 0; }
+.cred input { width: 100%; padding: .85rem 1rem; margin: .35rem 0; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-size: 1rem; }
+.cred .btn { width: 100%; margin-top: .4rem; padding: .85rem; }

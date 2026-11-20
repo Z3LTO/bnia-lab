@@ -1,7 +1,7 @@
 import { CONFIG } from './config.js';
 import { idb } from './db.js';
 import * as C from './crypto.js';
-import { PROVIDERS, AuthError, handleRedirect, startAuth, setPersist } from './providers.js';
+import { PROVIDERS, GUIDE, AuthError, handleRedirect, startAuth, setPersist } from './providers.js';
 
 /* ───────── utilitaires ───────── */
 const $ = (s, r = document) => r.querySelector(s);
@@ -76,9 +76,49 @@ function pickAccount(size, exclude) {
 async function connect(type, acc) {
   const P = PROVIDERS[type];
   if (!P.configured()) return toast(`${P.name} n'est pas encore activé sur ce site (Client ID manquant dans config.js).`, 'err');
+  if (P.credentials) return credForm(type, acc);
   // la clé reste en mémoire le temps de l'aller-retour chez le fournisseur
   if (S.key && !(await idb.get('kv', 'key'))) await idb.set('kv', 'tmpKey', S.key);
   await startAuth(type, acc);
+}
+
+// Connexion par e-mail + mot de passe (MEGA)
+function credForm(type, existing, mfa = false) {
+  const P = PROVIDERS[type], sh = $('#sheet');
+  sh.innerHTML = `<form class="sheet-panel cred" id="credForm" autocomplete="on">
+    <div class="sheet-title">Connecter ${P.name}</div>
+    <input type="email" id="cEmail" placeholder="E-mail ${P.name}" autocomplete="username" required value="${esc(existing?.label || '')}">
+    <input type="password" id="cPass" placeholder="Mot de passe ${P.name}" autocomplete="current-password" required>
+    <input type="text" id="cCode" placeholder="Code de double authentification (si activée)" inputmode="numeric" autocomplete="one-time-code" class="${mfa ? '' : 'hidden'}">
+    <p class="hint">🔐 Ton mot de passe sert uniquement à ouvrir la session, directement avec ${P.name}. Nimbus ne l'enregistre pas.</p>
+    <p class="err" id="cErr"></p>
+    <button class="btn primary" type="submit">Connecter</button>
+    <button class="sheet-btn cancel" type="button" id="cCancel">Annuler</button>
+  </form>`;
+  sh.classList.remove('hidden');
+  sh.onclick = e => { if (e.target === sh) sh.classList.add('hidden'); };
+  $('#cCancel').onclick = () => sh.classList.add('hidden');
+  $('#cEmail').value ? $('#cPass').focus() : $('#cEmail').focus();
+  $('#credForm').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]'), err = $('#cErr');
+    btn.disabled = true; btn.textContent = 'Connexion…'; err.textContent = '';
+    const acc = existing ? { ...existing } : { id: rid(), provider: type };
+    try {
+      await P.login(acc, { email: $('#cEmail').value, password: $('#cPass').value, code: $('#cCode').value });
+      acc.status = 'ok';
+      const i = S.accounts.findIndex(a => a.id === acc.id);
+      if (i >= 0) S.accounts[i] = acc; else S.accounts.push(acc);
+      sh.classList.add('hidden');
+      await saveAccounts();
+      await refreshQuotas();
+      toast(`✓ ${P.name} connecté : ${acc.label}`);
+      if (S.key) { sync(); render(); } else showLock();
+    } catch (x) {
+      if (x.mfa) $('#cCode').classList.remove('hidden');
+      err.textContent = x.message; btn.disabled = false; btn.textContent = 'Connecter';
+    }
+  };
 }
 
 /* ───────── coffre (chiffrement) ───────── */
@@ -424,20 +464,40 @@ function renderFiles() {
   observeThumbs();
 }
 function providerCards(withSignup) {
-  return Object.values(PROVIDERS).map(P => {
-    const mine = S.accounts.filter(a => a.provider === P.type);
+  return Object.values(PROVIDERS).map((P, n) => {
+    const mine = S.accounts.filter(a => a.provider === P.type), g = GUIDE[P.type];
     const off = P.configured() ? '' : ' disabled title="Pas encore activé : ajoute le Client ID dans config.js"';
-    return `<div class="pcard" style="--pc:${P.color}">
-      <div class="plogo">${P.letter}</div>
+    return `<div class="pcard${mine.length ? ' done' : ''}" style="--pc:${P.color}">
+      <div class="plogo">${mine.length ? '✓' : P.letter}</div>
       <div class="pbody">
-        <div class="pname">${P.name} <span class="pfree">${P.freeHint}</span></div>
+        <div class="pname"><span class="step">${n + 1}</span>${P.name} <span class="pfree">${P.freeHint}</span></div>
         <div class="phint">${mine.length ? `✓ ${mine.length} compte(s) connecté(s). Tu peux en ajouter un autre pour plus d'espace.` : P.hasIt}</div>
+        ${withSignup && !mine.length ? `<details class="howto"><summary>⏱ ${g.time} · Comment s'inscrire ?</summary>
+          <p class="hint">💡 ${g.need}</p><ol>${g.steps.map(x => `<li>${x}</li>`).join('')}</ol></details>` : ''}
         <div class="pbtns">
           <button class="btn primary sm" data-connect="${P.type}"${off}>${mine.length ? '+ Ajouter un compte' : "J'ai déjà un compte"}</button>
-          ${withSignup ? `<button class="btn sm" data-signup="${P.type}"${off}>Créer un compte gratuit</button>` : ''}
+          ${withSignup && !mine.length ? `<button class="btn sm" data-signup="${P.type}"${off}>Créer un compte gratuit</button>` : ''}
         </div>
       </div></div>`;
   }).join('');
+}
+function expressGuide() {
+  const possible = Object.values(GUIDE).reduce((t, g) => t + g.gb, 0);
+  const have = new Set(S.accounts.map(a => a.provider));
+  const got = Object.entries(GUIDE).filter(([k]) => have.has(k)).reduce((t, [, g]) => t + g.gb, 0);
+  return `<div class="card welcome">
+    <h2>Étape 2/2 : branche tes clouds</h2>
+    <p><b>≈ ${possible} Go gratuits en ≈ 7 minutes.</b> Pas besoin de tout faire d'un coup : Google + MEGA donnent déjà 35 Go.</p>
+    <div class="bar"><i style="width:${Math.min(100, (got / possible) * 100)}%"></i></div>
+    <p class="hint">${got} Go branchés sur ${possible} Go possibles</p>
+    <ul class="hint list">
+      <li><b>Tu as déjà le compte ?</b> → « J'ai déjà un compte ». Nimbus prend seulement l'espace libre, dans son propre dossier, sans toucher à tes fichiers.</li>
+      <li><b>Pas encore ?</b> → « Créer un compte gratuit » ouvre l'inscription dans un nouvel onglet. Reviens ici ensuite.</li>
+      <li><b>Va plus vite :</b> utilise la même adresse e-mail partout, « Continuer avec Google » quand c'est proposé, et laisse ton navigateur enregistrer les mots de passe.</li>
+      <li>Plusieurs comptes d'un même service = encore plus d'espace.</li>
+    </ul>
+    <button class="btn primary" id="doneOnboarding"${S.accounts.length ? '' : ' disabled'}>C'est bon, j'envoie mes photos →</button>
+  </div>`;
 }
 function accountCard(a, mine) {
   const P = PROVIDERS[a.provider], pct = a.total ? Math.min(100, (a.used / a.total) * 100) : 0;
@@ -462,12 +522,7 @@ async function renderClouds() {
   const tot = ok.reduce((s, a) => s + (a.total || 0), 0), used = ok.reduce((s, a) => s + (a.used || 0), 0);
   const onboarding = (await idb.get('kv', 'onboarded')) === false;
   $('#viewClouds').innerHTML = `
-    ${onboarding ? `<div class="card welcome">
-      <h2>Étape 2/2 : branche tes clouds</h2>
-      <p>Pour chaque service : <b>« J'ai déjà un compte »</b> si tu l'utilises déjà (Nimbus prend seulement l'espace libre, dans son propre dossier, sans toucher à tes fichiers), ou <b>« Créer un compte gratuit »</b> pour t'inscrire puis revenir le connecter.</p>
-      <p class="hint">Astuce : plusieurs comptes d'un même service = plus d'espace.</p>
-      <button class="btn primary" id="doneOnboarding"${S.accounts.length ? '' : ' disabled'}>C'est bon, j'envoie mes photos →</button>
-    </div>` : ''}
+    ${onboarding ? expressGuide() : ''}
     <div class="card total">
       <div class="big">${fmt(tot - used)}</div>
       <div class="hint">libres au total · ${fmt(tot)} cumulés sur ${S.accounts.length} cloud(s)</div>
@@ -477,14 +532,14 @@ async function renderClouds() {
     ${S.accounts.length ? `<h3>Tes clouds connectés</h3>${S.accounts.map(a => accountCard(a, usage[a.id] || 0)).join('')}` : ''}
     <h3>${S.accounts.length ? 'Ajouter des clouds' : 'Connecte tes clouds'}</h3>
     ${providerCards(true)}
-    <p class="hint soon">Bientôt : MEGA (20 Go), pCloud, Box, Koofr, Filen… (version 2, avec un petit serveur).</p>
+    <p class="hint soon">Bientôt : kDrive, Koofr, Box, Filen, Icedrive… (avec un petit serveur).</p>
     <div class="card">
       <h3>🔐 Sécurité</h3>
       <ul class="hint list">
         <li>Chaque fichier est chiffré (AES-256) sur ton appareil <b>avant</b> l'envoi. Les clouds ne stockent que des morceaux illisibles aux noms aléatoires.</li>
         <li>Ta phrase secrète n'est jamais envoyée nulle part. Sans elle, personne ne peut lire tes fichiers… toi non plus : ne la perds pas.</li>
         <li>Nimbus n'a accès qu'à son propre dossier sur chaque cloud, jamais à tes autres fichiers.</li>
-        <li>Aucun serveur Nimbus : les connexions vont directement de ton appareil vers Google, Microsoft et Dropbox.</li>
+        <li>Aucun serveur Nimbus : les connexions vont directement de ton appareil vers chaque cloud.</li>
       </ul>
     </div>`;
 }

@@ -266,7 +266,186 @@ const dropbox = {
   },
 };
 
-export const PROVIDERS = { google, onedrive, dropbox };
+/* ───────────────────────── pCloud ───────────────────────── */
+// Requêtes « simples » (GET / POST formulaire) : pas de pré-vol CORS, jeton sans expiration.
+const pcloud = {
+  type: 'pcloud', name: 'pCloud', color: '#17bed0', letter: 'P',
+  freeHint: "jusqu'à 10 Go gratuits",
+  hasIt: 'Tu as déjà un compte pCloud ? Connecte-le.',
+  signup: 'https://my.pcloud.com/#page=register',
+  configured: () => !!CONFIG.pcloud.clientId,
+  authUrl(acc) {
+    return 'https://my.pcloud.com/oauth2/authorize?' + new URLSearchParams({
+      client_id: CONFIG.pcloud.clientId, response_type: 'token', redirect_uri: REDIRECT, state: acc.id,
+    });
+  },
+  async finish(acc, params) {
+    acc.token = params.get('access_token');
+    acc.host = params.get('hostname') || 'api.pcloud.com'; // eapi.pcloud.com pour les comptes européens
+  },
+  async call(acc, method, params = {}, opts = {}) {
+    if (!acc.token) throw new AuthError(acc);
+    const r = await fetch(`https://${acc.host || 'api.pcloud.com'}/${method}?` + new URLSearchParams({ ...params, access_token: acc.token }), opts);
+    const j = await r.json();
+    if ([1000, 2000, 2094, 2095].includes(j.result)) throw new AuthError(acc);
+    if (j.result !== 0) { const e = new Error('pCloud : ' + (j.error || 'erreur ' + j.result)); e.code = j.result; throw e; }
+    return j;
+  },
+  async info(acc) {
+    const j = await this.call(acc, 'userinfo');
+    return { label: j.email, total: j.quota, used: j.usedquota };
+  },
+  async folder(acc) {
+    if (acc.pFolder) return acc.pFolder;
+    const j = await this.call(acc, 'createfolderifnotexists', { path: '/' + CONFIG.appFolder });
+    acc.pFolder = j.metadata.folderid; persist();
+    return acc.pFolder;
+  },
+  async put(acc, name, data) {
+    const fd = new FormData();
+    fd.append('file', new Blob([data]), name);
+    const j = await this.call(acc, 'uploadfile', { folderid: await this.folder(acc), filename: name, nopartial: 1 }, { method: 'POST', body: fd });
+    return j.metadata[0].fileid;
+  },
+  upload(acc, name, data) { return this.put(acc, name, data); },
+  async fetchLink(acc, params) {
+    const j = await this.call(acc, 'getfilelink', params);
+    return (await ok(await fetch(`https://${j.hosts[0]}${j.path}`), 'pCloud')).arrayBuffer();
+  },
+  download(acc, id) { return this.fetchLink(acc, { fileid: id }); },
+  async remove(acc, id) {
+    try { await this.call(acc, 'deletefile', { fileid: id }); } catch (e) { if (e.code !== 2009) throw e; }
+  },
+  async readIndex(acc) {
+    try { return new TextDecoder().decode(await this.fetchLink(acc, { path: `/${CONFIG.appFolder}/${INDEX_NAME}` })); }
+    catch (e) { if (e.code === 2009 || e.code === 2002 || e.code === 2005) return null; throw e; }
+  },
+  writeIndex(acc, text) { return this.put(acc, INDEX_NAME, new TextEncoder().encode(text)); }, // écrase l'ancien
+};
+
+/* ───────────────────────── MEGA ───────────────────────── */
+// Pas d'OAuth chez MEGA : connexion e-mail + mot de passe, faite UNE fois.
+// Le mot de passe n'est jamais enregistré : on garde seulement la session MEGA sur l'appareil.
+const megaSessions = new Map();
+let megaLib = null;
+const megaErr = e => /ESID|-15\b|EBLOCKED|-16\b/.test(String(e?.message || e));
+const mega = {
+  type: 'mega', name: 'MEGA', color: '#d9272e', letter: 'M', credentials: true,
+  freeHint: '20 Go gratuits',
+  hasIt: 'Tu as déjà un compte MEGA ? Connecte-le avec ton e-mail.',
+  signup: 'https://mega.io/fr/register',
+  configured: () => true,
+  lib: () => (megaLib ||= import('./vendor/megajs.mjs')),
+  async login(acc, { email, password, code }) {
+    const { Storage } = await this.lib();
+    const opts = { email: email.trim(), password, keepalive: false, autoload: false };
+    if (code) opts.secondFactorCode = code.trim();
+    let s;
+    try { s = await new Storage(opts).ready; }
+    catch (e) {
+      const m = String(e.message || e);
+      if (/-26|EMFAREQUIRED/.test(m)) { const x = new Error('Code de double authentification requis.'); x.mfa = true; throw x; }
+      if (/ENOENT|-9\b|EKEY|-14\b/.test(m)) throw new Error('E-mail ou mot de passe incorrect.');
+      if (/-18|ETEMPUNAVAIL/.test(m)) throw new Error("Compte pas encore confirmé : clique d'abord sur le lien reçu par e-mail.");
+      throw new Error('MEGA : ' + m);
+    }
+    const j = s.toJSON();
+    acc.session = { key: j.key, sid: j.sid, name: j.name, user: j.user };
+    acc.label = s.email;
+    megaSessions.delete(acc.id);
+  },
+  storage(acc) {
+    if (!megaSessions.has(acc.id)) {
+      const p = (async () => {
+        if (!acc.session) throw new AuthError(acc);
+        const { Storage } = await this.lib();
+        const s = Storage.fromJSON({ ...acc.session, options: { email: acc.label, keepalive: false } });
+        try { await s.reload(true); } catch (e) { if (megaErr(e)) throw new AuthError(acc); throw e; }
+        return s;
+      })();
+      megaSessions.set(acc.id, p);
+      p.catch(() => megaSessions.delete(acc.id));
+    }
+    return megaSessions.get(acc.id);
+  },
+  async wrap(acc, fn) {
+    try { return await fn(await this.storage(acc)); }
+    catch (e) { if (e instanceof AuthError || megaErr(e)) { megaSessions.delete(acc.id); throw new AuthError(acc); } throw e; }
+  },
+  async folder(s) {
+    return s.root.children?.find(f => f.directory && f.name === CONFIG.appFolder) || s.mkdir(CONFIG.appFolder);
+  },
+  info(acc) {
+    return this.wrap(acc, async s => {
+      const i = await s.getAccountInfo();
+      return { label: acc.label, total: i.spaceTotal, used: i.spaceUsed };
+    });
+  },
+  upload(acc, name, data) {
+    return this.wrap(acc, async s => {
+      const dir = await this.folder(s);
+      const f = await dir.upload({ name, size: data.byteLength }, data).complete;
+      return f.nodeId;
+    });
+  },
+  download(acc, id) {
+    return this.wrap(acc, async s => {
+      const f = s.files[id];
+      if (!f) throw new Error('MEGA : morceau introuvable');
+      return f.downloadBuffer({});
+    });
+  },
+  remove(acc, id) {
+    return this.wrap(acc, async s => { const f = s.files[id]; if (f) await f.delete(true); });
+  },
+  findIndex(s, dir) { return dir.children?.filter(f => f.name === INDEX_NAME) || []; },
+  readIndex(acc) {
+    return this.wrap(acc, async s => {
+      await s.reload(true); // l'index a pu changer depuis un autre appareil
+      const [f] = this.findIndex(s, await this.folder(s)).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      return f ? new TextDecoder().decode(await f.downloadBuffer({})) : null;
+    });
+  },
+  writeIndex(acc, text) {
+    return this.wrap(acc, async s => {
+      const dir = await this.folder(s), old = this.findIndex(s, dir), data = new TextEncoder().encode(text);
+      await dir.upload({ name: INDEX_NAME, size: data.byteLength }, data).complete;
+      for (const f of old) await f.delete(true).catch(() => {});
+    });
+  },
+};
+
+// Ordre d'affichage = ordre conseillé d'inscription (le plus de Go pour le moins d'effort)
+export const PROVIDERS = { google, mega, pcloud, onedrive, dropbox };
+
+// Guide d'inscription affiché dans l'appli
+export const GUIDE = {
+  google: {
+    gb: 15, time: '0 min si tu as Gmail · 3 min sinon',
+    need: 'Un numéro de téléphone peut être demandé.',
+    steps: ['Ouvre l’inscription Google', 'Prénom, nom, date de naissance', 'Choisis ton adresse @gmail.com et un mot de passe', 'Reviens ici → « J’ai déjà un compte »'],
+  },
+  mega: {
+    gb: 20, time: '≈ 2 min',
+    need: 'Juste un e-mail (ta Gmail convient).',
+    steps: ['Ouvre l’inscription MEGA', 'Prénom, e-mail, mot de passe', 'Clique sur le lien reçu par e-mail', 'Choisis l’offre « Gratuit »', 'Reviens ici → « J’ai déjà un compte » (e-mail + mot de passe)'],
+  },
+  pcloud: {
+    gb: 10, time: '≈ 1 min',
+    need: 'Utilise « Continuer avec Google » si c’est proposé : pas de mot de passe à créer.',
+    steps: ['Ouvre l’inscription pCloud', '« Continuer avec Google » (ou e-mail + mot de passe)', 'Les 10 Go se débloquent en faisant les petites actions proposées (confirmer l’e-mail, installer l’appli…)', 'Reviens ici → « J’ai déjà un compte »'],
+  },
+  onedrive: {
+    gb: 5, time: '0 min si tu as Hotmail/Outlook · 3 min sinon',
+    need: 'Tu peux créer le compte avec ton adresse Gmail existante.',
+    steps: ['Ouvre l’inscription Microsoft', 'Entre ton e-mail (Gmail possible) et un mot de passe', 'Recopie le code reçu par e-mail', 'Reviens ici → « J’ai déjà un compte »'],
+  },
+  dropbox: {
+    gb: 2, time: '≈ 1 min',
+    need: 'Utilise « Continuer avec Google » : c’est le plus rapide.',
+    steps: ['Ouvre l’inscription Dropbox', '« Continuer avec Google »', 'Choisis l’offre « Basic » (gratuite) si on te propose un essai', 'Reviens ici → « J’ai déjà un compte »'],
+  },
+};
 
 /* ───────────────────────── Flux OAuth ───────────────────────── */
 const PENDING = 'nimbus:pending:';

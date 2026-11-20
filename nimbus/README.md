@@ -1,7 +1,7 @@
 # ☁ Nimbus : tous tes clouds gratuits dans un seul coffre chiffré
 
 Nimbus est une application web installable (PWA) pour PC, Android et iPhone. Elle réunit l'espace gratuit de plusieurs clouds
-(Google Drive 15 Go, OneDrive 5 Go, Dropbox 2 Go, et plusieurs comptes par service si tu veux) et y répartit automatiquement
+(MEGA 20 Go, Google Drive 15 Go, pCloud jusqu'à 10 Go, OneDrive 5 Go, Dropbox 2 Go : ≈ 52 Go, et plus avec plusieurs comptes par service) et y répartit automatiquement
 tes photos, vidéos et dossiers.
 
 ## Comment ça marche
@@ -23,12 +23,27 @@ tes photos, vidéos et dossiers.
 - **Android** : une fois l'appli installée, « Partager » depuis la Galerie affiche **Nimbus** et envoie directement les photos.
 - **PC** : glisser-déposer, ou envoi d'un dossier entier avec ses sous-dossiers.
 
+## Guide d'inscription (pour les utilisateurs)
+
+L'appli contient un **parcours express** : ≈ 52 Go gratuits en ≈ 7 minutes, dans l'ordre le plus rentable.
+
+| # | Cloud | Gratuit | Temps | Astuce |
+|---|---|---|---|---|
+| 1 | Google Drive | 15 Go | 0 min avec une Gmail | Déjà inclus avec Gmail |
+| 2 | MEGA | 20 Go | ≈ 2 min | E-mail + mot de passe + clic dans l'e-mail de confirmation |
+| 3 | pCloud | jusqu'à 10 Go | ≈ 1 min | « Continuer avec Google » ; les 10 Go se débloquent avec de petites actions |
+| 4 | OneDrive | 5 Go | 0 min avec Hotmail/Outlook | Sinon, compte Microsoft créé avec sa Gmail |
+| 5 | Dropbox | 2 Go | ≈ 1 min | « Continuer avec Google » |
+
+Pour aller plus vite : la même adresse e-mail partout, « Continuer avec Google » dès que c'est proposé, et le gestionnaire de
+mots de passe du navigateur. Pas besoin de tout faire d'un coup : Google + MEGA = 35 Go.
+
 ## Mise en ligne (GitHub Pages, gratuit)
 
 1. Copie le dossier `nimbus/` dans ton dépôt (ex. `Z3LTO/bnia-lab`) → l'appli sera sur `https://z3lto.github.io/bnia-lab/nimbus/`.
 2. Note cette URL **exacte, avec le `/` final** : c'est ton **URL de redirection**. Pour tester en local :
    `python3 -m http.server 8080` dans le dossier, puis `http://localhost:8080/`.
-3. Crée les 3 identifiants ci-dessous et colle-les dans `config.js`.
+3. Crée les 4 identifiants ci-dessous et colle-les dans `config.js`. **MEGA ne demande aucun identifiant** : il marche tout de suite.
 
 ### Google Drive
 1. https://console.cloud.google.com → crée un projet « Nimbus ».
@@ -56,6 +71,16 @@ tes photos, vidéos et dossiers.
 4. Copie l'**App key** dans `config.js` → `dropbox.clientId`.
    (En mode développement : 50 utilisateurs max ; demande le passage en « Production » pour ouvrir à tous.)
 
+### pCloud
+1. Connecte-toi sur https://docs.pcloud.com → **My applications** → New app.
+2. Redirect URIs : `https://z3lto.github.io/bnia-lab/nimbus/`.
+3. Accès : écriture sur un dossier d'application (ou « Private app folder »).
+4. Copie le **Client ID** dans `config.js` → `pcloud.clientId`.
+
+### MEGA
+Rien à configurer. L'utilisateur se connecte une fois avec son e-mail et son mot de passe MEGA (directement avec MEGA,
+via la bibliothèque open source `megajs` incluse dans `vendor/`). Le mot de passe n'est jamais enregistré : seule la session est gardée sur l'appareil.
+
 ## Limites de cette V1 (sans serveur)
 
 - **Google** donne des sessions d'1 h sans serveur : après ça, un bouton « Reconnecter » apparaît (un clic).
@@ -63,11 +88,12 @@ tes photos, vidéos et dossiers.
 - **OneDrive** : reconnexion environ toutes les 24 h (règle Microsoft pour les applis 100 % navigateur).
 - Sur téléphone, garde l'écran allumé pendant un gros envoi (Nimbus bloque la mise en veille quand le navigateur le permet).
 - Il n'y a pas de copie de secours : un fichier est sur un seul cloud. Si tu retires ce cloud, le fichier devient inaccessible.
-- MEGA, pCloud, Box, Koofr et Filen ont besoin d'un petit serveur : prévu en V2.
+- pCloud et MEGA gardent la connexion sans limite de durée.
+- kDrive, Koofr, Box, Filen et Icedrive ont besoin d'un petit serveur : prévu en V2.
 
 ## Pistes V2
 
-- Petit backend (ex. Supabase Edge Functions) pour garder des sessions permanentes et ajouter MEGA (20 Go), pCloud, Box, Koofr.
+- Petit backend (ex. Supabase Edge Functions) pour garder des sessions permanentes et ajouter kDrive, Koofr, Box, Filen.
 - Option « copie de secours » : chaque fichier sur 2 clouds.
 - Compte Nimbus (e-mail) pour retrouver la liste de ses clouds sur un nouvel appareil sans rien reconnecter.
 
@@ -77,7 +103,8 @@ tes photos, vidéos et dossiers.
 |---|---|
 | `index.html`, `styles.css` | Interface |
 | `app.js` | Coffre, catalogue, envoi/répartition, synchro, visionneuse |
-| `providers.js` | Connecteurs Google Drive, OneDrive, Dropbox (OAuth 2 + PKCE) |
+| `providers.js` | Connecteurs Google Drive, OneDrive, Dropbox, pCloud (OAuth 2), MEGA, et le guide d'inscription |
+| `vendor/megajs.mjs` | Bibliothèque MEGA (licence MIT) |
 | `crypto.js` | Chiffrement AES-256-GCM / PBKDF2 |
 | `db.js` | Stockage local (IndexedDB) |
 | `sw.js`, `manifest.webmanifest` | Installation, mode hors-ligne, partage depuis la galerie Android |

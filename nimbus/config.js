@@ -13,4 +13,6 @@ export const CONFIG = {
   google:   { clientId: '' },          // ex. 1234-abcd.apps.googleusercontent.com
   onedrive: { clientId: '' },          // ex. 00000000-0000-0000-0000-000000000000
   dropbox:  { clientId: '' },          // « App key » Dropbox
+  pcloud:   { clientId: '' },          // « Client ID » pCloud
+  // MEGA : rien à configurer (connexion par e-mail + mot de passe)
 };
