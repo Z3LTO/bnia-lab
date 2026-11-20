@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tampon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout : colonne unique et étroite, une chose à la fois ; papier clair + encre de tampon bleue */
+:root{
+  --paper:#F6F5F2; --ink:#18181B; --muted:#5E5C57; --line:#E3E0D9; --card:#FFFFFF; --soft:#EFEDE8;
+  --stamp:#1E4D3A; --stamp-soft:#E1EDE5; --on-stamp:#FFFFFF;
+  --ok:#137A53; --ok-soft:#DDF2E8; --warn:#8A6400; --warn-soft:#F7EED2; --bad:#B8322A; --bad-soft:#FBE2DF;
+  --f-display:'Schibsted Grotesk',ui-sans-serif,system-ui,sans-serif;
+  --f-body:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#121110; --ink:#F0EEEA; --muted:#A8A49C; --line:#2E2B27; --card:#1B1A18; --soft:#23211E;
+  --stamp:#7CC49C; --stamp-soft:#16291F; --on-stamp:#121110;
+  --ok:#4CC88E; --ok-soft:#14352A; --warn:#E2B84A; --warn-soft:#352B10; --bad:#F27B6F; --bad-soft:#3D1B18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121110; --ink:#F0EEEA; --muted:#A8A49C; --line:#2E2B27; --card:#1B1A18; --soft:#23211E;
+  --stamp:#7CC49C; --stamp-soft:#16291F; --on-stamp:#121110;
+  --ok:#4CC88E; --ok-soft:#14352A; --warn:#E2B84A; --warn-soft:#352B10; --bad:#F27B6F; --bad-soft:#3D1B18; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+p{margin:0}
+a{color:var(--stamp)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:3px;border-radius:8px}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wide{max-width:1040px}
+
+/* Boutons : grands, faciles à toucher */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:12px 22px;font-weight:600;font-size:17px;cursor:pointer;text-decoration:none;color:var(--ink);transition:border-color .15s,filter .15s}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--stamp);border-color:var(--stamp);color:var(--on-stamp)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{min-height:42px;padding:8px 14px;font-size:15px;border-radius:11px}
+.link{background:none;border:0;padding:10px 4px;color:var(--stamp);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:16px}
+.link.muted{color:var(--muted)}
+
+/* Barre du haut */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.03em;text-decoration:none;color:var(--ink)}
+.logo svg{width:30px;height:30px;flex:none}
+.tabs{display:flex;gap:4px}
+.tabs a{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:11px;text-decoration:none;color:var(--muted);font-weight:600;font-size:16px}
+@media (max-width:500px){.tabs a{padding:0 9px;font-size:15px}.logo span.lt{display:none}}
+.tabs a[aria-current="page"]{background:var(--stamp-soft);color:var(--stamp)}
+
+/* Le tampon : l'élément signature */
+.stampmark{display:inline-block;transform:rotate(-10deg);font-family:var(--f-mono);font-weight:600;font-size:14px;letter-spacing:.18em;color:var(--stamp);border:2.5px solid var(--stamp);border-radius:8px;padding:3px 10px}
+@media (prefers-reduced-motion:no-preference){
+  .anim{animation:stampdown .5s cubic-bezier(.2,.9,.3,1.4) .3s both}
+  @keyframes stampdown{0%{transform:rotate(-10deg) scale(1.9);opacity:0}60%{transform:rotate(-10deg) scale(.94);opacity:1}100%{transform:rotate(-10deg) scale(1)}}
+}
+
+/* ===== Accueil ===== */
+.hero{padding-block:72px 56px}
+.hero h1{font-size:clamp(42px,8vw,72px);line-height:1;font-weight:800;letter-spacing:-.045em}
+.hero h1 em{font-style:normal;color:var(--stamp)}
+.hero .stampmark{margin-top:18px}
+.hero .lede{font-size:20px;color:var(--muted);margin-top:22px;max-width:32em}
+.hero .ctas{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:32px}
+.hero .ctas .btn{min-width:260px}
+.does{padding-block:8px 56px}
+.does h2{font-size:26px;font-weight:800;margin-bottom:18px}
+.does ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.does li{display:grid;grid-template-columns:28px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--line);align-items:start}
+.does li svg{width:24px;height:24px;color:var(--stamp);margin-top:2px}
+.does li b{display:block;font-size:18px}
+.does li span{color:var(--muted);font-size:16px}
+.promise{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:6px;margin-bottom:56px}
+.promise b{font-family:var(--f-display);font-size:22px}
+.promise p{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding-block:22px 36px;color:var(--muted);font-size:14px}
+
+/* ===== Questionnaire : une question par écran ===== */
+.q{padding-block:28px 48px}
+.prog{display:flex;align-items:center;gap:14px;margin-bottom:36px}
+.prog .bar{flex:1;height:8px;background:var(--soft);border-radius:99px;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:var(--stamp);border-radius:99px;transition:width .3s}
+.prog .n{font-size:15px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.q h1{font-size:clamp(28px,5vw,38px);font-weight:800;line-height:1.15}
+.q .help{color:var(--muted);margin-top:10px;font-size:17px}
+.q .body{margin-top:28px;display:flex;flex-direction:column;gap:12px}
+.choice{display:flex;align-items:center;gap:16px;width:100%;min-height:68px;text-align:left;padding:14px 18px;border:1.5px solid var(--line);background:var(--card);border-radius:16px;cursor:pointer;transition:border-color .15s,background .15s}
+.choice:hover{border-color:var(--stamp)}
+.choice[aria-pressed="true"]{border-color:var(--stamp);background:var(--stamp-soft)}
+.choice:disabled{cursor:not-allowed;opacity:.55}
+.choice .tx{flex:1;min-width:0}
+.choice .tx b{display:block;font-size:18px;font-weight:600}
+.choice .tx span{display:block;font-size:15px;color:var(--muted)}
+.choice .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center}
+.choice[aria-pressed="true"] .ck{background:var(--stamp);border-color:var(--stamp)}
+.choice[aria-pressed="true"] .ck::after{content:"";width:10px;height:6px;border:solid var(--on-stamp);border-width:0 0 2.5px 2.5px;transform:rotate(-45deg) translate(1px,-1px)}
+.choice .soon{font-size:13px;font-weight:600;color:var(--muted);background:var(--soft);padding:3px 10px;border-radius:99px}
+.big-in{width:100%;min-height:60px;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:14px 18px;font-size:20px;outline:none}
+.big-in:focus{border-color:var(--stamp);box-shadow:0 0 0 4px var(--stamp-soft)}
+.big-in.bad{border-color:var(--bad)}
+.err{color:var(--bad);font-size:16px;font-weight:500}
+.q .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:28px;flex-wrap:wrap}
+.done-card{text-align:center;padding-block:40px}
+.done-card .stampmark{font-size:20px;margin-bottom:26px}
+
+/* ===== Ma journée ===== */
+.day{padding-block:28px 64px;display:flex;flex-direction:column;gap:32px}
+.banner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:10px 16px;font-size:15px;font-weight:500}
+.banner .link{color:var(--warn);font-size:15px;padding:4px 0}
+.hello h1{font-size:clamp(30px,5vw,40px);font-weight:800}
+.hello p{color:var(--muted);font-size:18px;margin-top:6px}
+.ask{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:18px}
+.ask label{display:block;font-family:var(--f-display);font-weight:700;font-size:19px;margin-bottom:12px}
+.ask form{display:flex;gap:10px}
+.ask .big-in{font-size:17px;min-height:54px}
+@media (max-width:520px){.ask form{flex-direction:column}}
+.ideas{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ideas button{border:1.5px solid var(--line);background:var(--paper);border-radius:99px;padding:8px 14px;font-size:15px;cursor:pointer;min-height:40px}
+.ideas button:hover{border-color:var(--stamp);color:var(--stamp)}
+.answer{margin-top:14px;background:var(--stamp-soft);border-radius:14px;padding:14px 16px;font-size:16.5px}
+.answer b{display:block;font-size:14px;color:var(--stamp);margin-bottom:2px}
+.sec h2{font-size:22px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.count{font-family:var(--f-body);font-size:15px;font-weight:700;background:var(--stamp);color:var(--on-stamp);border-radius:99px;min-width:28px;height:28px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center}
+.cards{display:flex;flex-direction:column;gap:12px}
+.card{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.card.urgent{border-color:var(--warn)}
+.card .why{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--muted)}
+.card .why .dot{width:9px;height:9px;border-radius:50%;background:var(--stamp);flex:none}
+.card.urgent .why{color:var(--warn);font-weight:600}.card.urgent .why .dot{background:var(--warn)}
+.card h3{font-family:var(--f-body);font-size:19px;font-weight:600;letter-spacing:0;line-height:1.35}
+.card details summary{cursor:pointer;color:var(--stamp);font-weight:600;font-size:16px;min-height:36px;display:flex;align-items:center;list-style:none}
+.card details summary::-webkit-details-marker{display:none}
+.card details summary::before{content:"›";display:inline-block;margin-right:8px;transition:transform .15s;font-size:20px;line-height:1}
+.card details[open] summary::before{transform:rotate(90deg)}
+.card pre{white-space:pre-wrap;font-family:var(--f-body);font-size:16px;background:var(--soft);border-radius:12px;padding:14px;margin:6px 0 0;overflow-wrap:anywhere;outline:none}
+.card pre[contenteditable="true"]{box-shadow:0 0 0 2px var(--stamp)}
+.card .acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+@media (max-width:520px){.card .acts{flex-direction:column;align-items:stretch}}
+.card .stampmark{position:absolute;right:18px;top:16px}
+.card.leaving{opacity:.55;pointer-events:none;transition:opacity .3s}
+.allgood{background:var(--ok-soft);color:var(--ok);border-radius:18px;padding:22px;font-size:18px;font-weight:600;display:flex;gap:14px;align-items:center}
+.allgood .stampmark{color:var(--ok);border-color:var(--ok)}
+.list{background:var(--card);border:1.5px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .date{flex:none;width:58px;text-align:center;line-height:1.1}
+.row .date b{display:block;font-family:var(--f-display);font-size:24px;font-weight:800}
+.row .date span{font-size:13px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-weight:600}
+.row .tx span{display:block;font-size:15px;color:var(--muted)}
+.when{font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.when.soon{color:var(--warn)}
+.fine{font-size:14px;color:var(--muted);margin-top:10px}
+.donebox summary{cursor:pointer;font-family:var(--f-display);font-weight:800;font-size:22px;list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;flex-wrap:wrap}
+.donebox summary::-webkit-details-marker{display:none}
+.donebox summary::after{content:"Afficher";font-family:var(--f-body);font-size:15px;font-weight:600;color:var(--stamp)}
+.donebox[open] summary::after{content:"Masquer"}
+.donebox .list{margin-top:12px}
+.donebox .row .t{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;width:46px;flex:none}
+
+/* ===== Réglages ===== */
+.set{padding-block:28px 64px;display:flex;flex-direction:column;gap:28px}
+.set h1{font-size:clamp(28px,5vw,36px);font-weight:800}
+.kv .row{justify-content:space-between}
+.kv .row .k{color:var(--muted);font-size:15px}
+.kv .row .v{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+.switch{position:relative;width:56px;height:32px;border-radius:99px;background:var(--line);border:0;cursor:pointer;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:50%;background:var(--card);transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch[aria-checked="true"]{background:var(--ok)}
+.switch[aria-checked="true"]::after{transform:translateX(24px)}
+
+.note{font-size:15.5px;color:var(--muted)}
+.docbtn{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:1.5px dashed var(--line);background:var(--soft);border-radius:14px;cursor:pointer;text-align:left;font-weight:600;color:var(--stamp);font-size:16px}
+.docbtn:hover{border-color:var(--stamp);border-style:solid}
+.docbtn svg{width:24px;height:24px;flex:none}
+.docbtn span:not(.arr){flex:1;min-width:0}
+.docbtn .arr{font-size:22px;line-height:1}
+/* Mes documents */
+.docs{padding-block:28px 64px;display:flex;flex-direction:column;gap:20px}
+.docs-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.docs-top h1{font-size:clamp(28px,5vw,36px);font-weight:800}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters button{min-height:42px;padding:0 16px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:15px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.drow{display:flex;align-items:center;gap:14px;width:100%;padding:14px 18px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;cursor:pointer}
+.drow:last-child{border-bottom:0}
+.drow:hover{background:var(--soft)}
+.dic{flex:none;width:46px;height:54px;border-radius:8px;border:1.5px solid var(--line);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--stamp);background:var(--card)}
+.dic.devis{color:var(--ok)}.dic.recue{color:var(--muted)}
+.drow .tx{flex:1;min-width:0}.drow .tx b{display:block}.drow .tx span{display:block;font-size:14.5px;color:var(--muted)}
+.drow .amt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;white-space:nowrap}
+.drow .amt b{font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:99px}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.mute{background:var(--soft);color:var(--muted)}
+@media (max-width:480px){.drow{flex-wrap:wrap}.drow .amt{flex-direction:row;width:100%;justify-content:space-between;padding-left:60px}}
+/* Visionneuse de document : le papier reste blanc dans les deux thèmes */
+:root{--doc-paper:#FFFFFF;--doc-ink:#18181B;--doc-muted:#66635D;--doc-line:#E6E3DC;--doc-accent:#1E4D3A;--doc-soft:#F4F2EE}
+.viewer{position:fixed;inset:0;z-index:60;background:rgba(18,17,16,.88);display:flex;flex-direction:column}
+.vbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.vbar h2{flex:1;min-width:140px;font-size:18px;font-weight:800}
+.vscroll{flex:1;overflow:auto;padding:24px max(16px,env(safe-area-inset-right,0px)) calc(32px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.paper{position:relative;max-width:760px;margin:0 auto;background:var(--doc-paper);color:var(--doc-ink);border-radius:6px;box-shadow:0 30px 70px -30px rgba(0,0,0,.55);padding:clamp(20px,5vw,52px);font-size:14.5px;line-height:1.5;color-scheme:light}
+.p-head{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:22px;border-bottom:2px solid var(--doc-ink)}
+.p-co{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.02em}
+.p-small{font-size:13px;color:var(--doc-muted)}
+.p-title{text-align:right}
+.p-type{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;color:var(--doc-accent);text-transform:uppercase}
+.p-to{margin:24px 0;display:flex;flex-direction:column}
+.p-to span{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--doc-muted);font-weight:600}
+.p-to b{font-size:16px}
+.p-tablewrap{overflow-x:auto}
+.p-table{width:100%;border-collapse:collapse;min-width:440px;font-variant-numeric:tabular-nums}
+.p-table th{background:var(--doc-soft);font-size:12.5px;text-align:left;padding:9px 10px;font-weight:600}
+.p-table td{padding:11px 10px;border-bottom:1px solid var(--doc-line)}
+.p-table .r{text-align:right;white-space:nowrap}
+.p-tot{margin-left:auto;max-width:300px;margin-top:16px;display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.p-tot div{display:flex;justify-content:space-between;gap:16px}
+.p-tot .big{font-weight:800;font-size:18px;border-top:2px solid var(--doc-ink);padding-top:8px}
+.p-tot .p-small{justify-content:flex-end}
+.p-foot{margin-top:36px;padding-top:14px;border-top:1px solid var(--doc-line);font-size:12px;color:var(--doc-muted)}
+.pstamp{position:absolute;left:clamp(20px,6vw,56px);bottom:clamp(70px,12vw,96px);transform:rotate(-12deg);font-family:var(--f-mono);font-weight:600;font-size:20px;letter-spacing:.18em;border:3px solid;border-radius:10px;padding:4px 14px;opacity:.85;pointer-events:none}
+.pstamp.ok{color:#137A53}.pstamp.bad{color:#B8322A}.pstamp.mute{color:#66635D}
+.mailv{max-width:760px;margin:0 auto;background:var(--card);border-radius:16px;border:1px solid var(--line);overflow:hidden}
+.mailv dl{display:grid;grid-template-columns:84px 1fr;margin:0;border-bottom:1px solid var(--line)}
+.mailv dt,.mailv dd{margin:0;padding:12px 18px;border-bottom:1px solid var(--line);min-width:0;overflow-wrap:anywhere}
+.mailv dt{color:var(--muted);font-size:15px}
+.mailv dl>*:nth-last-child(-n+2){border-bottom:0}
+.mbody{padding:20px 18px;font-size:16.5px;outline:none}
+.mbody[contenteditable="true"]{box-shadow:inset 0 0 0 2px var(--stamp)}
+.pj{padding:14px 18px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.pjl{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.vactions{max-width:760px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vhint{flex:1;min-width:180px;color:#F6F5F2;font-weight:600;font-size:15px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.ed-in{width:100%;min-height:42px;border:1.5px solid var(--doc-line);border-radius:8px;padding:6px 10px;font:inherit;color:var(--doc-ink);background:#FFFFFF}
+.ed-in:focus{outline:none;border-color:var(--doc-accent);box-shadow:0 0 0 3px #E1EDE5}
+.ed-in.num{width:96px;text-align:right}
+.ed-del{border:0;background:none;color:#B8322A;font-weight:600;cursor:pointer;font-size:13px;padding:8px 4px}
+.paper .link{color:var(--doc-accent);margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:14px;font-size:16px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:50;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="nav">
+  <div class="wrap wide">
+    <a class="logo" href="#accueil" aria-label="Tampon, accueil">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13.5" fill="none" stroke="var(--stamp)" stroke-width="2.5"/><circle cx="16" cy="16" r="9" fill="none" stroke="var(--stamp)" stroke-width="1.2" stroke-dasharray="2 2.4"/><path d="M11 16.5l3.4 3.3L21.5 12" fill="none" stroke="var(--stamp)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="lt">Tampon</span>
+    </a>
+    <nav class="tabs" id="appTabs" aria-label="Menu" hidden>
+      <a href="#journee" id="tabDay">Ma journée</a>
+      <a href="#documents" id="tabDocs">Documents</a>
+      <a href="#reglages" id="tabSet">Réglages</a>
+    </nav>
+    <a class="btn sm primary" href="#bienvenue" id="navStart">Commencer</a>
+  </div>
+</header>
+
+<!-- ================= ACCUEIL ================= -->
+<main id="v-accueil">
+  <div class="wrap hero">
+    <h1>Votre paperasse,<br><em>on s'en occupe.</em></h1>
+    <span class="stampmark anim" aria-hidden="true">TRAITÉ</span>
+    <p class="lede">Tampon est un assistant qui fait votre administratif à votre place : factures, relances, déclarations, classement. Il prépare, vous dites oui ou non.</p>
+    <div class="ctas">
+      <a class="btn primary" href="#bienvenue">Commencer</a>
+    </div>
+  </div>
+  <div class="wrap does">
+    <h2>Ce que Tampon fait pour vous</h2>
+    <ul>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg><div><b>Il fait vos factures et vos devis</b><span>Avec toutes les mentions obligatoires.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg><div><b>Il relance les clients qui n'ont pas payé</b><span>Poliment, au bon moment.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><div><b>Il vous rappelle chaque date limite</b><span>URSSAF, impôts, TVA : plus d'oubli.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><div><b>Il range vos justificatifs</b><span>Chaque facture reçue va dans le bon dossier.</span></div></li>
+    </ul>
+  </div>
+  <div class="wrap">
+    <div class="promise"><b>Rien ne part sans votre accord.</b><p>Tampon prépare tout, mais c'est vous qui appuyez sur « Envoyer ». Vous pouvez lui retirer l'accès à vos outils quand vous voulez.</p></div>
+  </div>
+  <footer><div class="wrap">Tampon · un produit bnia.lab · prototype</div></footer>
+</main>
+
+<!-- ================= QUESTIONNAIRE ================= -->
+<main id="v-bienvenue" hidden>
+  <div class="wrap q">
+    <div class="prog"><div class="bar"><i id="progBar"></i></div><span class="n" id="progTxt"></span></div>
+    <form id="qForm" novalidate>
+      <div id="qBody" aria-live="polite"></div>
+      <div class="foot" id="qFoot">
+        <button type="button" class="link muted" id="qBack">‹ Retour</button>
+        <button type="submit" class="btn primary" id="qNext">Continuer</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<!-- ================= MA JOURNÉE ================= -->
+<main id="v-journee" hidden>
+  <div class="wrap day">
+        <div class="hello"><h1 id="hello">Bonjour</h1><p id="helloSub"></p></div>
+
+    <div class="ask">
+      <label for="askIn">Que voulez-vous que je fasse ?</label>
+      <form id="askForm"><input class="big-in" id="askIn" autocomplete="off" placeholder="Écrivez ici, comme à une personne"><button class="btn primary" type="submit">Demander</button></form>
+      <div class="ideas" id="ideas"></div>
+      <div class="answer" id="answer" hidden></div>
+    </div>
+
+    <section class="sec" aria-labelledby="h-todo">
+      <h2 id="h-todo">À valider <span class="count" id="todoCount"></span></h2>
+      <div class="cards" id="todo"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="h-next">
+      <h2 id="h-next">À venir</h2>
+      <div class="list" id="next"></div>
+      <p class="fine">Dates indicatives : vérifiez-les sur votre espace URSSAF et sur impots.gouv.fr.</p>
+    </section>
+
+    <details class="donebox sec">
+      <summary>Déjà fait aujourd'hui <span class="count" id="doneCount"></span></summary>
+      <div class="list" id="done"></div>
+    </details>
+  </div>
+</main>
+
+<!-- ================= RÉGLAGES ================= -->
+<main id="v-reglages" hidden>
+  <div class="wrap set">
+    <h1>Réglages</h1>
+    <section class="sec"><h2>Mon entreprise</h2><div class="list kv" id="profileList"></div><div style="margin-top:12px"><button class="btn sm" type="button" id="editProfile">Modifier mes réponses</button></div></section>
+    <section class="sec"><h2>Ce que Tampon peut utiliser</h2><div class="list" id="toolList"></div><p class="fine">Prototype : les connexions sont simulées.</p></section>
+    <section class="sec"><h2>Tout effacer</h2><p style="color:var(--muted);margin-bottom:12px">Supprime vos réponses de cet appareil et revient à l'accueil.</p><button class="btn sm" type="button" id="wipe">Effacer mes informations</button></section>
+  </div>
+</main>
+
+<!-- ================= DOCUMENTS ================= -->
+<main id="v-documents" hidden>
+  <div class="wrap docs">
+    <div class="docs-top"><h1>Mes documents</h1><button class="btn sm primary" type="button" id="newDoc">Nouvelle facture</button></div>
+    <div class="filters" id="docFilters" role="group" aria-label="Filtrer"></div>
+    <div class="list" id="docList"></div>
+    <p class="fine">Touchez un document pour l’ouvrir et le télécharger en PDF.</p>
+  </div>
+</main>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="vTitle" hidden>
+  <div class="vbar">
+    <button class="btn sm" type="button" id="vBack" hidden>‹ Message</button>
+    <h2 id="vTitle"></h2>
+    <button class="btn sm" type="button" id="vEdit" hidden>Modifier le texte</button>
+    <button class="btn sm" type="button" id="vPdf">Télécharger le PDF</button>
+    <button class="btn sm primary" type="button" id="vGo" hidden></button>
+    <button class="btn sm" type="button" id="vClose">Fermer</button>
+  </div>
+  <div class="vscroll" id="vScroll"><div id="vBody"></div></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='tampon.profil.v2';
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}};
+const save=p=>{try{localStorage.setItem(KEY,JSON.stringify(p))}catch(e){}};
+const wipe=()=>{try{localStorage.removeItem(KEY)}catch(e){}};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)};
+let profile=load();
+
+/* ---------- Choix possibles, en mots simples ---------- */
+const PAYS=[{id:'FR',nom:'France'},{id:'BE',nom:'Belgique',off:1},{id:'CH',nom:'Suisse',off:1},{id:'LU',nom:'Luxembourg',off:1},{id:'CA',nom:'Canada (Québec)',off:1}];
+const STATUTS=[{id:'micro',nom:'Auto-entrepreneur',info:'Micro-entreprise'},{id:'ei',nom:'Entreprise individuelle',info:'À mon nom, au réel'},{id:'societe',nom:'Société',info:'SARL, EURL, SAS, SASU…'},{id:'nsp',nom:'Je ne sais pas',info:'Tampon vous aidera à le retrouver'}];
+const METIERS=[{id:'artisan',nom:'Artisan ou bâtiment'},{id:'commerce',nom:'Commerce'},{id:'services',nom:'Services'},{id:'conseil',nom:'Conseil ou profession libérale'},{id:'immo',nom:'Immobilier'},{id:'resto',nom:'Restauration'},{id:'autre',nom:'Autre'}];
+const TVA=[{id:'oui',nom:'Oui',info:'Mes factures affichent un montant HT et TTC'},{id:'non',nom:'Non',info:'J’écris « TVA non applicable » sur mes factures'},{id:'nsp',nom:'Je ne sais pas'}];
+const OUTILS=[{id:'mail',nom:'Mes emails',info:'Gmail ou Outlook'},{id:'agenda',nom:'Mon agenda',info:'Google Agenda ou Outlook'},{id:'docs',nom:'Mes documents',info:'Google Drive ou OneDrive'},{id:'banque',nom:'Mon compte bancaire',info:'Pour voir qui a payé. Aucun virement possible.'}];
+const nomDe=(l,id)=>(l.find(x=>x.id===id)||{}).nom||'';
+
+
+/* ---------- SIRET ---------- */
+function siretOk(s){s=String(s).replace(/\s/g,'');if(!/^\d{14}$/.test(s))return false;let sum=0;for(let i=0;i<14;i++){let d=+s[13-i];if(i%2){d*=2;if(d>9)d-=9}sum+=d}return sum%10===0}
+const fmtSiret=s=>{const d=String(s||'').replace(/\D/g,'').slice(0,14);return [d.slice(0,3),d.slice(3,6),d.slice(6,9),d.slice(9)].filter(Boolean).join(' ')};
+
+/* ---------- Questionnaire : une question par écran ---------- */
+const QS=[
+  {id:'pays',type:'choice',list:PAYS,h:'Où se trouve votre entreprise ?',help:'Pour l’instant, Tampon fonctionne en France. Les autres pays arrivent bientôt.'},
+  {id:'prenom',type:'text',h:'Comment vous appelez-vous ?',help:'Votre prénom suffit.',ph:'Votre prénom',ac:'given-name',req:'Écrivez votre prénom pour continuer.'},
+  {id:'entreprise',type:'text',h:p=>`Enchanté, ${p.prenom}. Comment s'appelle votre entreprise ?`,ph:'Nom de l’entreprise',ac:'organization',req:'Écrivez le nom de votre entreprise pour continuer.'},
+  {id:'statut',type:'choice',list:STATUTS,h:'Quel est votre statut ?'},
+  {id:'metier',type:'choice',list:METIERS,h:'Que fait votre entreprise ?'},
+  {id:'tva',type:'choice',list:TVA,h:'Ajoutez-vous la TVA sur vos factures ?',help:'Si vous êtes auto-entrepreneur et que vous débutez, c’est souvent « Non ».'},
+  {id:'siret',type:'siret',h:'Quel est votre numéro SIRET ?',help:'14 chiffres. Il est sur votre extrait Kbis ou votre avis de situation INSEE.',ph:'123 456 789 00012',skip:'Je l’ajouterai plus tard'},
+  {id:'email',type:'email',h:'Quelle adresse email utilisez-vous pour le travail ?',help:'Tampon s’en sert pour signer vos messages.',ph:'vous@entreprise.fr',ac:'email'},
+  {id:'outils',type:'multi',list:OUTILS,h:'Que peut utiliser Tampon pour vous aider ?',help:'Touchez pour cocher. Vous pourrez changer d’avis à tout moment.'},
+];
+let qi=0,ans={};
+function startQuiz(){ans=Object.assign({pays:'FR',outils:[]},profile?JSON.parse(JSON.stringify(profile)):{});qi=0;renderQ()}
+function renderQ(){
+  const total=QS.length;const fin=qi>=total;
+  $('#progBar').style.width=Math.round(Math.min(qi,total)/total*100)+'%';
+  $('#progTxt').textContent=fin?'Terminé':`Question ${qi+1} sur ${total}`;
+  $('#qBack').style.visibility=qi===0?'hidden':'visible';
+  $('#qNext').hidden=false;
+  if(fin){
+    $('#qBody').innerHTML=`<div class="done-card"><span class="stampmark anim" aria-hidden="true">PRÊT</span><h1>C'est prêt, ${esc(ans.prenom)} !</h1><p class="help">Tampon a préparé votre première journée pour ${esc(ans.entreprise)}.</p></div>`;
+    $('#qNext').textContent='Voir ma journée';$('#qFoot').style.justifyContent='center';$('#qBack').hidden=true;$('#qNext').focus({preventScroll:true});return;
+  }
+  $('#qFoot').style.justifyContent='';$('#qBack').hidden=false;
+  const q=QS[qi];const h=typeof q.h==='function'?q.h(ans):q.h;let body='';
+  if(q.type==='choice'||q.type==='multi'){
+    body=q.list.map(o=>{const on=q.type==='multi'?ans.outils.includes(o.id):ans[q.id]===o.id;return `<button type="button" class="choice" data-v="${o.id}" aria-pressed="${on}" ${o.off?'disabled':''}><span class="tx"><b>${esc(o.nom)}</b>${o.info?`<span>${esc(o.info)}</span>`:''}</span>${o.off?'<span class="soon">Bientôt</span>':'<span class="ck"></span>'}</button>`}).join('');
+  }else{
+    const type=q.type==='email'?'email':'text';
+    body=`<label for="qIn" hidden>${esc(h)}</label><input class="big-in" id="qIn" type="${type}" ${q.type==='siret'?'inputmode="numeric" maxlength="17"':''} ${q.ac?`autocomplete="${q.ac}"`:''} placeholder="${esc(q.ph||'')}" value="${esc(q.type==='siret'?fmtSiret(ans.siret):ans[q.id]||'')}"><span class="err" id="qErr" hidden></span>${q.skip?`<button type="button" class="link" id="qSkip" style="align-self:flex-start">${esc(q.skip)}</button>`:''}`;
+  }
+  $('#qBody').innerHTML=`<h1>${esc(h)}</h1>${q.help?`<p class="help">${esc(q.help)}</p>`:''}<div class="body">${body}</div>`;
+  $('#qNext').textContent='Continuer';
+  $('#qNext').hidden=q.type==='choice';
+  const inp=$('#qIn');if(inp){inp.focus({preventScroll:true});if(q.type==='siret')inp.addEventListener('input',()=>{inp.value=fmtSiret(inp.value)})}
+  const sk=$('#qSkip');if(sk)sk.addEventListener('click',()=>{ans[q.id]='';qi++;renderQ()});
+}
+$('#qBody').addEventListener('click',e=>{
+  const b=e.target.closest('.choice');if(!b||b.disabled)return;const q=QS[qi];
+  if(q.type==='multi'){const i=ans.outils.indexOf(b.dataset.v);if(i>=0)ans.outils.splice(i,1);else ans.outils.push(b.dataset.v);b.setAttribute('aria-pressed',String(i<0));return}
+  ans[q.id]=b.dataset.v;$('#qBody').querySelectorAll('.choice').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));
+  setTimeout(()=>{qi++;renderQ()},220);
+});
+$('#qForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(qi>=QS.length){profile=JSON.parse(JSON.stringify(ans));delete profile.test;save(profile);state=null;location.hash='journee';return}
+  const q=QS[qi];const inp=$('#qIn');const err=m=>{const x=$('#qErr');x.textContent=m;x.hidden=!m;inp.classList.toggle('bad',!!m);if(m)inp.focus()};
+  if(inp){const v=inp.value.trim();
+    if(q.req&&!v)return err(q.req);
+    if(q.type==='siret'&&v&&!siretOk(v))return err('Ce numéro ne semble pas correct. Vérifiez les 14 chiffres, ou ajoutez-le plus tard.');
+    if(q.type==='email'&&v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))return err('Cette adresse email semble incomplète.');
+    ans[q.id]=q.type==='siret'?v.replace(/\s/g,''):v;
+  }
+  qi++;renderQ();
+});
+$('#qBack').addEventListener('click',()=>{if(qi>0){qi--;renderQ()}});
+
+/* ---------- Échéances (France), en clair ---------- */
+const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MOISL=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const lastDay=(y,m)=>new Date(y,m+1,0);
+function echeances(p){
+  const now=new Date();now.setHours(0,0,0,0);const y=now.getFullYear();const out=[];
+  if(p.statut==='micro'||p.statut==='nsp'){[[y,0],[y,3],[y,6],[y,9],[y+1,0],[y+1,3]].forEach(([yy,m])=>out.push({d:lastDay(yy,m),t:'Déclarer votre chiffre d’affaires',s:'Sur le site de l’URSSAF, pour les 3 derniers mois'}))}
+  else{out.push({d:new Date(y+1,4,20),t:'Faire votre bilan de l’année',s:'Avec votre comptable'})}
+  out.push({d:new Date(y,11,15),t:'Payer la CFE',s:'L’impôt local des entreprises'});
+  if(p.tva==='oui'){out.push({d:new Date(y,6,24),t:'Payer un acompte de TVA',s:'Si vous êtes au régime simplifié'});out.push({d:new Date(y,11,24),t:'Payer un acompte de TVA',s:'Si vous êtes au régime simplifié'})}
+  return out.filter(e=>e.d>=now).sort((a,b)=>a.d-b.d).slice(0,3).map(e=>({...e,j:Math.round((e.d-now)/864e5)}));
+}
+const dansJ=j=>j===0?'aujourd’hui':j===1?'demain':j<60?`dans ${j} jours`:`dans ${Math.round(j/30)} mois`;
+
+/* ---------- Documents : factures, devis, factures reçues ---------- */
+const eur=n=>{const [i,d]=Math.abs(n).toFixed(2).split('.');return (n<0?'-':'')+i.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+d+' €'};
+const eur0=n=>Number.isInteger(n)?eur(n).replace(',00',''):eur(n);
+const fdate=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+const TYPES={facture:'Facture',devis:'Devis',recue:'Facture reçue'};
+function totals(doc){const ht=doc.lignes.reduce((s,l)=>s+l[1]*l[2],0);const tva=(doc.type!=='recue'&&profile.tva==='oui')?Math.round(ht*20)/100:0;return {ht,tva,ttc:ht+tva}}
+const docById=id=>state.docs.find(d=>d.id===id);
+const STATUT_CHIP={'Accepté':'ok','Payée':'ok','En retard':'bad','En attente':'mute','Brouillon':'mute','Envoyé':'ok','Relancée':'warn','À vérifier':'warn','Classée':'ok'};
+
+/* ---------- Ma journée ---------- */
+let state=null,nextId=100,nextFact=42,nextDevis=19;
+const hhmm=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const dOff=n=>{const x=new Date();x.setHours(12,0,0,0);x.setDate(x.getDate()+n);return x};
+function initState(p){
+  nextFact=42;nextDevis=19;
+  const docs=[
+    {id:'D-2026-018',type:'devis',client:{nom:'M. Henri Garnier',adr:'45 rue du Palais\n17000 La Rochelle'},date:dOff(0),ech:dOff(30),lignes:[['Prestation principale',1,2900],['Préparation et évacuation',1,380],['Déplacement',1,200]],statut:'Brouillon'},
+    {id:'F-2026-041',type:'facture',client:{nom:'Mme Claire Lefèvre',adr:'8 avenue Carnot\n17000 La Rochelle'},date:dOff(-42),ech:dOff(-12),lignes:[['Prestation d’octobre',1,1240]],statut:'En retard'},
+    {id:'F-2026-040',type:'facture',client:{nom:'M. Paul Roux',adr:'3 rue Gargoulleau\n17000 La Rochelle'},date:dOff(-27),ech:dOff(3),lignes:[['Intervention et conseil',2,210]],statut:'En attente'},
+    {id:'F-2026-039',type:'facture',client:{nom:'SCI Les Tamaris',adr:'21 quai Duperré\n17000 La Rochelle'},date:dOff(-35),ech:dOff(-5),lignes:[['Prestation de septembre',1,650]],statut:'Payée'},
+    {id:'R-88412',type:'recue',num:'88412',fournisseur:{nom:'Point.P',adr:'Zone commerciale de Beaulieu\n17138 Puilboreau'},client:{nom:p.entreprise,adr:''},date:dOff(-14),ech:dOff(16),lignes:[['Fournitures et petit matériel',1,312.40]],statut:'À vérifier'},
+  ];
+  state={docs};
+  const ttc41=totals(docs[1]).ttc,ttc18=totals(docs[0]).ttc;
+  state.todo=[
+    {id:1,urgent:1,why:'Paiement en retard de 12 jours',t:`Relancer Mme Lefèvre, qui vous doit ${eur0(ttc41)}`,view:'Voir le message et la facture',go:'Envoyer la relance',doc:'F-2026-041',after:'Relancée',
+      mail:{to:'claire.lefevre@exemple.fr',objet:'Facture F-2026-041 en attente de règlement',body:`Bonjour Madame Lefèvre,\n\nSauf erreur de ma part, la facture F-2026-041 de ${eur(ttc41)} n'a pas encore été réglée. Je vous la renvoie en pièce jointe.\n\nSi le paiement est déjà parti, merci de ne pas tenir compte de ce message.\n\nBien cordialement,\n${p.prenom}\n${p.entreprise}`}},
+    {id:2,why:'Demandé par M. Garnier vendredi',t:`Envoyer le devis de ${eur0(ttc18)} à M. Garnier`,view:'Voir le devis',go:'Envoyer le devis',doc:'D-2026-018',after:'Envoyé'},
+    {id:3,why:'Une facture reçue deux fois',t:'Supprimer un doublon de facture Point.P (312,40 €)',view:'Voir la facture reçue',go:'Garder un seul exemplaire',doc:'R-88412',after:'Classée',note:'Point.P vous a envoyé cette facture le 3 et le 10 novembre. Tampon garde la première dans vos documents et supprime la copie.'},
+  ];
+  state.done=[{t:'08:02',x:'9 factures reçues par email rangées dans vos documents'},{t:'08:04',x:'Paiement de 650 € reçu, facture F-2026-039 marquée comme payée'}];
+  state.answer=null;
+  return state;
+}
+function renderDay(){
+  if(!state)state=initState(profile);const p=profile;
+  const now=new Date();const h=now.getHours();
+  $('#hello').textContent=(h<18?'Bonjour ':'Bonsoir ')+p.prenom;
+  const n=state.todo.length;
+  const jour=now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  $('#helloSub').textContent=jour.charAt(0).toUpperCase()+jour.slice(1)+' · '+(n?`${n} chose${n>1?'s':''} à valider`:'rien à valider');
+  $('#todoCount').textContent=n;$('#todoCount').hidden=!n;
+  $('#todo').innerHTML=n?state.todo.map(t=>`<article class="card ${t.urgent?'urgent':''}" data-id="${t.id}"><div class="why"><span class="dot"></span>${esc(t.why)}</div><h3>${esc(t.t)}</h3>${t.note?`<p class="note">${esc(t.note)}</p>`:''}<button type="button" class="docbtn" data-act="view">${ICON_DOC}<span>${esc(t.view)}</span><span class="arr">›</span></button><div class="acts"><button class="btn primary" type="button" data-act="ok">${esc(t.go)}</button><button class="btn" type="button" data-act="later">Pas maintenant</button></div></article>`).join(''):`<div class="allgood"><span class="stampmark" aria-hidden="true">OK</span>Tout est à jour. Profitez de votre soirée.</div>`;
+  $('#next').innerHTML=echeances(p).map(e=>`<div class="row"><div class="date"><b>${e.d.getDate()}</b><span>${MOIS[e.d.getMonth()]}</span></div><div class="tx"><b>${esc(e.t)}</b><span>${esc(e.s)}</span></div><span class="when ${e.j<=15?'soon':''}">${dansJ(e.j)}</span></div>`).join('');
+  $('#doneCount').textContent=state.done.length;
+  $('#done').innerHTML=state.done.slice().reverse().map(d=>`<div class="row"><span class="t">${d.t}</span><span class="tx">${esc(d.x)}</span></div>`).join('');
+  $('#ideas').innerHTML=['Fais une facture de 850 € pour M. Garnier','Qui ne m’a pas payé ?','Quelle est ma prochaine date limite ?'].map(s=>`<button type="button">${esc(s)}</button>`).join('');
+  const a=$('#answer');a.hidden=!state.answer;if(state.answer)a.innerHTML=`<b>Tampon</b>${esc(state.answer.x)}${state.answer.doc?` <button type="button" class="link" data-open="${state.answer.doc}">${esc(state.answer.label)}</button>`:''}`;
+}
+const ICON_DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>';
+function validate(t,el){
+  const d=docById(t.doc);if(d&&t.after)d.statut=t.after;
+  if(el){const s=document.createElement('span');s.className='stampmark anim';s.textContent='FAIT';s.setAttribute('aria-hidden','true');el.appendChild(s);el.classList.add('leaving')}
+  setTimeout(()=>{state.todo=state.todo.filter(x=>x.id!==t.id);state.done.push({t:hhmm(),x:t.go+' : '+t.t.charAt(0).toLowerCase()+t.t.slice(1)});renderDay();if(location.hash==='#documents')renderDocs()},el?750:0);
+  toast('C’est fait');
+}
+$('#todo').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const el=b.closest('.card');const t=state.todo.find(x=>x.id===+el.dataset.id);
+  if(b.dataset.act==='view'){openViewer(t.mail?{mail:t.mail,doc:t.doc,task:t}:{doc:t.doc,task:t});return}
+  if(b.dataset.act==='later'){state.todo=state.todo.filter(x=>x.id!==t.id);state.todo.push(t);renderDay();toast('D’accord, je le mets en bas de la liste');return}
+  validate(t,el);
+});
+document.addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o){openViewer({doc:o.dataset.open})}});
+
+/* ---------- Demander à Tampon (réponses simulées) ---------- */
+function reply(q){
+  const p=profile,l=q.toLowerCase();
+  const amt=(q.match(/(\d[\d\s]*(?:[,.]\d+)?)\s*(?:€|euros?)/i)||[])[1];const who=((q.match(/pour\s+([^,!?]+)/i)||[])[1]||'').trim().replace(/\.$/,'')||null;
+  if(/(factur|devis)/.test(l)&&amt){
+    const isDevis=/devis/.test(l)&&!/factur/.test(l);const m=parseFloat(amt.replace(/\s/g,'').replace(',','.'));
+    const id=isDevis?'D-2026-0'+(nextDevis++):newFact();
+    const objet=(q.match(/,\s*(.+)$/)||[])[1];
+    const doc={id,type:isDevis?'devis':'facture',client:{nom:who||'Client à préciser',adr:''},date:dOff(0),ech:dOff(30),lignes:[[objet?objet.charAt(0).toUpperCase()+objet.slice(1):'Prestation',1,m]],statut:'Brouillon'};
+    state.docs.unshift(doc);const T=totals(doc).ttc;
+    state.todo.unshift({id:nextId++,why:'Vous venez de le demander',t:`Envoyer ${isDevis?'le devis':'la facture'} de ${eur0(T)}${who?' à '+who:''}`,view:isDevis?'Voir le devis':'Voir la facture',go:isDevis?'Envoyer le devis':'Envoyer la facture',doc:id,after:'Envoyé'});
+    return {x:`C'est prêt : ${isDevis?'le devis':'la facture'} ${id} de ${eur0(T)}${who?' pour '+who:''}. ${isDevis?'Vérifiez-le':'Vérifiez-la'} avant l'envoi : ${isDevis?'il':'elle'} est dans « À valider ».`,doc:id,label:isDevis?'Voir le devis':'Voir la facture'};
+  }
+  if(/pay|relanc|doit|argent/.test(l))return {x:'Deux clients ne vous ont pas encore payé : Mme Lefèvre (facture F-2026-041, en retard de 12 jours) et M. Roux (F-2026-040, à payer d’ici 3 jours). La relance de Mme Lefèvre est prête juste en dessous.'};
+  if(/date|limite|déclar|declar|urssaf|tva|impôt|impot|échéance/.test(l)){const e=echeances(p)[0];return {x:e?`${e.t}, avant le ${e.d.getDate()} ${MOISL[e.d.getMonth()]} (${dansJ(e.j)}). Je vous le rappellerai une semaine avant.`:'Aucune date limite proche.'}}
+  if(/rang|class|justif|document/.test(l)){state.done.push({t:hhmm(),x:'4 nouvelles factures rangées dans vos documents'});return {x:'C’est fait : j’ai rangé 4 nouvelles factures dans vos documents.'}}
+  if(/devis/.test(l))return {x:'Avec plaisir. Dites-moi pour qui, combien et pour quoi. Par exemple : « devis de 1 200 € pour Mme Durand, pose de parquet ».'};
+  return {x:'Dans cette démo, je sais faire une facture ou un devis, vous dire qui ne vous a pas payé, donner votre prochaine date limite et ranger vos documents. Essayez une des idées ci-dessus.'};
+}
+function ask(q){if(!q.trim())return;state.answer=reply(q);renderDay()}
+$('#askForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#askIn');ask(i.value);i.value=''});
+$('#ideas').addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.textContent)});
+
+/* ---------- Mes documents ---------- */
+let docFilter='tout';
+function renderDocs(){
+  if(!state)state=initState(profile);
+  const F=[['tout','Tout'],['facture','Factures'],['devis','Devis'],['recue','Reçues']];
+  $('#docFilters').innerHTML=F.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${docFilter===k}">${l}</button>`).join('');
+  const list=state.docs.filter(d=>docFilter==='tout'||d.type===docFilter);
+  $('#docList').innerHTML=list.length?list.map(d=>{const T=totals(d);const who=d.type==='recue'?d.fournisseur.nom:d.client.nom;return `<button type="button" class="drow" data-open="${d.id}"><span class="dic ${d.type}">${d.type==='devis'?'DEV':d.type==='recue'?'REÇ':'FAC'}</span><span class="tx"><b>${esc(TYPES[d.type])} ${esc(d.num||d.id)}</b><span>${esc(who)} · ${esc(fdate(d.date))}</span></span><span class="amt"><b>${eur(T.ttc)}</b><span class="chip ${STATUT_CHIP[d.statut]||'mute'}">${esc(d.statut)}</span></span></button>`}).join(''):'<div class="row"><span class="tx">Aucun document ici pour l’instant.</span></div>';
+}
+$('#docFilters').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(b){docFilter=b.dataset.f;renderDocs()}});
+$('#newDoc').addEventListener('click',()=>{location.hash='journee';setTimeout(()=>{const i=$('#askIn');i.value='Fais une facture de  € pour ';i.focus();i.setSelectionRange(21,21)},60)});
+
+/* ---------- Visionneuse ---------- */
+let vCur=null,lastFocus=null;
+function sheetHTML(d,edit){
+  const p=profile;const T=totals(d);const isR=d.type==='recue';
+  const from=isR?d.fournisseur:{nom:p.entreprise,adr:[p.prenom,p.email].filter(Boolean).join('\n')};
+  const to=isR?{nom:p.entreprise,adr:''}:d.client;
+  const stamp={'Payée':['PAYÉE','ok'],'En retard':['EN RETARD','bad'],'Brouillon':['BROUILLON','mute'],'Relancée':['RELANCÉE','bad'],'Envoyé':['ENVOYÉ','ok'],'À vérifier':['DOUBLON ?','bad'],'Classée':['CLASSÉE','ok'],'Accepté':['ACCEPTÉ','ok']}[d.statut];
+  const tva=p.tva==='oui'&&!isR;
+  return `<article class="paper" aria-label="${esc(TYPES[d.type])} ${esc(d.num||d.id)}">
+    ${stamp?`<span class="pstamp ${stamp[1]}" aria-hidden="true">${stamp[0]}</span>`:''}
+    <header class="p-head"><div><div class="p-co">${esc(from.nom)}</div><div class="p-small">${esc(from.adr).replace(/\n/g,'<br>')}${!isR&&p.siret?`<br>SIRET ${esc(fmtSiret(p.siret))}`:''}</div></div>
+    <div class="p-title"><div class="p-type">${esc(d.type==='recue'?'Facture':TYPES[d.type])}</div><div class="p-small">N° ${esc(d.num||d.id)}<br>Date : ${esc(fdate(d.date))}<br>${d.type==='devis'?'Valable jusqu’au':'Échéance'} : ${esc(fdate(d.ech))}</div></div></header>
+    <div class="p-to"><span>${isR?'Facturé à':'Client'}</span>${edit&&!isR?`<input class="ed-in" id="edClient" value="${esc(to.nom)}" aria-label="Nom du client">`:`<b>${esc(to.nom)}</b>`}${to.adr?`<div class="p-small">${esc(to.adr).replace(/\n/g,'<br>')}</div>`:''}</div>
+    <div class="p-tablewrap"><table class="p-table"><thead><tr><th>Désignation</th><th class="r">Qté</th><th class="r">Prix unitaire${tva?' HT':''}</th><th class="r">Total${tva?' HT':''}</th></tr></thead>
+    <tbody>${edit?d.lignes.map((l,i)=>`<tr data-l="${i}"><td><input class="ed-in" data-k="0" value="${esc(l[0])}" aria-label="Désignation"></td><td class="r"><input class="ed-in num" data-k="1" type="number" min="0" step="1" value="${l[1]}" aria-label="Quantité"></td><td class="r"><input class="ed-in num" data-k="2" type="number" min="0" step="0.01" value="${l[2]}" aria-label="Prix unitaire"></td><td class="r"><button type="button" class="ed-del" data-del="${i}" aria-label="Supprimer la ligne">Supprimer</button></td></tr>`).join(''):d.lignes.map(l=>`<tr><td>${esc(l[0])}</td><td class="r">${l[1]}</td><td class="r">${eur(l[2])}</td><td class="r">${eur(l[1]*l[2])}</td></tr>`).join('')}</tbody></table></div>${edit?'<button type="button" class="link" data-va="addline">+ Ajouter une ligne</button>':''}
+    <div class="p-tot">${tva?`<div><span>Total HT</span><span>${eur(T.ht)}</span></div><div><span>TVA 20 %</span><span>${eur(T.tva)}</span></div>`:''}<div class="big"><span>${tva?'Total TTC':'Total à payer'}</span><span>${eur(T.ttc)}</span></div>${!tva&&!isR&&p.tva!=='oui'?'<div class="p-small">TVA non applicable, art. 293 B du CGI</div>':''}</div>
+    <footer class="p-foot">${d.type==='devis'?'Devis gratuit, valable 30 jours. Bon pour accord : date, signature et mention « lu et approuvé ».':d.type==='facture'?`Paiement à réception, au plus tard le ${esc(fdate(d.ech))}. En cas de retard, des pénalités au taux de trois fois le taux d’intérêt légal s’appliquent, ainsi qu’une indemnité forfaitaire de 40 € pour frais de recouvrement (clients professionnels).`:'Document reçu par email et classé par Tampon.'}</footer>
+  </article>`;
+}
+function mailHTML(m,docId){const d=docById(docId);return `<article class="mailv"><dl><dt>À</dt><dd>${esc(m.to)}</dd><dt>Objet</dt><dd><b>${esc(m.objet)}</b></dd></dl><div class="mbody" id="mailBody">${esc(m.body).replace(/\n/g,'<br>')}</div><div class="pj"><span class="pjl">Pièce jointe</span><button type="button" class="docbtn" data-show-doc="${esc(docId)}">${ICON_DOC}<span>${esc(TYPES[d.type])} ${esc(d.id)}.pdf</span><span class="arr">›</span></button></div></article>`}
+function openViewer(o){
+  vCur=o;lastFocus=document.activeElement;
+  const d=o.doc?docById(o.doc):null;
+  $('#vTitle').textContent=o.mail&&!o.showDoc?'Message prêt à partir':d?`${TYPES[d.type]} ${d.num||d.id}`:'';
+  $('#vBack').hidden=!(o.mail&&o.showDoc);
+  $('#vBody').innerHTML=o.mail&&!o.showDoc?mailHTML(o.mail,o.doc):docActions(d,o)+sheetHTML(d,o.edit);
+  $('#vPdf').hidden=!(d&&(!o.mail||o.showDoc))||!!o.edit;
+  $('#vEdit').hidden=!o.mail||!!o.showDoc;$('#vEdit').textContent='Modifier le texte';
+  const t=o.task&&state.todo.find(x=>x.id===o.task.id);
+  $('#vGo').hidden=!t;if(t)$('#vGo').textContent=t.go;
+  $('#viewer').hidden=false;document.body.style.overflow='hidden';$('#vScroll').scrollTop=0;$('#vClose').focus();
+}
+function docActions(d,o){
+  const a=[];
+  if(o.edit)return `<div class="vactions"><span class="vhint">Modifiez les champs, puis enregistrez.</span><button type="button" class="btn sm primary" data-va="save">Enregistrer</button><button type="button" class="btn sm" data-va="cancel">Annuler</button></div>`;
+  if(d.type!=='recue'&&d.statut!=='Payée')a.push(['edit','Modifier']);
+  if(!o.task){
+    if(d.type==='facture'&&d.statut!=='Payée')a.push(['paid','Marquer comme payée']);
+    if(d.type==='devis'&&!d.facture)a.push(['convert','Transformer en facture']);
+    if(d.type!=='recue')a.push(['dup','Dupliquer']);
+    if(d.type!=='recue'&&(d.statut==='Brouillon'))a.push(['send','Envoyer au client']);
+  }
+  return a.length?`<div class="vactions">${a.map(([k,l],i)=>`<button type="button" class="btn sm ${k==='paid'||k==='convert'||k==='send'?'primary':''}" data-va="${k}">${l}</button>`).join('')}</div>`:'';
+}
+function newFact(){return 'F-2026-0'+(nextFact++)}
+function syncTask(d){state.todo.forEach(t=>{if(t.doc===d.id){t.t=t.t.replace(/de [\d\s]+(,\d+)? €/,'de '+eur0(totals(d).ttc));if(d.type!=='recue'&&!/Relancer/.test(t.t))t.t=t.t.replace(/ à .+$/,' à '+d.client.nom)}})}
+function refreshAll(){renderDay();if(location.hash==='#documents')renderDocs()}
+$('#vBody').addEventListener('click',e=>{
+  const b=e.target.closest('[data-va],[data-del]');if(!b||!vCur)return;const d=docById(vCur.doc);
+  const readEditor=()=>{const rows=[...$('#vBody').querySelectorAll('tr[data-l]')];d.lignes=rows.map(r=>{const v=[...r.querySelectorAll('[data-k]')].map(x=>x.value);return [v[0]||'Ligne',Math.max(0,parseFloat(v[1])||0),Math.max(0,parseFloat(v[2])||0)]});const c=$('#edClient');if(c&&c.value.trim())d.client.nom=c.value.trim()};
+  if(b.dataset.del!==undefined){readEditor();d.lignes.splice(+b.dataset.del,1);if(!d.lignes.length)d.lignes.push(['Nouvelle ligne',1,0]);openViewer(Object.assign({},vCur,{edit:true}));return}
+  const k=b.dataset.va;
+  if(k==='edit'){vCur._backup=JSON.stringify({l:d.lignes,c:d.client});openViewer(Object.assign({},vCur,{edit:true}));return}
+  if(k==='addline'){readEditor();d.lignes.push(['Nouvelle ligne',1,0]);openViewer(Object.assign({},vCur,{edit:true}));const ins=$('#vBody').querySelectorAll('tr[data-l] [data-k="0"]');const last=ins[ins.length-1];if(last){last.focus();last.select()}return}
+  if(k==='cancel'){if(vCur._backup){const bk=JSON.parse(vCur._backup);d.lignes=bk.l;d.client=bk.c}openViewer(Object.assign({},vCur,{edit:false}));return}
+  if(k==='save'){readEditor();syncTask(d);openViewer(Object.assign({},vCur,{edit:false}));refreshAll();toast('Document enregistré');return}
+  if(k==='paid'){d.statut='Payée';state.todo=state.todo.filter(t=>t.doc!==d.id);state.done.push({t:hhmm(),x:`Facture ${d.id} marquée comme payée (${eur0(totals(d).ttc)})`});openViewer(vCur);refreshAll();toast('Facture marquée comme payée');return}
+  if(k==='convert'){const id=newFact();const f={id,type:'facture',client:JSON.parse(JSON.stringify(d.client)),date:dOff(0),ech:dOff(30),lignes:JSON.parse(JSON.stringify(d.lignes)),statut:'Brouillon',devis:d.id};d.facture=id;d.statut='Accepté';state.todo=state.todo.filter(t=>t.doc!==d.id);state.docs.unshift(f);
+    state.todo.unshift({id:nextId++,why:`Créée à partir du devis ${d.id}`,t:`Envoyer la facture de ${eur0(totals(f).ttc)} à ${f.client.nom}`,view:'Voir la facture',go:'Envoyer la facture',doc:id,after:'Envoyé'});
+    state.done.push({t:hhmm(),x:`Devis ${d.id} transformé en facture ${id}`});refreshAll();openViewer({doc:id});toast(`Facture ${id} créée`);return}
+  if(k==='dup'){const nd=JSON.parse(JSON.stringify(d));nd.client=nd.client||{};nd.id=d.type==='devis'?'D-2026-0'+(nextDevis++):newFact();nd.date=dOff(0);nd.ech=dOff(30);nd.statut='Brouillon';delete nd.facture;delete nd.devis;state.docs.unshift(nd);refreshAll();openViewer({doc:nd.id,edit:true});toast('Copie créée : modifiez-la');return}
+  if(k==='send'){d.statut='Envoyé';state.todo=state.todo.filter(t=>t.doc!==d.id);state.done.push({t:hhmm(),x:`${TYPES[d.type]} ${d.id} envoyé${d.type==='facture'?'e':''} à ${d.client.nom}`});openViewer(vCur);refreshAll();toast('Envoyé au client');return}
+});
+function closeViewer(){$('#viewer').hidden=true;document.body.style.overflow='';vCur=null;if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+$('#vClose').addEventListener('click',closeViewer);
+$('#viewer').addEventListener('click',e=>{if(e.target.id==='viewer')closeViewer();const s=e.target.closest('[data-show-doc]');if(s)openViewer(Object.assign({},vCur,{showDoc:true}))});
+$('#vBack').addEventListener('click',()=>openViewer(Object.assign({},vCur,{showDoc:false})));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#viewer').hidden)closeViewer()});
+$('#vEdit').addEventListener('click',()=>{const b=$('#mailBody');if(!b)return;const on=b.contentEditable!=='true';b.contentEditable=on?'true':'false';if(on){b.focus();$('#vEdit').textContent='Terminer'}else{vCur.mail.body=b.innerText;vCur.task.mail.body=b.innerText;$('#vEdit').textContent='Modifier le texte';toast('Texte enregistré')}});
+$('#vGo').addEventListener('click',()=>{const t=state.todo.find(x=>x.id===vCur.task.id);const b=$('#mailBody');if(b&&b.contentEditable==='true')t.mail.body=b.innerText;closeViewer();const el=document.querySelector(`.card[data-id="${t.id}"]`);validate(t,el)});
+$('#vPdf').addEventListener('click',()=>{
+  const d=docById(vCur.doc);if(!window.jspdf){toast('Le module PDF n’a pas pu se charger');return}
+  const p=profile;const T=totals(d);const isR=d.type==='recue';const tva=p.tva==='oui'&&!isR;
+  const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});const W=210,M=18;let y=22;
+  const from=isR?d.fournisseur:{nom:p.entreprise,adr:[p.prenom,p.email,p.siret?'SIRET '+fmtSiret(p.siret):''].filter(Boolean).join('\n')};
+  pdf.setFont('helvetica','bold');pdf.setFontSize(16);pdf.text(from.nom,M,y);
+  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);pdf.text(from.adr.split('\n'),M,y+6);
+  pdf.setFont('helvetica','bold');pdf.setFontSize(22);pdf.setTextColor(30,77,58);pdf.text((d.type==='devis'?'DEVIS':'FACTURE'),W-M,y,{align:'right'});pdf.setTextColor(24,24,27);
+  pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);pdf.text(['N° '+(d.num||d.id),'Date : '+fdate(d.date),(d.type==='devis'?'Valable jusqu’au : ':'Échéance : ')+fdate(d.ech)],W-M,y+7,{align:'right'});
+  y=62;const to=isR?{nom:p.entreprise,adr:''}:d.client;
+  pdf.setFontSize(8.5);pdf.setTextColor(100,100,115);pdf.text(isR?'FACTURÉ À':'CLIENT',M,y);pdf.setTextColor(24,24,27);
+  pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.text(to.nom,M,y+6);pdf.setFont('helvetica','normal');pdf.setFontSize(9.5);if(to.adr)pdf.text(to.adr.split('\n'),M,y+11.5);
+  y=92;const cx=[M,120,150,W-M];
+  pdf.setFillColor(244,242,238);pdf.rect(M,y-5.5,W-2*M,9,'F');pdf.setFont('helvetica','bold');pdf.setFontSize(9);
+  pdf.text('Désignation',M+2,y);pdf.text('Qté',cx[1],y,{align:'right'});pdf.text('Prix unit.'+(tva?' HT':''),cx[2]+8,y,{align:'right'});pdf.text('Total'+(tva?' HT':''),cx[3]-2,y,{align:'right'});
+  pdf.setFont('helvetica','normal');y+=10;
+  d.lignes.forEach(l=>{const lines=pdf.splitTextToSize(l[0],90);pdf.text(lines,M+2,y);pdf.text(String(l[1]),cx[1],y,{align:'right'});pdf.text(eur(l[2]),cx[2]+8,y,{align:'right'});pdf.text(eur(l[1]*l[2]),cx[3]-2,y,{align:'right'});y+=6*lines.length+2;pdf.setDrawColor(230,227,220);pdf.line(M,y-4,W-M,y-4)});
+  y+=6;const tx=W-M-2;
+  if(tva){pdf.text('Total HT',130,y);pdf.text(eur(T.ht),tx,y,{align:'right'});y+=6;pdf.text('TVA 20 %',130,y);pdf.text(eur(T.tva),tx,y,{align:'right'});y+=7}
+  pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text(tva?'Total TTC':'Total à payer',130,y);pdf.text(eur(T.ttc),tx,y,{align:'right'});
+  pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);if(!tva&&!isR)pdf.text('TVA non applicable, art. 293 B du CGI',tx,y+6,{align:'right'});
+  const foot=d.type==='devis'?'Devis gratuit, valable 30 jours. Bon pour accord : date, signature et mention « lu et approuvé ».':'Paiement à réception, au plus tard le '+fdate(d.ech)+'. En cas de retard, des pénalités au taux de trois fois le taux d’intérêt légal s’appliquent, ainsi qu’une indemnité forfaitaire de 40 € pour frais de recouvrement (clients professionnels).';
+  pdf.setTextColor(100,100,115);pdf.text(pdf.splitTextToSize(foot,W-2*M),M,270);
+  try{pdf.save((d.num||d.id)+'.pdf');toast('PDF téléchargé')}catch(err){toast('Le téléchargement est bloqué ici')}
+});
+
+/* ---------- Réglages ---------- */
+function renderSet(){
+  const p=profile;
+  const rows=[['Prénom',p.prenom],['Entreprise',p.entreprise],['Pays',nomDe(PAYS,p.pays)],['Statut',nomDe(STATUTS,p.statut)],['Activité',nomDe(METIERS,p.metier)],['TVA sur les factures',nomDe(TVA,p.tva)],['SIRET',p.siret?fmtSiret(p.siret):'À ajouter'],['Email',p.email||'À ajouter']];
+  $('#profileList').innerHTML=rows.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${esc(v||'—')}</span></div>`).join('');
+  $('#toolList').innerHTML=OUTILS.map(o=>{const on=(p.outils||[]).includes(o.id);return `<div class="row"><div class="tx"><b>${o.nom}</b><span>${o.info}</span></div><button class="switch" type="button" role="switch" aria-checked="${on}" aria-label="${o.nom}" data-tool="${o.id}"></button></div>`}).join('');
+}
+$('#toolList').addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b)return;const o=profile.outils||(profile.outils=[]);const i=o.indexOf(b.dataset.tool);if(i>=0)o.splice(i,1);else o.push(b.dataset.tool);save(profile);renderSet();toast(i>=0?'Accès retiré':'Accès donné')});
+$('#editProfile').addEventListener('click',()=>{location.hash='bienvenue'});
+$('#wipe').addEventListener('click',()=>{wipe();profile=null;state=null;location.hash='accueil';toast('Informations effacées')});
+
+/* ---------- Navigation ---------- */
+const VIEWS=['accueil','bienvenue','journee','documents','reglages'];
+function show(v){
+  if(!VIEWS.includes(v))v='accueil';
+  if((v==='journee'||v==='reglages'||v==='documents')&&!profile)v='bienvenue';
+  VIEWS.forEach(x=>$('#v-'+x).hidden=x!==v);
+  const inApp=v==='journee'||v==='reglages'||v==='documents';
+  $('#appTabs').hidden=!inApp;$('#navStart').hidden=inApp||v==='bienvenue';
+  [['#tabDay','journee'],['#tabDocs','documents'],['#tabSet','reglages']].forEach(([s,x])=>{if(v===x)$(s).setAttribute('aria-current','page');else $(s).removeAttribute('aria-current')});
+  if(v==='bienvenue')startQuiz();if(v==='journee')renderDay();if(v==='reglages')renderSet();if(v==='documents')renderDocs();
+  window.scrollTo({top:0});
+}
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+show(location.hash.slice(1)||(profile?'journee':'accueil'));
+})();
+</script>
+
+</body>
+</html>
