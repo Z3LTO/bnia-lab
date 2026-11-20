@@ -6,20 +6,22 @@ tes photos, vidéos et dossiers.
 
 ## Comment ça marche
 
-- **Une seule inscription** : l'utilisateur crée son coffre avec une phrase secrète (étape 1), puis branche ses clouds (étape 2).
-  Pour chaque service, il choisit :
+- **Connexion simple, sans mot de passe à inventer** : l'utilisateur appuie sur « Continuer avec Google » (ou Microsoft, MEGA,
+  pCloud, Dropbox). Ce compte devient son **compte principal**. Ensuite, un parcours guidé l'aide à brancher ses autres clouds :
   - **« J'ai déjà un compte »** : connexion en un clic. Nimbus n'utilise que l'**espace libre restant**, dans **son propre dossier**,
-    et n'a pas accès aux fichiers existants (droits limités : `drive.file`, `Files.ReadWrite.AppFolder`, dossier d'application Dropbox).
+    et n'a pas accès aux fichiers existants.
   - **« Créer un compte gratuit »** : ouvre la page d'inscription officielle, puis le bouton devient « Compte créé ? Connecter → ».
   - Le même compte connecté deux fois est fusionné automatiquement.
 - **Répartition automatique** : chaque fichier part sur le cloud qui a le plus d'espace libre (on garde 300 Mo de marge).
   Les gros fichiers (vidéos) sont découpés en morceaux de 32 Mo qui peuvent aller sur des clouds différents.
 - **Pas de doublons** : un fichier déjà envoyé (même nom, taille et date) est ignoré. On peut donc renvoyer toute sa galerie.
-- **Sécurité** : chiffrement AES-256-GCM **sur l'appareil, avant l'envoi** (clé dérivée de la phrase secrète avec PBKDF2, 600 000 itérations).
-  Les clouds ne voient que des fichiers `xxxx.bin` illisibles. Le catalogue (noms, dossiers) est lui aussi chiffré.
-  **Aucun serveur Nimbus** : tout va directement de l'appareil vers Google, Microsoft et Dropbox.
-- **PC ⇄ téléphone** : le catalogue chiffré est copié sur chaque cloud. Sur un nouvel appareil, on connecte un des clouds
-  et Nimbus retrouve le coffre automatiquement ; il suffit de taper la phrase secrète.
+- **Sécurité** : chaque espace a sa propre clé de chiffrement aléatoire (AES-256-GCM), créée à la première connexion et rangée
+  dans le compte principal (fichier `Nimbus/nimbus-cle.json`). Les fichiers sont chiffrés **sur l'appareil, avant l'envoi** :
+  les autres clouds ne voient que des fichiers `xxxx.bin` illisibles, et le catalogue (noms, dossiers) est lui aussi chiffré.
+  Conseil à donner aux utilisateurs : activer la double authentification sur le compte principal.
+  **Aucun serveur Nimbus** : tout va directement de l'appareil vers chaque cloud.
+- **PC ⇄ téléphone** : sur un nouvel appareil, on se reconnecte avec le même compte principal, et tout réapparaît.
+- **Déconnexion** (bouton ⏻) : efface tout de l'appareil. Les fichiers restent sur les clouds.
 - **Android** : une fois l'appli installée, « Partager » depuis la Galerie affiche **Nimbus** et envoie directement les photos.
 - **PC** : glisser-déposer, ou envoi d'un dossier entier avec ses sous-dossiers.
 

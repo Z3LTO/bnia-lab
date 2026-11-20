@@ -1,7 +1,7 @@
 import { CONFIG } from './config.js';
 import { idb } from './db.js';
 import * as C from './crypto.js';
-import { PROVIDERS, GUIDE, AuthError, handleRedirect, startAuth, setPersist } from './providers.js';
+import { PROVIDERS, GUIDE, AuthError, handleRedirect, startAuth, setPersist, KEY_NAME } from './providers.js';
 
 /* ───────── utilitaires ───────── */
 const $ = (s, r = document) => r.querySelector(s);
@@ -77,8 +77,6 @@ async function connect(type, acc) {
   const P = PROVIDERS[type];
   if (!P.configured()) return toast(`${P.name} n'est pas encore activé sur ce site (Client ID manquant dans config.js).`, 'err');
   if (P.credentials) return credForm(type, acc);
-  // la clé reste en mémoire le temps de l'aller-retour chez le fournisseur
-  if (S.key && !(await idb.get('kv', 'key'))) await idb.set('kv', 'tmpKey', S.key);
   await startAuth(type, acc);
 }
 
@@ -113,7 +111,7 @@ function credForm(type, existing, mfa = false) {
       await saveAccounts();
       await refreshQuotas();
       toast(`✓ ${P.name} connecté : ${acc.label}`);
-      if (S.key) { sync(); render(); } else showLock();
+      if (S.key) { sync(); render(); } else { showLock({ busy: 'Ouverture de ton espace…' }); await findVault(acc); }
     } catch (x) {
       if (x.mfa) $('#cCode').classList.remove('hidden');
       err.textContent = x.message; btn.disabled = false; btn.textContent = 'Connecter';
@@ -122,43 +120,68 @@ function credForm(type, existing, mfa = false) {
 }
 
 /* ───────── coffre (chiffrement) ───────── */
-async function createVault(pass, remember) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await C.deriveKey(pass, salt);
-  const check = await C.encrypt(key, te.encode('nimbus-ok'));
-  S.vault = { salt: C.toB64(salt), check: C.toB64(check) };
+// Aucun mot de passe à retenir : une clé aléatoire (AES-256) est créée pour l'espace de l'utilisateur
+// et rangée dans son compte principal (le premier cloud connecté). Sur l'appareil, elle est gardée non exportable.
+const isHome = a => S.vault?.home && a.provider === S.vault.home.provider && (a.label || '').toLowerCase() === (S.vault.home.label || '').toLowerCase();
+async function createVaultOn(acc) {
+  const raw = C.newRawKey(), id = rid();
+  await PROVIDERS[acc.provider].writeIndex(acc, JSON.stringify({ app: 'nimbus', v: 2, vault: id, key: C.toB64(raw) }), KEY_NAME);
+  S.vault = { id, home: { provider: acc.provider, label: acc.label } };
   await idb.set('kv', 'vault', S.vault);
   await idb.set('kv', 'onboarded', false);
-  await unlocked(key, remember);
+  await unlocked(await C.importKey(raw));
+  toast(`✓ Ton espace Nimbus est prêt (compte principal : ${acc.label})`);
 }
-async function unlock(pass, remember) {
-  const key = await C.deriveKey(pass, C.fromB64(S.vault.salt));
-  try { await C.decrypt(key, C.fromB64(S.vault.check)); }
-  catch { throw new Error('Phrase secrète incorrecte.'); }
+async function openVaultFrom(acc, text) {
+  const k = JSON.parse(text);
+  if (k.app !== 'nimbus' || !k.key || !k.vault) throw new Error('Clé de ton espace illisible.');
+  S.vault = { id: k.vault, home: { provider: acc.provider, label: acc.label } };
   await idb.set('kv', 'vault', S.vault);
-  await unlocked(key, remember);
+  await unlocked(await C.importKey(C.fromB64(k.key)));
 }
-async function unlocked(key, remember) {
+// Retrouve l'espace sur les clouds connectés, sinon en crée un sur le compte qu'on vient de connecter
+async function findVault(prefer) {
+  const list = S.accounts.filter(a => a.status === 'ok');
+  if (prefer) {
+    const p = list.find(a => a.id === prefer.id) || list.find(a => a.provider === prefer.provider && a.label === prefer.label);
+    if (p) { list.splice(list.indexOf(p), 1); list.unshift(p); prefer = p; } else prefer = null;
+  }
+  for (const a of list) {
+    let t = null;
+    try { t = await PROVIDERS[a.provider].readIndex(a, KEY_NAME); } catch (e) { console.warn(e); }
+    if (t) return await openVaultFrom(a, t);
+  }
+  for (const a of list) {
+    try {
+      const t = await PROVIDERS[a.provider].readIndex(a), w = t && JSON.parse(t);
+      if (w?.app === 'nimbus' && w.home) return showLock({ needHome: w.home });
+    } catch {}
+  }
+  const target = prefer || list[0];
+  if (target) return await createVaultOn(target);
+  showLock();
+}
+async function unlocked(key) {
   S.key = key;
-  if (remember) await idb.set('kv', 'key', key); else await idb.del('kv', 'key');
+  await idb.set('kv', 'key', key);
   const local = await idb.get('kv', 'catalog');
   if (local) { try { const c = await openCatalog(local); if (c && !c.foreign) S.catalog = c; } catch {} }
   S.catalog.folders ||= {}; S.catalog.files ||= {};
   $('#lock').classList.add('hidden');
   $('#app').classList.remove('hidden');
   const onboarded = await idb.get('kv', 'onboarded');
-  setView(onboarded === false || !S.accounts.length ? 'clouds' : 'files');
+  setView(onboarded === false || S.accounts.length < 2 ? 'clouds' : 'files');
   sync();
   takeShared();
 }
 async function sealCatalog() {
   const data = await C.encrypt(S.key, te.encode(JSON.stringify(S.catalog)));
-  return JSON.stringify({ app: 'nimbus', v: 1, salt: S.vault.salt, check: S.vault.check, data: C.toB64(data) });
+  return JSON.stringify({ app: 'nimbus', v: 2, vault: S.vault.id, home: S.vault.home, data: C.toB64(data) });
 }
 async function openCatalog(text) {
   const w = JSON.parse(text);
   if (w.app !== 'nimbus') return null;
-  if (w.salt !== S.vault.salt) return { foreign: true };
+  if (w.vault !== S.vault.id) return { foreign: true };
   return JSON.parse(td.decode(await C.decrypt(S.key, C.fromB64(w.data))));
 }
 
@@ -505,13 +528,13 @@ function accountCard(a, mine) {
   return `<div class="acard" style="--pc:${P.color}">
     <div class="plogo">${P.letter}</div>
     <div class="pbody">
-      <div class="pname">${P.name} ${st}</div>
+      <div class="pname">${P.name} ${isHome(a) ? '<span class="chip home">⭐ Compte principal</span>' : ''} ${st}</div>
       <div class="phint">${esc(a.label || '…')}</div>
       <div class="bar"><i style="width:${pct}%"></i></div>
       <div class="phint">${fmt(free(a))} libres sur ${fmt(a.total)} · Nimbus y occupe ${fmt(mine)}</div>
       <div class="pbtns">
         ${a.status !== 'ok' ? `<button class="btn primary sm" data-reconnect="${a.id}">Reconnecter</button>` : ''}
-        <button class="btn sm ghost" data-remove="${a.id}">Retirer</button>
+        ${isHome(a) ? '' : `<button class="btn sm ghost" data-remove="${a.id}">Retirer</button>`}
       </div>
     </div></div>`;
 }
@@ -537,66 +560,41 @@ async function renderClouds() {
       <h3>🔐 Sécurité</h3>
       <ul class="hint list">
         <li>Chaque fichier est chiffré (AES-256) sur ton appareil <b>avant</b> l'envoi. Les clouds ne stockent que des morceaux illisibles aux noms aléatoires.</li>
-        <li>Ta phrase secrète n'est jamais envoyée nulle part. Sans elle, personne ne peut lire tes fichiers… toi non plus : ne la perds pas.</li>
+        <li>La clé de chiffrement est rangée dans ton <b>compte principal</b>${S.vault?.home ? ` (${esc(S.vault.home.label)})` : ''}. Protège-le avec la double authentification, et ne supprime pas le fichier <i>nimbus-cle.json</i> du dossier Nimbus.</li>
         <li>Nimbus n'a accès qu'à son propre dossier sur chaque cloud, jamais à tes autres fichiers.</li>
         <li>Aucun serveur Nimbus : les connexions vont directement de ton appareil vers chaque cloud.</li>
       </ul>
     </div>`;
 }
-function renderLockAccounts() {
-  return S.accounts.length
-    ? S.accounts.map(a => `<div class="mini" style="--pc:${PROVIDERS[a.provider].color}"><span class="plogo">${PROVIDERS[a.provider].letter}</span>${esc(a.label || PROVIDERS[a.provider].name)}${a.status !== 'ok' ? ' <span class="chip warn">à reconnecter</span>' : ''}</div>`).join('')
-    : '';
-}
-async function showLock() {
+function showLock({ needHome = null, busy = '' } = {}) {
   const el = $('#lock');
   el.classList.remove('hidden'); $('#app').classList.add('hidden');
-  if (!S.vault && S.accounts.some(a => a.status === 'ok')) {
-    el.innerHTML = '<div class="lockbox"><div class="card"><p>Recherche d\'un coffre existant sur tes clouds…</p></div></div>';
-    for (const a of S.accounts.filter(x => x.status === 'ok')) {
-      try {
-        const t = await PROVIDERS[a.provider].readIndex(a);
-        const w = t && JSON.parse(t);
-        if (w?.app === 'nimbus') { S.vault = { salt: w.salt, check: w.check }; S.foundOn = a.label; break; }
-      } catch {}
-    }
-  }
-  const create = !S.vault;
+  const H = needHome && PROVIDERS[needHome.provider];
   el.innerHTML = `<div class="lockbox">
     <div class="logo">☁</div><h1>Nimbus</h1>
-    <p class="sub">Tous tes clouds gratuits réunis dans un seul coffre chiffré.</p>
-    <form id="lockForm" class="card">
-      <h2>${create ? 'Étape 1/2 : crée ton coffre' : 'Déverrouille ton coffre'}</h2>
-      ${S.foundOn ? `<p class="hint ok">✓ Coffre trouvé sur ${esc(S.foundOn)}. Entre ta phrase secrète.</p>` : ''}
-      ${create ? `<p class="hint">Une seule phrase secrète pour tous tes clouds. Elle chiffre tes fichiers sur ton appareil avant l'envoi. <b>Si tu l'oublies, tes fichiers sont perdus</b> : note-la en lieu sûr.</p>` : ''}
-      <input type="password" id="pass" placeholder="Phrase secrète${create ? ' (10 caractères min.)' : ''}" autocomplete="${create ? 'new-password' : 'current-password'}" required minlength="${create ? 10 : 1}">
-      ${create ? '<input type="password" id="pass2" placeholder="Confirme la phrase secrète" autocomplete="new-password" required>' : ''}
-      <label class="check"><input type="checkbox" id="remember" checked> Rester déverrouillé sur cet appareil</label>
-      <button class="btn primary" type="submit">${create ? 'Créer mon coffre' : 'Déverrouiller'}</button>
-      <p class="err" id="lockErr"></p>
-    </form>
-    <div class="card">
-      <h3>${create ? 'Tu utilises déjà Nimbus sur un autre appareil ?' : 'Clouds connectés'}</h3>
-      ${create ? '<p class="hint">Connecte un des clouds de ton coffre : Nimbus le retrouvera automatiquement.</p>' : ''}
-      ${renderLockAccounts()}
-      ${create ? `<div class="pbtns wrap">${Object.values(PROVIDERS).map(P => `<button class="btn sm" style="--pc:${P.color}" data-connect="${P.type}"${P.configured() ? '' : ' disabled'}>${P.name}</button>`).join('')}</div>` : ''}
-    </div>
-    ${!create && !S.foundOn ? '<button class="link" id="resetVault">Oublier ce coffre sur cet appareil</button>' : ''}
+    <p class="sub">Tous tes clouds gratuits réunis dans un seul espace sécurisé.</p>
+    ${busy ? `<div class="card center"><div class="spinner"></div><p>${esc(busy)}</p></div>`
+    : H ? `<div class="card">
+        <h2>Reconnecte ton compte principal</h2>
+        <p class="hint">Ton espace Nimbus est rattaché à <b>${esc(needHome.label)}</b> (${H.name}). Connecte ce compte pour l'ouvrir sur cet appareil.</p>
+        <button class="btn login" style="--pc:${H.color}" data-connect="${H.type}"><span class="plogo">${H.letter}</span>Continuer avec ${H.brand}</button>
+      </div>`
+    : `<div class="card">
+        <h2>Connecte-toi</h2>
+        <p class="hint">Pas de compte à créer ni de mot de passe à inventer : utilise un compte que tu as déjà. Ce sera ton <b>compte principal</b>.</p>
+        <div class="login-btns">${Object.values(PROVIDERS).map(P => `<button class="btn login" style="--pc:${P.color}" data-connect="${P.type}"${P.configured() ? '' : ' disabled title="Bientôt disponible"'}><span class="plogo">${P.letter}</span>Continuer avec ${P.brand}</button>`).join('')}</div>
+        <p class="hint center">Tu as une adresse Gmail ? Choisis Google.</p>
+      </div>
+      <div class="card">
+        <h3>Comment ça marche ?</h3>
+        <ol class="hint list">
+          <li><b>Connecte-toi</b> avec ton compte principal.</li>
+          <li><b>Ajoute tes autres clouds gratuits</b> : on te guide pas à pas (≈ 52 Go en 7 min).</li>
+          <li><b>Envoie tes photos</b> : Nimbus les répartit et les protège tout seul.</li>
+        </ol>
+        <p class="hint">🔐 Tes fichiers sont chiffrés avant de quitter ton appareil : les clouds ne voient que des morceaux illisibles.</p>
+      </div>`}
   </div>`;
-  $('#lockForm').onsubmit = async e => {
-    e.preventDefault();
-    const pass = $('#pass').value, err = $('#lockErr'), btn = e.target.querySelector('button[type=submit]');
-    err.textContent = '';
-    if (create && pass !== $('#pass2').value) { err.textContent = 'Les deux phrases ne correspondent pas.'; return; }
-    btn.disabled = true; btn.textContent = 'Calcul de la clé…';
-    try { create ? await createVault(pass, $('#remember').checked) : await unlock(pass, $('#remember').checked); }
-    catch (x) { err.textContent = x.message; btn.disabled = false; btn.textContent = create ? 'Créer mon coffre' : 'Déverrouiller'; }
-  };
-  $('#resetVault')?.addEventListener('click', async () => {
-    if (!confirm("Oublier ce coffre sur cet appareil ? (Rien n'est supprimé sur tes clouds.)")) return;
-    for (const k of ['vault', 'catalog', 'key', 'onboarded']) await idb.del('kv', k);
-    S.vault = null; showLock();
-  });
 }
 
 /* ───────── feuilles d'actions & visionneuse ───────── */
@@ -671,7 +669,12 @@ async function openViewer(id) {
 function bind() {
   document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
   $('#btnSync').onclick = () => sync().then(() => toast('Synchronisé'));
-  $('#btnLock').onclick = async () => { await idb.del('kv', 'key'); location.reload(); };
+  $('#btnLock').onclick = async () => {
+    if (!confirm("Se déconnecter de Nimbus sur cet appareil ?\n\nTes fichiers restent sur tes clouds : tu les retrouveras en te reconnectant avec ton compte principal.")) return;
+    for (const k of ['key', 'vault', 'catalog', 'accounts', 'onboarded']) await idb.del('kv', k);
+    await idb.clear('thumbs');
+    location.reload();
+  };
   $('#crumbs').onclick = e => { const b = e.target.closest('[data-folder]'); if (b) { S.cwd = b.dataset.folder; renderFiles(); } };
   $('#grid').onclick = e => {
     const m = e.target.closest('[data-fmenu]'); if (m) { e.stopPropagation(); return folderMenu(m.dataset.fmenu); }
@@ -704,6 +707,7 @@ function bind() {
     if (t.dataset.reconnect) { const a = S.accounts.find(x => x.id === t.dataset.reconnect); return connect(a.provider, a); }
     if (t.dataset.remove) {
       const a = S.accounts.find(x => x.id === t.dataset.remove);
+      if (isHome(a)) return toast("C'est ton compte principal : il garde la clé de ton espace, il ne peut pas être retiré.", 'err');
       const n = liveFiles().filter(f => f.chunks.some(c => c.a === a.id)).length;
       if (!confirm(`Retirer ${a.label} de Nimbus ?${n ? `\n\n⚠️ ${n} fichier(s) y sont stockés et deviendront inaccessibles tant que tu ne le reconnectes pas.` : ''}`)) return;
       S.accounts = S.accounts.filter(x => x !== a);
@@ -740,12 +744,13 @@ async function boot() {
   if (location.search.includes('shared=1')) history.replaceState(null, '', location.pathname);
   await refreshQuotas();
   if (added) { const a = S.accounts.find(x => x.id === added.id) || added; toast(`✓ ${PROVIDERS[a.provider].name} connecté${a.label ? ' : ' + a.label : ''}`); }
-  const remembered = await idb.get('kv', 'key');
-  const tmp = await idb.get('kv', 'tmpKey');
-  if (tmp) await idb.del('kv', 'tmpKey');
-  const key = remembered || tmp;
-  if (key && S.vault) await unlocked(key, !!remembered);
-  else await showLock();
+  const key = await idb.get('kv', 'key');
+  if (key && S.vault) await unlocked(key);
+  else if (S.accounts.some(a => a.status === 'ok')) {
+    showLock({ busy: 'Ouverture de ton espace…' });
+    try { await findVault(added); }
+    catch (e) { showLock(); toast(e.message, 'err'); }
+  } else showLock();
   if (err) toast(err.message, 'err');
 }
 boot();

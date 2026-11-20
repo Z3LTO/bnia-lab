@@ -1,6 +1,11 @@
-// Chiffrement de bout en bout : AES-256-GCM, clé dérivée de la phrase secrète (PBKDF2-SHA256, 600 000 itérations)
-// La clé ne quitte jamais l'appareil et n'est jamais exportable.
+// Chiffrement AES-256-GCM. Chaque coffre a une clé aléatoire de 256 bits, rangée dans le compte principal
+// de l'utilisateur ; sur l'appareil, elle est gardée sous forme non exportable.
 const te = new TextEncoder();
+
+export function newRawKey() { return crypto.getRandomValues(new Uint8Array(32)); }
+export function importKey(raw) {
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
 
 export async function deriveKey(passphrase, salt) {
   const base = await crypto.subtle.importKey('raw', te.encode(passphrase.normalize('NFC')), 'PBKDF2', false, ['deriveKey']);

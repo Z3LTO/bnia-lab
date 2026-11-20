@@ -4,6 +4,7 @@ import { CONFIG } from './config.js';
 
 export const REDIRECT = location.origin + location.pathname.replace(/index\.html$/, '');
 export const INDEX_NAME = 'nimbus-index.json';
+export const KEY_NAME = 'nimbus-cle.json'; // clé du coffre, rangée dans le compte principal
 
 export class AuthError extends Error {
   constructor(acc) { super('Session expirée'); this.acc = acc; }
@@ -63,7 +64,7 @@ async function refreshWith(acc, url, body) {
 /* ───────────────────────── Google Drive ───────────────────────── */
 const GAPI = 'https://www.googleapis.com';
 const google = {
-  type: 'google', name: 'Google Drive', color: '#4285f4', letter: 'G',
+  type: 'google', name: 'Google Drive', brand: 'Google', color: '#4285f4', letter: 'G',
   freeHint: '15 Go gratuits (partagés avec Gmail et Photos)',
   hasIt: 'Tu as une adresse Gmail ? Tu as déjà un Google Drive.',
   signup: 'https://accounts.google.com/signup',
@@ -120,20 +121,20 @@ const google = {
     const r = await this.call(acc, `${GAPI}/drive/v3/files/${id}`, { method: 'DELETE' });
     if (!r.ok && r.status !== 404) await ok(r, 'Google');
   },
-  async findIndex(acc) {
+  async findIndex(acc, name = INDEX_NAME) {
     const parent = await this.folder(acc);
-    const q = `name='${INDEX_NAME}' and '${parent}' in parents and trashed=false`;
+    const q = `name='${name}' and '${parent}' in parents and trashed=false`;
     const j = await (await ok(await this.call(acc, GAPI + '/drive/v3/files?fields=files(id)&q=' + encodeURIComponent(q)), 'Google')).json();
     return j.files[0]?.id || null;
   },
-  async readIndex(acc) {
-    const id = await this.findIndex(acc);
+  async readIndex(acc, name = INDEX_NAME) {
+    const id = await this.findIndex(acc, name);
     return id ? new TextDecoder().decode(await this.download(acc, id)) : null;
   },
-  async writeIndex(acc, text) {
-    const id = await this.findIndex(acc), data = new TextEncoder().encode(text);
+  async writeIndex(acc, text, name = INDEX_NAME) {
+    const id = await this.findIndex(acc, name), data = new TextEncoder().encode(text);
     if (id) await ok(await this.call(acc, `${GAPI}/upload/drive/v3/files/${id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: data }), 'Google');
-    else await this.upload(acc, INDEX_NAME, data);
+    else await this.upload(acc, name, data);
   },
 };
 
@@ -141,7 +142,7 @@ const google = {
 const MS = 'https://login.microsoftonline.com/consumers/oauth2/v2.0';
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const onedrive = {
-  type: 'onedrive', name: 'OneDrive', color: '#0f6cbd', letter: 'O', pkce: true,
+  type: 'onedrive', name: 'OneDrive', brand: 'Microsoft (Outlook, Hotmail)', color: '#0f6cbd', letter: 'O', pkce: true,
   freeHint: '5 Go gratuits',
   hasIt: 'Tu as une adresse Hotmail, Outlook ou Live ? Tu as déjà un OneDrive.',
   signup: 'https://signup.live.com/',
@@ -191,14 +192,14 @@ const onedrive = {
     const r = await this.call(acc, `/me/drive/items/${id}`, { method: 'DELETE' });
     if (!r.ok && r.status !== 404) await ok(r, 'OneDrive');
   },
-  async readIndex(acc) {
-    const r = await this.call(acc, `/me/drive/special/approot:/${INDEX_NAME}`);
+  async readIndex(acc, name = INDEX_NAME) {
+    const r = await this.call(acc, `/me/drive/special/approot:/${name}`);
     if (r.status === 404) return null;
     const j = await (await ok(r, 'OneDrive')).json();
     return new TextDecoder().decode(await (await ok(await fetch(j['@microsoft.graph.downloadUrl']), 'OneDrive')).arrayBuffer());
   },
-  async writeIndex(acc, text) {
-    await ok(await this.call(acc, `/me/drive/special/approot:/${INDEX_NAME}:/content`, {
+  async writeIndex(acc, text, name = INDEX_NAME) {
+    await ok(await this.call(acc, `/me/drive/special/approot:/${name}:/content`, {
       method: 'PUT', headers: { 'Content-Type': 'application/octet-stream' }, body: new TextEncoder().encode(text),
     }), 'OneDrive');
   },
@@ -207,7 +208,7 @@ const onedrive = {
 /* ───────────────────────── Dropbox ───────────────────────── */
 const DBX_TOKEN = 'https://api.dropboxapi.com/oauth2/token';
 const dropbox = {
-  type: 'dropbox', name: 'Dropbox', color: '#0061fe', letter: 'D', pkce: true,
+  type: 'dropbox', name: 'Dropbox', brand: 'Dropbox', color: '#0061fe', letter: 'D', pkce: true,
   freeHint: '2 Go gratuits',
   hasIt: 'Tu as déjà utilisé Dropbox ? Connecte simplement ton compte.',
   signup: 'https://www.dropbox.com/register',
@@ -256,20 +257,20 @@ const dropbox = {
     const r = await this.rpc(acc, 'files/delete_v2', { path: id });
     if (!r.ok && r.status !== 409) await ok(r, 'Dropbox');
   },
-  async readIndex(acc) {
-    const r = await this.content(acc, 'files/download', { path: '/' + INDEX_NAME });
+  async readIndex(acc, name = INDEX_NAME) {
+    const r = await this.content(acc, 'files/download', { path: '/' + name });
     if (r.status === 409) return null;
     return new TextDecoder().decode(await (await ok(r, 'Dropbox')).arrayBuffer());
   },
-  async writeIndex(acc, text) {
-    await ok(await this.content(acc, 'files/upload', { path: '/' + INDEX_NAME, mode: 'overwrite', mute: true }, new TextEncoder().encode(text)), 'Dropbox');
+  async writeIndex(acc, text, name = INDEX_NAME) {
+    await ok(await this.content(acc, 'files/upload', { path: '/' + name, mode: 'overwrite', mute: true }, new TextEncoder().encode(text)), 'Dropbox');
   },
 };
 
 /* ───────────────────────── pCloud ───────────────────────── */
 // Requêtes « simples » (GET / POST formulaire) : pas de pré-vol CORS, jeton sans expiration.
 const pcloud = {
-  type: 'pcloud', name: 'pCloud', color: '#17bed0', letter: 'P',
+  type: 'pcloud', name: 'pCloud', brand: 'pCloud', color: '#17bed0', letter: 'P',
   freeHint: "jusqu'à 10 Go gratuits",
   hasIt: 'Tu as déjà un compte pCloud ? Connecte-le.',
   signup: 'https://my.pcloud.com/#page=register',
@@ -316,11 +317,11 @@ const pcloud = {
   async remove(acc, id) {
     try { await this.call(acc, 'deletefile', { fileid: id }); } catch (e) { if (e.code !== 2009) throw e; }
   },
-  async readIndex(acc) {
-    try { return new TextDecoder().decode(await this.fetchLink(acc, { path: `/${CONFIG.appFolder}/${INDEX_NAME}` })); }
+  async readIndex(acc, name = INDEX_NAME) {
+    try { return new TextDecoder().decode(await this.fetchLink(acc, { path: `/${CONFIG.appFolder}/${name}` })); }
     catch (e) { if (e.code === 2009 || e.code === 2002 || e.code === 2005) return null; throw e; }
   },
-  writeIndex(acc, text) { return this.put(acc, INDEX_NAME, new TextEncoder().encode(text)); }, // écrase l'ancien
+  writeIndex(acc, text, name = INDEX_NAME) { return this.put(acc, name, new TextEncoder().encode(text)); }, // écrase l'ancien
 };
 
 /* ───────────────────────── MEGA ───────────────────────── */
@@ -330,7 +331,7 @@ const megaSessions = new Map();
 let megaLib = null;
 const megaErr = e => /ESID|-15\b|EBLOCKED|-16\b/.test(String(e?.message || e));
 const mega = {
-  type: 'mega', name: 'MEGA', color: '#d9272e', letter: 'M', credentials: true,
+  type: 'mega', name: 'MEGA', brand: 'MEGA', color: '#d9272e', letter: 'M', credentials: true,
   freeHint: '20 Go gratuits',
   hasIt: 'Tu as déjà un compte MEGA ? Connecte-le avec ton e-mail.',
   signup: 'https://mega.io/fr/register',
@@ -398,18 +399,18 @@ const mega = {
   remove(acc, id) {
     return this.wrap(acc, async s => { const f = s.files[id]; if (f) await f.delete(true); });
   },
-  findIndex(s, dir) { return dir.children?.filter(f => f.name === INDEX_NAME) || []; },
-  readIndex(acc) {
+  findIndex(s, dir, name = INDEX_NAME) { return dir.children?.filter(f => f.name === name) || []; },
+  readIndex(acc, name = INDEX_NAME) {
     return this.wrap(acc, async s => {
       await s.reload(true); // l'index a pu changer depuis un autre appareil
-      const [f] = this.findIndex(s, await this.folder(s)).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      const [f] = this.findIndex(s, await this.folder(s), name).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       return f ? new TextDecoder().decode(await f.downloadBuffer({})) : null;
     });
   },
-  writeIndex(acc, text) {
+  writeIndex(acc, text, name = INDEX_NAME) {
     return this.wrap(acc, async s => {
-      const dir = await this.folder(s), old = this.findIndex(s, dir), data = new TextEncoder().encode(text);
-      await dir.upload({ name: INDEX_NAME, size: data.byteLength }, data).complete;
+      const dir = await this.folder(s), old = this.findIndex(s, dir, name), data = new TextEncoder().encode(text);
+      await dir.upload({ name, size: data.byteLength }, data).complete;
       for (const f of old) await f.delete(true).catch(() => {});
     });
   },
