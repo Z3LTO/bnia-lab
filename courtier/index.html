@@ -34,8 +34,11 @@ html[data-theme=dark] .btn:not(.ghost),html[data-theme=dark] nav .fab .rond{colo
 html[data-theme=dark] .chip.on{color:#1A100B}
 html[data-theme=dark] .seg button.on{background:var(--raised);color:var(--ink)}
 .chip{border-color:var(--ckbd)}
-.tbtn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;display:grid;place-items:center;padding:0}
-.tbtn svg{width:17px;height:17px}
+.acc-btn{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:var(--acc);color:#2E1A0E;font-weight:800;font-size:15px;display:grid;place-items:center;padding:0;position:relative}
+.acc-btn::after{content:"";position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#5FBF6A;border:2px solid var(--navy)}
+.opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 4px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-weight:600;font-size:15px;color:var(--ink)}
+.opt svg{width:20px;height:20px;color:var(--brand);flex:none}
+.opt.out{color:var(--warn)}.opt.out svg{color:var(--warn)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 body{padding-bottom:88px}
@@ -192,7 +195,7 @@ main.anim{animation:vin .22s ease-out}
   <p class="by">Développé par <a href="https://z3lto.github.io/bnia-lab/" target="_blank" rel="noopener">bnia.lab</a></p>
 </section>
 <header>
-  <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="tbtn" id="tBtn" onclick="theme()" aria-label="Changer de thème"></button><button class="btn ghost sm" onclick="logout()" aria-label="Se déconnecter">Sortir</button></div></div>
+  <div class="top"><div class="logo">Carnet<span>.</span>Courtier</div><div class="row"><span class="pill" id="pillDate"></span><button class="acc-btn" id="accBtn" onclick="compte()" aria-label="Mon compte"></button></div></div>
   <h1 id="title">Aujourd'hui</h1>
   <p class="sub" id="subtitle"></p>
 </header>
@@ -284,7 +287,7 @@ async function auth(e){
 async function logout(){await sb.auth.signOut()}
 sb.auth.onAuthStateChange((ev,session)=>{
   const u=session?.user||null;
-  if(u&&(!USER||USER.id!==u.id)){USER=u;charger()}
+  if(u&&(!USER||USER.id!==u.id)){USER=u;tIcon();charger()}
   if(!u){USER=null;S=vide();document.body.classList.add('out');$('lgBox').classList.remove('hidden');$('lgWait').classList.add('hidden');lgUI()}
 });
 const cli=id=>S.clients.find(c=>c.id===id);
@@ -308,9 +311,19 @@ function vu(k){(S.vu||(S.vu={}))[k]=1;save();render()}
 const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
 const prochains=()=>{const r=[];let d=TODAY;while(r.length<3){d=addD(d,1);if(new Date(d+'T12:00:00').getDay())r.push(d)}return r};// 3 prochains jours, sans le dimanche
 const salut=()=>{const h=new Date().getHours();return h<5||h>=18?'Bonsoir':h<12?'Bonjour':'Bon après-midi'};
-const LUNE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',SOLEIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
-function theme(){const d=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=d?'dark':'light';try{localStorage.setItem('cc-theme',d?'dark':'light')}catch(e){}tIcon()}
-function tIcon(){$('tBtn').innerHTML=document.documentElement.dataset.theme==='dark'?SOLEIL:LUNE}
+function themeChoisi(){try{return localStorage.getItem('cc-theme')||'auto'}catch(e){return 'auto'}}
+function setTheme(t){try{t==='auto'?localStorage.removeItem('cc-theme'):localStorage.setItem('cc-theme',t)}catch(e){}
+  document.documentElement.dataset.theme=(t==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t);compte()}
+function tIcon(){$('accBtn').textContent=((USER&&USER.email)||'?')[0].toUpperCase()}
+function compte(){
+  const t=themeChoisi(),e=(USER&&USER.email)||'';
+  openSheet(`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span class="av" style="background:var(--acc);color:#2E1A0E">${esc((e||'?')[0].toUpperCase())}</span><div class="grow"><b>${e?'Connecté':'Mode démo'}</b><div class="muted" style="overflow-wrap:anywhere">${e?esc(e):'Données fictives, gardées sur cet appareil'}</div></div><span class="st ok">● En ligne</span></div>
+  <label class="f">Apparence</label><div class="seg" style="max-width:none;margin:0 0 6px">${[['light','Clair'],['dark','Sombre'],['auto','Auto']].map(([k,l])=>`<button class="${t===k?'on':''}" onclick="setTheme('${k}')">${l}</button>`).join('')}</div>
+  <p class="help" style="margin:4px 0 8px">« Auto » suit le réglage de ton téléphone.</p>
+  <button class="opt" onclick="closeSheet();trameSheet()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Mes créneaux de la journée</button>
+  <button class="opt" onclick="S.vu={};save();closeSheet();go('jour');toast('Les astuces sont de retour')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>Revoir le guide et les astuces</button>
+  <a class="opt" href="mailto:benjaminjouy44@gmail.com?subject=${encodeURIComponent('Carnet Courtier : une remarque')}" style="text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Une idée, un souci ? Écris-nous</a>
+  <button class="opt out" onclick="closeSheet();logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>Se déconnecter</button>`)}
 function head(t,s){$('title').textContent=t;$('subtitle').textContent=s||''}
 function badge(){const n=S.taches.filter(x=>!x.done&&x.due<=TODAY).length;const b=$('badge');b.textContent=n;b.classList.toggle('hidden',!n)}
 tIcon();$('pillDate').textContent=fd(TODAY,{day:'numeric',month:'short'});
