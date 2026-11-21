@@ -63,6 +63,7 @@ async def main():
             await pg.fill('#lgE', 'ami@test.fr'); await pg.fill('#lgP', 'secret1'); await pg.click('#lgB'); await pg.wait_for_timeout(300)
             ok(await pg.evaluate("!document.body.classList.contains('out')"), 'membre connecté')
             ok(await pg.evaluate("'u1' in DB.carnets"), 'carnet créé en base au premier login')
+            ok(await pg.evaluate("[...document.querySelectorAll('nav button')].map(b=>b.dataset.v).join()")=='jour,rappels,appel,mails,clients', "bouton Appel au centre")
             # accueil guidé
             ok(await pg.is_visible('.welcome'), 'carte de bienvenue au premier lancement')
             await pg.click("text=C'est parti"); ok(not await pg.is_visible('.welcome'), 'bienvenue masquée')
@@ -74,7 +75,10 @@ async def main():
             await pg.wait_for_timeout(700)
             ok('"bienvenue":1' in await pg.evaluate("DB.carnets.u1"), 'choix gardé en base')
             # journée
-            await pg.fill('.slot.s1 .add input', 'Étudier dossier Dupont'); await pg.click('.slot.s1 .add .btn'); await pg.wait_for_timeout(50)
+            await pg.fill('.slot.s1 .add input', 'Étudier dossier Dupont'); await pg.press('.slot.s1 .add input', 'Enter'); await pg.wait_for_timeout(50)
+            ok(await pg.evaluate("document.activeElement.closest('form.add')?.dataset.s==='s1'"), 'curseur reste dans le créneau pour enchaîner')
+            ok('Enregistrement' in await pg.inner_text('#pillDate'), 'indicateur « Enregistrement… »')
+            await pg.wait_for_timeout(700); ok('Enregistré' in await pg.inner_text('#pillDate'), 'indicateur « ✓ Enregistré »')
             ok('Étudier dossier Dupont' in await pg.inner_text('.slot.s1'), 'ajout tâche dans un créneau')
             await pg.click('.slot.s1 .ck'); ok(await pg.locator('.slot.s1 .ck.on').count() == 1, 'tâche cochée')
             ok('bravo' in await pg.inner_text('#toast'), 'félicitation quand la journée est bouclée')
@@ -105,6 +109,7 @@ async def main():
             await pg.fill('#cS', 'dam'); ok("D'Amico" in await pg.inner_text('#cSug'), 'suggestion à 3 lettres (apostrophe)')
             await pg.fill('#cS', '0611'); ok("D'Amico" in await pg.inner_text('#cSug'), 'recherche par téléphone')
             await pg.click('#cSug .item'); ok(await pg.input_value('input[placeholder=Nom]') == "D'Amico", 'fiche préremplie')
+            ok(await pg.evaluate("[...document.querySelectorAll('nav button')].indexOf(document.querySelector('nav .fab'))")==2, 'bouton central mis en avant')
             # à faire
             await pg.click('nav button[data-v=rappels]')
             ok('Rappeler Léa' in await pg.inner_text('main'), 'rappel visible dans À faire')
@@ -126,7 +131,11 @@ async def main():
             await pg.click("button:has-text(\"Je l'ai envoyé\")"); ok(await pg.inner_text('.kpi b') == '1', 'compteur de mails')
             await pg.screenshot(path=str(OUT / 'mails.png'), full_page=True)
             # clients
-            await pg.click('nav button[data-v=clients]'); await pg.click('.card.cli:has-text("D\'Amico")')
+            await pg.click('nav button[data-v=clients]')
+            ok(await pg.inner_text('.card.cli:has-text("D\'Amico") .av')=='LD', 'avatar avec initiales')
+            ok(await pg.get_attribute('.card.cli:has-text("D\'Amico") a.ico','href')=='tel:0611223344', 'appel en un geste depuis la liste')
+            await pg.click('.card.cli:has-text("D\'Amico") b')
+            ok(await pg.is_visible('.hero a.btn[href="tel:0611223344"]'), 'bouton Appeler sur la fiche')
             await pg.click('.chip >> text=Transmis banque'); ok(await pg.evaluate("S.clients.find(c=>c.nom.startsWith(\"D\")).statut==='Transmis banque'"), 'changement de statut')
             await pg.click('button[aria-label="Pièce reçue"]'); ok(await pg.evaluate("S.clients.find(c=>c.nom.startsWith(\"D\")).pieces.length===0"), 'pièce cochée reçue')
             await pg.screenshot(path=str(OUT / 'fiche.png'), full_page=True)
@@ -141,6 +150,11 @@ async def main():
             await pg.screenshot(path=str(OUT / 'sombre.png'))
             ok(await pg.evaluate("localStorage.getItem('cc-theme')")=='dark', 'choix du thème gardé')
             await pg.click('#tBtn'); ok(await pg.evaluate("document.documentElement.dataset.theme")=='light', 'retour au mode clair')
+            await pg.evaluate("go('rappels')"); ok(await pg.locator('main .item a.ico[href^="tel:"]').count()>=1, 'bouton appeler sur les rappels')
+            # autre appareil : la version en ligne est reprise au retour sur l'appli
+            await pg.wait_for_timeout(700)
+            await pg.evaluate("const d=JSON.parse(DB.carnets.u1);d.taches.push({id:'x9',c:null,t:'Ajouté sur le PC',due:TODAY,done:false});DB.carnets.u1=JSON.stringify(d);Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});document.dispatchEvent(new Event('visibilitychange'))")
+            await pg.wait_for_timeout(200); ok('Ajouté sur le PC' in await pg.inner_text('main'), 'reprend les changements faits sur un autre appareil')
             # rechargement : les données reviennent de la base
             await pg.wait_for_timeout(700)
             saved = await pg.evaluate("DB.carnets.u1")
