@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tampon</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cxdcmaguipvztmctxkkh.supabase.co wss://cxdcmaguipvztmctxkkh.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Tampon, l'assistant administratif des indépendants et TPE : factures, devis, relances, dates limites et facture électronique 2027.">
 <link rel="manifest" href="manifest.webmanifest?v=2">
@@ -133,6 +133,21 @@ footer a{color:var(--muted)}
 .prose h1{font-size:clamp(28px,5vw,36px);font-weight:800}
 .prose h2{font-size:20px;font-weight:800;margin-top:14px}
 .prose p,.prose li{color:var(--ink)}
+.faq{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:4px 16px}
+.faq summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:'+';display:inline-block;width:20px;color:var(--stamp);font-weight:800}
+.faq[open] summary::before{content:'−'}
+.faq p{padding-bottom:14px;color:var(--muted)}
+.start{display:flex;flex-direction:column;gap:2px}
+.start .st{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.start .st:last-child{border-bottom:0}
+.start .ic{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--on-stamp)}
+.start .st.ok .ic{background:var(--ok);border-color:var(--ok)}
+.start .st.ok .tx{color:var(--muted);text-decoration:line-through}
+.start .tx{flex:1;min-width:0}
+.syncdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-right:6px}
+.syncdot.off{background:var(--warn)}
 .prose .todo{background:var(--warn-soft);color:var(--warn);padding:1px 6px;border-radius:6px;font-weight:600}
 
 /* ===== Questionnaire ===== */
@@ -406,7 +421,7 @@ textarea.in{min-height:90px;resize:vertical}
     <span class="stampmark anim" aria-hidden="true">TRAITÉ</span>
     <p class="lede">Tampon est l'assistant administratif des indépendants et des TPE : factures, devis, relances, dates limites et classement. Il prépare, vous dites oui ou non.</p>
     <div class="trial-badge" id="heroTrial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>14 jours gratuits de la formule Complet, sans carte bancaire</div>
-    <div class="ctas"><a class="btn primary" href="#bienvenue" id="heroCta">Essayer gratuitement 14 jours</a></div>
+    <div class="ctas"><a class="btn primary" href="#bienvenue" id="heroCta">Essayer gratuitement 14 jours</a><button class="link" type="button" data-login id="heroLogin">J’ai déjà un compte</button></div>
   </div>
   <div class="wrap does">
     <h2>Ce que Tampon fait pour vous</h2>
@@ -438,10 +453,26 @@ textarea.in{min-height:90px;resize:vertical}
     </div>
     <p class="fineprint">Chaque nouvel espace profite de la formule Complet pendant 14 jours, sans carte bancaire, puis repasse en Découverte si vous ne choisissez pas de formule. Prototype : toutes les fonctions sont gratuites pendant la phase de test.</p>
   </div>
-  <footer><div class="wrap"><span>Tampon · un produit bnia.lab</span><span><a href="#mentions">Mentions légales</a> · <a href="#confidentialite">Confidentialité</a></span></div></footer>
+  <footer><div class="wrap"><span>Tampon · un produit bnia.lab</span><span><a href="#aide">Aide</a> · <a href="#mentions">Mentions légales</a> · <a href="#confidentialite">Confidentialité</a></span></div></footer>
 </main>
 
 <!-- ================= PAGES LÉGALES ================= -->
+<main id="v-aide" hidden>
+  <div class="wrap prose">
+    <h1>Aide</h1>
+    <p>Les réponses aux questions les plus fréquentes. Une autre question ? Écrivez à <span class="todo">adresse email de contact à compléter</span>.</p>
+    <details class="faq"><summary>Comment installer Tampon sur mon téléphone ?</summary><p>Sur iPhone : ouvrez Tampon dans Safari, touchez le bouton Partager puis « Sur l’écran d’accueil ». Sur Android : ouvrez Tampon dans Chrome, touchez le menu ⋮ puis « Ajouter à l’écran d’accueil » ou « Installer l’application ». Rien à télécharger, aucun droit administrateur nécessaire.</p></details>
+    <details class="faq"><summary>Où sont mes données ? Sont-elles en sécurité ?</summary><p>Avec un compte, vos données sont enregistrées en ligne, sur des serveurs situés en Europe, et vous les retrouvez sur tous vos appareils. Chaque compte ne voit que ses propres données. Sans compte, elles restent uniquement sur cet appareil : pensez à télécharger une sauvegarde depuis Réglages. Vous pouvez aussi protéger l’appli par un code.</p></details>
+    <details class="faq"><summary>Comment faire une facture ?</summary><p>Dans Documents, touchez « Nouvelle facture », choisissez le client, ajoutez les lignes, puis « Finaliser la facture ». Vous pouvez aussi l’écrire dans Ma journée : « Fais une facture de 850 € pour M. Dupont ». Une facture finalisée reçoit son numéro et ne peut plus être modifiée : pour l’annuler, on fait un avoir.</p></details>
+    <details class="faq"><summary>Pourquoi Tampon me demande le SIREN de mes clients professionnels ?</summary><p>C’est une des nouvelles mentions obligatoires de la facture électronique, avec la nature de l’opération, l’adresse de livraison si elle est différente, et l’option pour le paiement de la TVA d’après les débits.</p></details>
+    <details class="faq"><summary>Qu’est-ce que la facture électronique de 2026-2027 ?</summary><p>Depuis le 1er septembre 2026, toutes les entreprises doivent pouvoir recevoir des factures électroniques. À partir du 1er septembre 2027, les TPE et micro-entreprises devront aussi les émettre via une plateforme agréée. Tampon produit vos factures au format Factur-X et vous indique, dans Réglages, ce qu’il vous manque.</p></details>
+    <details class="faq"><summary>L’estimation URSSAF est-elle exacte ?</summary><p>C’est une estimation, à partir des factures que vous avez marquées comme payées et du taux de votre activité. Elle ne comprend pas la contribution à la formation professionnelle ni l’impôt. Le montant à déclarer reste celui que vous avez réellement encaissé.</p></details>
+    <details class="faq"><summary>Comment fonctionne l’essai gratuit ?</summary><p>Chaque nouvel espace profite de la formule Complet pendant 14 jours, sans carte bancaire. Ensuite, vous passez en Découverte (gratuit) sauf si vous choisissez une formule. Un seul essai par SIRET.</p></details>
+    <details class="faq"><summary>Comment résilier mon abonnement ?</summary><p>Dans Réglages, « Gérer mon abonnement ». La résiliation prend effet à la fin du mois payé ; vos documents restent accessibles en formule Découverte.</p></details>
+    <details class="faq"><summary>Comment supprimer mon compte et mes données ?</summary><p>Dans Réglages, section Mon compte, « Supprimer mon compte ». Tout est effacé définitivement. Téléchargez d’abord une sauvegarde si vous voulez garder vos documents : vous devez conserver vos factures 10 ans.</p></details>
+    <p><a href="#accueil">Retour à l’accueil</a></p>
+  </div>
+</main>
 <main id="v-mentions" hidden>
   <div class="wrap prose">
     <h1>Mentions légales</h1>
@@ -461,13 +492,16 @@ textarea.in{min-height:90px;resize:vertical}
   <div class="wrap prose">
     <h1>Politique de confidentialité</h1>
     <h2>Où sont vos données ?</h2>
-    <p>Dans cette version, toutes les informations que vous saisissez (entreprise, clients, factures, photos de justificatifs) restent <b>uniquement dans le navigateur de votre appareil</b>. Elles ne sont envoyées à aucun serveur de bnia.lab. Si vous videz les données de votre navigateur, elles sont effacées : pensez à faire une sauvegarde depuis Réglages.</p>
+    <p><b>Sans compte</b>, les informations que vous saisissez (entreprise, clients, factures, photos de justificatifs) restent uniquement dans le navigateur de votre appareil. Si vous videz les données du navigateur, elles sont effacées : faites des sauvegardes depuis Réglages.</p>
+    <p><b>Avec un compte</b>, elles sont aussi enregistrées chez notre hébergeur de données, Supabase, sur des serveurs situés en Allemagne (Union européenne). Chaque compte n’a accès qu’à ses propres données. Elles servent uniquement à faire fonctionner Tampon : elles ne sont ni vendues, ni utilisées à des fins publicitaires. Elles sont conservées tant que votre compte existe, et effacées quand vous le supprimez.</p>
+    <h2>Paiement</h2>
+    <p>Les abonnements sont payés via Stripe. Vos coordonnées bancaires sont saisies sur la page sécurisée de Stripe et ne passent jamais par Tampon.</p>
     <h2>Services tiers</h2>
-    <p>Pour afficher la page, votre navigateur télécharge des polices chez Google Fonts et des bibliothèques de création de PDF chez Cloudflare (cdnjs). Ces services reçoivent votre adresse IP, comme pour tout site web. Aucun outil de mesure d'audience ni cookie publicitaire n'est utilisé.</p>
+    <p>Pour afficher les polices de caractères, votre navigateur contacte Google Fonts, qui reçoit votre adresse IP. Aucun outil de mesure d’audience ni cookie publicitaire n’est utilisé. Tampon garde votre session de connexion dans votre navigateur.</p>
     <h2>Vos droits</h2>
-    <p>Vous pouvez à tout moment exporter ou effacer vos données depuis Réglages. Pour toute question sur vos données personnelles, écrivez à <span class="todo">adresse email à compléter</span>. Vous pouvez aussi saisir la CNIL (cnil.fr).</p>
+    <p>Vous pouvez à tout moment exporter ou effacer vos données depuis Réglages. Vous pouvez aussi supprimer votre compte depuis Réglages : tout est effacé définitivement. Pour toute question sur vos données personnelles, écrivez à <span class="todo">adresse email à compléter</span>. Vous pouvez aussi saisir la CNIL (cnil.fr).</p>
     <h2>Évolutions</h2>
-    <p>Quand Tampon proposera des comptes en ligne et la connexion à vos emails ou à votre banque, cette politique sera mise à jour et votre accord vous sera demandé avant tout envoi de données.</p>
+    <p>Quand Tampon proposera la connexion à vos emails ou à votre banque, cette politique sera mise à jour et votre accord vous sera demandé avant toute connexion.</p>
     <p><a href="#accueil">Retour à l'accueil</a></p>
   </div>
 </main>
@@ -497,6 +531,7 @@ textarea.in{min-height:90px;resize:vertical}
       <div class="ideas" id="ideas"></div>
       <div class="answer" id="answer" hidden></div>
     </div>
+    <section class="sec" id="startSec" hidden aria-labelledby="h-start"><h2 id="h-start">Pour bien démarrer <button class="link muted" type="button" id="startHide" style="margin-left:auto;font-size:14px;font-family:var(--f-body)">Masquer</button></h2><div class="panel start" id="start"></div></section>
     <section class="sec" aria-labelledby="h-todo">
       <h2 id="h-todo">À valider <span class="count" id="todoCount"></span></h2>
       <div class="cards" id="todo"></div>
@@ -558,6 +593,7 @@ textarea.in{min-height:90px;resize:vertical}
 <input type="file" id="importIn" accept="application/json,.json" hidden>
 <script src="vendor/jspdf-2.5.1.umd.min.js"></script>
 <script src="vendor/pdf-lib-1.17.1.min.js"></script>
-<script src="app.js?v=5"></script>
+<script src="vendor/supabase-2.45.4.js"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

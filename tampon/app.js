@@ -33,7 +33,7 @@ function download(name,data,type){
    Données (gardées dans ce navigateur)
    ===================================================================== */
 const KEY='tampon.v3';
-const blank=()=>({profile:null,clients:[],catalogue:[],docs:[],seq:{},journal:[],snooze:{},sec:null});
+const blank=()=>({profile:null,clients:[],catalogue:[],docs:[],seq:{},journal:[],snooze:{},sec:null,meta:{}});
 let DB=blank();
 /* Nettoyage des données (au chargement et à la restauration d'une sauvegarde) */
 const ID_RE=/^[a-z0-9]{4,40}$/i;
@@ -68,6 +68,7 @@ function cleanDB(o){
   if(o.seq&&typeof o.seq==='object')Object.keys(o.seq).forEach(k=>{if(/^[FDA]-\d{4}$/.test(k))d.seq[k]=Math.max(0,Math.floor(num(o.seq[k])))});
   d.journal=(Array.isArray(o.journal)?o.journal:[]).slice(-300).map(j=>({t:str(j&&j.t),x:str(j&&j.x)}));
   if(o.snooze&&typeof o.snooze==='object')Object.keys(o.snooze).forEach(k=>{if(isoOk(o.snooze[k])||o.snooze[k]==='9999-12-31')d.snooze[str(k).slice(0,80)]=o.snooze[k]});
+  if(o.meta&&typeof o.meta==='object')d.meta={lastBackup:isoOk(o.meta.lastBackup)||'',startHidden:!!o.meta.startHidden,uid:/^[0-9a-f-]{36}$/.test(o.meta.uid||'')?o.meta.uid:''};
   if(o.sec&&typeof o.sec==='object'&&/^[0-9a-f]{32,128}$/.test(o.sec.hash||'')&&/^[0-9a-f]{16,64}$/.test(o.sec.salt||''))d.sec={hash:o.sec.hash,salt:o.sec.salt,iter:Math.max(100000,Math.floor(num(o.sec.iter)))};
   return d;
 }
@@ -79,7 +80,7 @@ function load(){
   if(DB.profile)save();
 }
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(DB));return true}
+  try{localStorage.setItem(KEY,JSON.stringify(DB));if(typeof cloudQueue==='function')cloudQueue();return true}
   catch(e){toast('Mémoire de l’appareil pleine : supprimez des photos de justificatifs ou faites une sauvegarde.');return false}
 }
 function log(x){DB.journal.push({t:new Date().toISOString(),x});if(DB.journal.length>300)DB.journal.shift();save()}
@@ -268,7 +269,14 @@ function renderQ(){
   if(fin){
     const finEssai=P()&&P().plan?null:fdate(addDays(iso(today()),TRIAL_DAYS));
     $('#qBody').innerHTML=`<div class="done-card"><span class="stampmark anim" aria-hidden="true">PRÊT</span><h1>C'est prêt, ${esc(ans.prenom)} !</h1><p class="help">Votre espace ${esc(ans.entreprise)} est créé.</p>${finEssai?`<div class="trial-badge">Formule Complet offerte jusqu’au ${esc(finEssai)}, sans carte bancaire</div>`:''}</div>`;
-    $('#qNext').textContent='Ouvrir Tampon';$('#qFoot').style.justifyContent='center';$('#qBack').hidden=true;$('#qNext').focus({preventScroll:true});return;
+    if(!cloudUser()&&cloudAvailable()){
+      $('#qBody').insertAdjacentHTML('beforeend',`<div class="panel" style="margin-top:8px;text-align:left"><b style="font-size:18px">Créez votre compte gratuit</b><p class="help" style="margin:0">Pour retrouver vos factures sur tous vos appareils et ne jamais les perdre.</p>
+        <div class="fld"><label for="qMail">Email</label><input class="in" id="qMail" type="email" autocomplete="username" value="${esc(ans.email||'')}"></div>
+        <div class="fld"><label for="qPwd">Mot de passe (8 caractères minimum)</label><input class="in" id="qPwd" type="password" autocomplete="new-password" minlength="8"></div>
+        <span class="err" id="qErr" hidden></span><button class="link muted" type="button" id="qNoAcc" style="align-self:flex-start">Continuer sans compte (données sur cet appareil uniquement)</button></div>`);
+      $('#qNext').textContent='Créer mon compte et ouvrir Tampon';$('#qNoAcc').onclick=()=>finishQuiz(false);
+    }else $('#qNext').textContent='Ouvrir Tampon';
+    $('#qFoot').style.justifyContent='center';$('#qBack').hidden=true;$('#qNext').focus({preventScroll:true});return;
   }
   $('#qFoot').style.justifyContent='';$('#qBack').hidden=false;
   const q=QS[qi];const h=typeof q.h==='function'?q.h(ans):q.h;let body='';
@@ -294,7 +302,11 @@ $('#qBody').addEventListener('click',e=>{
 });
 $('#qForm').addEventListener('submit',e=>{
   e.preventDefault();
-  if(qi>=QS.length){if(!ans.activite)ans.activite=activiteDefaut(ans.metier);if(!ans.plan){ans.plan='essai';ans.trialStart=iso(today())}DB.profile=clone(ans);save();if(!DB.journal.length)log('Espace Tampon créé');location.hash='journee';return}
+  if(qi>=QS.length){const m=$('#qMail');if(m){const mail=m.value.trim(),pwd=$('#qPwd').value;const er=$('#qErr');
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){er.textContent='Indiquez une adresse email valide.';er.hidden=false;return}
+      if(pwd.length<8){er.textContent='Le mot de passe doit faire au moins 8 caractères.';er.hidden=false;return}
+      finishQuiz({mail,pwd});return}
+    finishQuiz(false);return}
   const q=QS[qi];const errBox=$('#qErr');const err=(m,el)=>{errBox.textContent=m;errBox.hidden=!m;if(el){el.classList.toggle('bad',!!m);if(m)el.focus()}};
   if(q.type==='adresse'){const a=$('#qAdr').value.trim(),c=$('#qCp').value.trim(),v=$('#qVille').value.trim();
     if((a||c||v)&&(!a||!/^\d{5}$/.test(c)||!v))return err('Complétez la rue, un code postal à 5 chiffres et la ville.',!a?$('#qAdr'):!/^\d{5}$/.test(c)?$('#qCp'):$('#qVille'));
@@ -338,6 +350,8 @@ function computeTodo(){
     const per=periodeADeclarer(p);const j=daysBetween(t,per.due);const k='urssaf:'+per.to;
     if(j>=0&&j<=20&&!snoozed(k)){const ca=caEncaisse(per.from,per.to);out.push({key:k,kind:'urssaf',urgent:j<=7?1:0,why:`À faire avant le ${fdate(per.due)}`,title:`Déclarer ${eur0(ca)} de chiffre d’affaires à l’URSSAF`,note:`Période : ${per.label}. Montant encaissé d’après vos factures payées dans Tampon.${can('urssaf')?` Cotisations estimées : ${eur0(ca*tauxURSSAF(p)/100)}.`:''} Déclarez sur autoentrepreneur.urssaf.fr.`,acts:[['declared','C’est déclaré',1],['later','Pas maintenant']]})}
   }
+  const nbDocs=DB.docs.filter(d=>d.num).length;const lb=DB.meta&&DB.meta.lastBackup;
+  if(!cloudUser()&&nbDocs>=3&&(!lb||daysBetween(lb,t)>=30)&&!snoozed('backup'))out.push({key:'backup',kind:'setup',why:lb?`Dernière sauvegarde il y a ${daysBetween(lb,t)} jours`:'Aucune sauvegarde pour l’instant',title:'Mettez vos documents à l’abri',note:'Sans compte, vos factures ne sont que sur cet appareil. Créez un compte gratuit pour les garder en ligne, ou téléchargez une sauvegarde.',acts:[['account','Créer un compte',1],['backup','Télécharger une sauvegarde'],['later','Plus tard']]});
   if(t>='2026-09-01'&&p.paStatut!=='oui'&&!snoozed('pa'))out.push({key:'pa',kind:'pa',why:'Obligatoire depuis le 1er septembre 2026',title:'Choisissez votre plateforme agréée pour recevoir vos factures électroniques',note:'Toutes les entreprises doivent pouvoir recevoir des factures électroniques. Tampon vous aide à choisir et s’y connectera.',acts:[['einv','Voir comment faire',1],['later','Plus tard']]});
   return out;
 }
@@ -358,6 +372,7 @@ function renderDay(){
   $('#todo').innerHTML=n?todo.map(c=>`<article class="card ${c.urgent?'urgent':''} ${c.kind==='setup'||c.kind==='pa'?'info':''}" data-key="${esc(c.key)}"><div class="why"><span class="dot"></span>${esc(c.why)}</div><h3>${esc(c.title)}</h3>${c.note?`<p class="note">${esc(c.note)}</p>`:''}${c.doc?`<button type="button" class="docbtn" data-act="open">${ICON_DOC}<span>${esc(titleOf(docBy(c.doc)))}</span><span class="arr">›</span></button>`:''}<div class="acts">${c.acts.map(([k,l,pr])=>`<button class="btn ${pr?'primary':''}" type="button" data-act="${k}">${esc(l)}</button>`).join('')}</div></article>`).join('')
     :hasDocs?`<div class="allgood"><span class="stampmark" aria-hidden="true">OK</span>Tout est à jour. Profitez de votre soirée.</div>`
     :`<div class="empty"><b>Rien à valider pour l’instant.</b><span>Créez votre première facture ou votre premier devis, ou écrivez-le ci-dessus : « Fais une facture de 850 € pour M. Dupont ».</span><div class="row-btns" style="margin-top:8px"><button class="btn sm primary" type="button" data-new="facture">Nouvelle facture</button><button class="btn sm" type="button" data-new="devis">Nouveau devis</button></div></div>`;
+  renderStart();
   renderMoney();
   $('#next').innerHTML=echeances(p).map(e=>`<div class="row"><div class="date"><b>${e.d.getDate()}</b><span>${MOIS[e.d.getMonth()]}</span></div><div class="tx"><b>${esc(e.t)}</b><span>${esc(e.s)}</span></div><span class="when ${e.j<=15?'soon':''}">${dansJ(e.j)}</span></div>`).join('');
   const j=DB.journal.slice(-40).reverse();
@@ -390,6 +405,8 @@ $('#todo').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const el=b.closest('.card');const key=el.dataset.key;const c=computeTodo().find(x=>x.key===key);if(!c)return;const d=c.doc&&docBy(c.doc);
   const a=b.dataset.act;
   if(a==='plans'){goPlans();return}
+  if(a==='account'){authDialog('signup');return}
+  if(a==='backup'){downloadBackup();renderDay();return}
   if(a==='later'){DB.snooze[key]=addDays(iso(today()),1);save();renderDay();toast('D’accord, je vous le remets demain');return}
   if(a==='setup'){location.hash='reglages';setTimeout(()=>{const s=document.getElementById('sec-entreprise');if(s)s.scrollIntoView({behavior:'smooth'})},80);return}
   if(a==='einv'){location.hash='reglages';setTimeout(()=>{const s=document.getElementById('sec-einv');if(s)s.scrollIntoView({behavior:'smooth'})},80);return}
@@ -530,6 +547,39 @@ function clientDialog(id,onSaved){
 function goPlans(){if(!$('#viewer').hidden){$('#viewer').hidden=true;document.body.style.overflow='';V=null}if(!$('#dlg').hidden)closeDialog();location.hash='reglages';setTimeout(()=>{const s=document.getElementById('sec-formule');if(s)s.scrollIntoView({behavior:'smooth'})},80)}
 document.addEventListener('click',e=>{if(e.target.closest('[data-goplans]'))goPlans()});
 
+/* Pour bien démarrer */
+function startItems(){
+  const p=P();const docs=DB.docs.filter(d=>d.type!=='recue');
+  return [
+    {ok:sellerMissing(p).length===0,t:'Compléter vos informations de facturation (adresse, SIRET)',go:()=>{location.hash='reglages';setTimeout(()=>{const s=document.getElementById('sec-entreprise');if(s)s.scrollIntoView({behavior:'smooth'})},80)}},
+    {ok:ibanOk(p.iban),t:'Ajouter votre IBAN pour être payé par virement',go:()=>{location.hash='reglages'}},
+    {ok:!!safeImg(p.logo),t:'Ajouter votre logo',go:()=>{location.hash='reglages'}},
+    {ok:DB.clients.length>0,t:'Ajouter votre premier client',go:()=>{location.hash='clients';setTimeout(()=>clientDialog(null),80)}},
+    {ok:docs.length>0,t:'Créer votre premier devis ou votre première facture',go:()=>newDoc('facture')},
+    {ok:!!cloudUser()||!!(DB.meta&&DB.meta.lastBackup),t:'Mettre vos données à l’abri avec un compte gratuit',go:()=>authDialog('signup')},
+  ];
+}
+function renderStart(){
+  const items=startItems();const done=items.filter(i=>i.ok).length;
+  const show=!(DB.meta&&DB.meta.startHidden)&&done<items.length;
+  $('#startSec').hidden=!show;if(!show)return;
+  $('#start').innerHTML=`<p class="fine" style="margin:0 0 4px">${done} sur ${items.length} fait${done>1?'s':''}</p>`+items.map((i,k)=>`<div class="st ${i.ok?'ok':''}"><span class="ic">${i.ok?'✓':''}</span><span class="tx">${esc(i.t)}</span>${i.ok?'':`<button class="btn sm" type="button" data-start="${k}">Faire</button>`}</div>`).join('');
+}
+$('#start').addEventListener('click',e=>{const b=e.target.closest('[data-start]');if(b)startItems()[+b.dataset.start].go()});
+$('#startHide').addEventListener('click',()=>{DB.meta=DB.meta||{};DB.meta.startHidden=true;save();renderDay()});
+
+async function finishQuiz(acc){
+  if(!ans.activite)ans.activite=activiteDefaut(ans.metier);if(!ans.plan){ans.plan='essai';ans.trialStart=iso(today())}
+  DB.profile=clone(ans);save();if(!DB.journal.length)log('Espace Tampon créé');
+  if(acc){$('#qNext').disabled=true;$('#qNext').textContent='Création du compte…';
+    const r=await cloudSignUp(acc.mail,acc.pwd);$('#qNext').disabled=false;
+    if(r.error){const er=$('#qErr');if(er){er.textContent=r.error;er.hidden=false}$('#qNext').textContent='Créer mon compte et ouvrir Tampon';return}
+    if(r.confirm)toast('Compte créé : confirmez votre email avec le lien reçu pour activer la sauvegarde en ligne.');
+  }
+  if(cloudUser()){await refreshPlan();cloudQueue()}
+  location.hash='journee';
+}
+
 /* =====================================================================
    Réglages
    ===================================================================== */
@@ -558,7 +608,7 @@ function renderSet(){
   $('#setRoot').innerHTML=`<h1>Réglages</h1>
   <section class="sec" id="sec-formule"><h2>Ma formule</h2><div style="display:flex;flex-direction:column;gap:12px">${trialLine}<div class="plans">${planCards}</div>
     <div class="tile"><div class="k">Demandes à l’assistant ce mois-ci</div><div class="v">${used} <small style="font-size:15px;color:var(--muted);font-weight:500">/ ${lim.toLocaleString('fr-FR')}</small></div><div class="gauge ${used/lim>.8?'warn':''}"><i style="width:${Math.min(100,used/lim*100).toFixed(1)}%"></i></div></div>
-    <p class="fine" style="margin:0">Phase de test : le paiement en ligne arrive bientôt. En attendant, la formule choisie est activée gratuitement.</p></div></section>
+    ${p.statutPaiement==='active'||p.statutPaiement==='past_due'?'<div class="row-btns"><button class="btn sm" type="button" id="manageSub">Gérer mon abonnement</button></div>':''}<p class="fine" style="margin:0">${cloudUser()?'Paiement sécurisé par Stripe. Résiliable à tout moment.':'Phase de test : créez un compte pour choisir une formule. Sans compte, la formule choisie est activée sur cet appareil.'}</p></div></section>
   <section class="sec" id="sec-entreprise"><h2>Mon entreprise</h2><div class="panel"><div class="form">
     <div class="fld"><label for="sPrenom">Prénom</label><input class="in" id="sPrenom" value="${esc(p.prenom)}"></div>
     <div class="fld"><label for="sNom">Nom de famille</label><input class="in" id="sNom" value="${esc(p.nom)}"></div>
@@ -612,9 +662,12 @@ function renderSet(){
     <div class="row-btns">${DB.sec?'<button class="btn sm" type="button" data-pin="lock">Verrouiller maintenant</button><button class="btn sm" type="button" data-pin="set">Changer le code</button><button class="btn sm danger" type="button" data-pin="off">Retirer le code</button>':'<button class="btn sm primary" type="button" data-pin="set">Créer un code</button>'}</div>
     <p class="fine" style="margin:0">Vos données restent sur cet appareil et ne sont envoyées à personne. Le code bloque l’accès à l’appli ; pour ne rien perdre, faites aussi des sauvegardes.</p></div></section>
 
-  <section class="sec"><h2>Mes données</h2><div class="panel"><p>Vos données sont gardées dans ce navigateur, sur cet appareil. Faites une sauvegarde de temps en temps, et pour passer sur un autre appareil.</p>
+  <section class="sec" id="sec-compte"><h2>Mon compte</h2><div class="panel" id="accountPanel"></div></section>
+
+  <section class="sec"><h2>Mes données</h2><div class="panel"><p>${cloudUser()?'Vos données sont enregistrées en ligne dans votre compte, et gardées aussi sur cet appareil pour fonctionner sans réseau.':'Vos données sont gardées dans ce navigateur, sur cet appareil. Créez un compte pour les garder en ligne, ou faites une sauvegarde de temps en temps.'}${DB.meta&&DB.meta.lastBackup?` Dernière sauvegarde téléchargée : ${esc(fdate(DB.meta.lastBackup))}.`:''}</p>
     <div class="row-btns"><button class="btn sm" type="button" id="bkSave">Télécharger une sauvegarde</button><button class="btn sm" type="button" id="bkLoad">Restaurer une sauvegarde</button><button class="btn sm danger" type="button" id="wipe">Tout effacer</button></div></div></section>
-  <p class="fine"><a href="#mentions">Mentions légales</a> · <a href="#confidentialite">Confidentialité</a></p>`;
+  <p class="fine"><a href="#aide">Aide</a> · <a href="#mentions">Mentions légales</a> · <a href="#confidentialite">Confidentialité</a></p>`;
+  renderAccount();
   const S=id=>$(id);const val=id=>S(id)?S(id).value.trim():'';
   S('#sSiret').addEventListener('input',e=>{e.target.value=fmtSiret(e.target.value)});
   S('#sSave').onclick=()=>{
@@ -643,11 +696,13 @@ function renderSet(){
   $$('#setRoot [data-tool]').forEach(b=>b.onclick=()=>{const o=p.outils||(p.outils=[]);const i=o.indexOf(b.dataset.tool);if(i>=0)o.splice(i,1);else o.push(b.dataset.tool);save();renderSet()});
   $$('#setRoot [data-plan]').forEach(b=>b.onclick=()=>{const pl=PLANS.find(x=>x.id===b.dataset.plan);
     const txt=pl.prix?`Le paiement en ligne arrive bientôt. Pendant la phase de test, la formule ${pl.nom} est activée gratuitement.`:(p.plan==='essai'&&trialLeft(p)>0?'Votre essai de la formule Complet s’arrête maintenant.':'Les relances, l’estimation URSSAF et Factur-X ne seront plus disponibles.');
+    if(cloudUser())return choosePlanOnline(pl);
     confirmBox(`Passer en ${pl.nom} ?`,txt,`Choisir ${pl.nom}`,()=>{p.plan=pl.id;save();log(`Formule ${pl.nom} choisie`);renderSet();toast(`Formule ${pl.nom} activée`)})});
   $$('#setRoot [data-pin]').forEach(b=>b.onclick=()=>{const k=b.dataset.pin;if(k==='set')pinDialog();if(k==='lock')lockNow();if(k==='off')confirmBox('Retirer le code ?','Tampon s’ouvrira sans code sur cet appareil.','Retirer le code',()=>{DB.sec=null;save();renderSet();toast('Code retiré')},true)});
-  S('#bkSave').onclick=()=>{download(`tampon-sauvegarde-${iso(today())}.json`,JSON.stringify(Object.assign({},DB,{sec:null})),'application/json');log('Sauvegarde téléchargée')};
+  if(S('#manageSub'))S('#manageSub').onclick=()=>openPortal();
+  S('#bkSave').onclick=()=>{downloadBackup();renderSet()};
   S('#bkLoad').onclick=()=>$('#importIn').click();
-  S('#wipe').onclick=()=>confirmBox('Tout effacer ?','Votre entreprise, vos clients et tous vos documents seront supprimés de cet appareil. Pensez à télécharger une sauvegarde avant.','Tout effacer',()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('tampon.profil.v2');localStorage.removeItem('tampon.donnees.v1')}catch(e){}DB=blank();location.hash='accueil';toast('Tout est effacé')},true);
+  S('#wipe').onclick=()=>confirmBox('Tout effacer ?','Votre entreprise, vos clients et tous vos documents seront supprimés de cet appareil. Pensez à télécharger une sauvegarde avant.','Tout effacer',()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('tampon.profil.v2');localStorage.removeItem('tampon.donnees.v1')}catch(e){}DB=blank();if(cloudUser())cloudSignOut(true);location.hash='accueil';toast('Tout est effacé de cet appareil')},true);
 }
 async function compressImage(file,max,q){
   const url=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
@@ -1102,7 +1157,7 @@ async function makePDF(id,fx){
 /* =====================================================================
    Navigation
    ===================================================================== */
-const VIEWS=['accueil','mentions','confidentialite','bienvenue','journee','documents','clients','reglages'];
+const VIEWS=['accueil','aide','mentions','confidentialite','bienvenue','journee','documents','clients','reglages'];
 const APP=['journee','documents','clients','reglages'];
 function refresh(){const v=current;if(!P())return;if(v==='journee')renderDay();if(v==='documents')renderDocs();if(v==='clients')renderClients();if(v==='reglages')renderSet()}
 let current='accueil';
@@ -1113,7 +1168,7 @@ function show(v){
   const inApp=APP.includes(v);document.body.classList.toggle('inapp',inApp);
   $('#appTabs').hidden=!inApp;$('#navStart').hidden=inApp||v==='bienvenue';
   $('#navStart').textContent=P()?'Ouvrir Tampon':'Commencer';$('#navStart').href=P()?'#journee':'#bienvenue';
-  $('#heroCta').textContent=P()?'Ouvrir Tampon':'Essayer gratuitement 14 jours';$('#heroTrial').hidden=!!P();$('#heroCta').href=P()?'#journee':'#bienvenue';
+  $('#heroCta').textContent=P()?'Ouvrir Tampon':'Essayer gratuitement 14 jours';$('#heroTrial').hidden=!!P();$('#heroLogin').hidden=!!P();$('#heroCta').href=P()?'#journee':'#bienvenue';
   $$('#appTabs a').forEach(a=>{if(a.dataset.tab===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
   if(v==='bienvenue')startQuiz();else refresh();
   window.scrollTo({top:0});
@@ -1162,4 +1217,201 @@ load();
 show(location.hash.slice(1)||(P()?'journee':'accueil'));
 if(DB.sec)lockNow();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{})}
+
+
+/* =====================================================================
+   Comptes en ligne (Supabase) : connexion, synchronisation, formule
+   La clé ci-dessous est la clé publique du projet : elle ne donne accès
+   qu'à ce que les règles de la base autorisent pour l'utilisateur connecté.
+   ===================================================================== */
+var SB_URL='https://cxdcmaguipvztmctxkkh.supabase.co';
+var SB_KEY='sb_publishable_hRiEUv_4zV-tsojFGQTfMw_yaF0acgF';
+var RETOUR=location.origin+location.pathname;
+var sb=null,cUser=null,cVersion=null,cTimer=null,cBusy=false,cPending=false,cLastSync=null,cErr='',cApplying=false;
+function cloudAvailable(){return !!(window.supabase&&window.supabase.createClient)&&location.protocol==='https:'||!!window.__TAMPON_TEST_SB}
+function cloudUser(){return cUser}
+function downloadBackup(){download(`tampon-sauvegarde-${iso(today())}.json`,JSON.stringify(Object.assign({},DB,{sec:null})),'application/json');DB.meta=DB.meta||{};DB.meta.lastBackup=iso(today());log('Sauvegarde téléchargée')}
+document.addEventListener('click',e=>{if(e.target.closest('[data-login]'))authDialog('login')});
+
+function cloudInit(){
+  if(!cloudAvailable())return;
+  const factory=window.__TAMPON_TEST_SB||window.supabase;
+  sb=factory.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});
+  sb.auth.onAuthStateChange((ev,session)=>{
+    if(ev==='PASSWORD_RECOVERY'){setTimeout(newPasswordDialog,100);return}
+    if(ev==='SIGNED_OUT'){cUser=null;cVersion=null;renderAfterCloud();return}
+    if(session&&session.user&&(!cUser||cUser.id!==session.user.id)){cUser=session.user;setTimeout(()=>afterLogin(),0)}
+  });
+  sb.auth.getSession().then(({data})=>{if(data&&data.session&&!cUser){cUser=data.session.user;afterLogin()}});
+  // nettoie l'adresse après un lien reçu par email
+  if(/[?&]code=/.test(location.search))setTimeout(()=>history.replaceState(null,'',location.pathname+location.hash),1500);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&cUser)pullIfNewer()});
+  window.addEventListener('online',()=>{if(cUser&&cPending)cloudQueue()});
+}
+function renderAfterCloud(){try{if(current==='reglages')renderSet();else refresh();show(current)}catch(e){}}
+
+/* Après connexion : récupère l'espace en ligne ou y envoie celui de l'appareil */
+async function afterLogin(){
+  try{
+    const {data:row,error}=await sb.from('tampon_espaces').select('data,version').eq('user_id',cUser.id).maybeSingle();
+    if(error)throw error;
+    const localHas=!!(DB.profile&&(DB.docs.length||DB.clients.length));
+    const localOther=DB.meta&&DB.meta.uid&&DB.meta.uid!==cUser.id;
+    if(row){
+      cVersion=row.version;
+      const remote=cleanDB(row.data||{});
+      if(localHas&&!localOther&&!(DB.meta&&DB.meta.uid)&&remote.profile){
+        // données créées sans compte sur cet appareil + données en ligne : on demande
+        return chooseSide(remote);
+      }
+      applyRemote(remote);
+    }else{
+      cVersion=null;
+      if(localOther){DB=blank()}
+      DB.meta=DB.meta||{};DB.meta.uid=cUser.id;
+      if(DB.profile)await pushNow();
+    }
+    await refreshPlan();
+    cErr='';renderAfterCloud();
+    if(!DB.profile&&location.hash!=='#bienvenue')location.hash='bienvenue';
+  }catch(e){cErr='Connexion au serveur impossible pour l’instant. Vos données restent sur cet appareil.';renderAfterCloud()}
+}
+function applyRemote(remote){const sec=DB.sec;cApplying=true;DB=remote;DB.sec=sec;DB.meta=DB.meta||{};DB.meta.uid=cUser.id;save();cApplying=false}
+function chooseSide(remote){
+  const nR=remote.docs.length,nL=DB.docs.length;
+  dialog(`<h2 id="dlgTitle">Quelles données garder ?</h2><p>Votre compte contient déjà un espace (${nR} document${nR>1?'s':''}), et cet appareil aussi (${nL} document${nL>1?'s':''}).</p>
+    <div class="row-btns"><button class="btn primary" type="button" id="csRemote">Garder celles du compte</button><button class="btn" type="button" id="csLocal">Garder celles de cet appareil</button></div>
+    <p class="fine" style="margin:0">L’autre version sera remplacée. Par précaution, téléchargez d’abord une sauvegarde.</p><button class="link" type="button" id="csBk" style="align-self:flex-start">Télécharger une sauvegarde de cet appareil</button>`,box=>{
+    box.querySelector('#csBk').onclick=()=>downloadBackup();
+    box.querySelector('#csRemote').onclick=async()=>{closeDialog();applyRemote(remote);await refreshPlan();renderAfterCloud();toast('Données du compte chargées')};
+    box.querySelector('#csLocal').onclick=async()=>{closeDialog();DB.meta=DB.meta||{};DB.meta.uid=cUser.id;await pushNow(true);await refreshPlan();renderAfterCloud();toast('Données de cet appareil envoyées dans votre compte')};
+  });
+}
+
+/* Formule lue sur le serveur (l'essai, la formule et le paiement ne se modifient pas depuis l'appareil) */
+async function refreshPlan(){
+  if(!cUser||!DB.profile)return;
+  const {data,error}=await sb.rpc('tampon_mon_abonnement',{p_siret:DB.profile.siret||null});
+  if(error||!data)return;
+  const a=Array.isArray(data)?data[0]:data;
+  cApplying=true;DB.profile.plan=a.formule;DB.profile.trialStart=a.essai_debut||'';DB.profile.statutPaiement=a.statut_paiement||'';DB.profile.finPeriode=a.fin_periode||'';save();cApplying=false;
+}
+
+/* Synchronisation : envoi groupé 1,5 seconde après une modification */
+function cloudQueue(){if(!sb||!cUser||cApplying)return;cPending=true;clearTimeout(cTimer);cTimer=setTimeout(()=>pushNow(),1500)}
+async function pushNow(force){
+  if(!sb||!cUser||!DB.profile)return;
+  if(cBusy){cPending=true;return}
+  cBusy=true;cPending=false;
+  const data=Object.assign({},DB,{sec:null});
+  try{
+    if(cVersion==null){
+      const {data:r,error}=await sb.from('tampon_espaces').upsert({user_id:cUser.id,data,version:1,updated_at:new Date().toISOString()}).select('version').single();
+      if(error)throw error;cVersion=r.version;
+    }else{
+      let q=sb.from('tampon_espaces').update({data,version:cVersion+1,updated_at:new Date().toISOString()}).eq('user_id',cUser.id);
+      if(!force)q=q.eq('version',cVersion);
+      const {data:r,error}=await q.select('version');
+      if(error)throw error;
+      if(!r||!r.length){cBusy=false;return conflict()}
+      cVersion=r[0].version;
+    }
+    cLastSync=new Date();cErr='';
+  }catch(e){cErr=navigator.onLine?'Synchronisation impossible pour l’instant : nouvel essai automatique.':'Hors ligne : vos changements seront envoyés au retour du réseau.';cPending=true;setTimeout(()=>{if(cPending)cloudQueue()},30000)}
+  cBusy=false;if(current==='reglages')renderAccount();
+  if(cPending)cloudQueue();
+}
+async function pullIfNewer(){
+  if(!sb||!cUser||cBusy||cPending)return;
+  const {data:row}=await sb.from('tampon_espaces').select('data,version').eq('user_id',cUser.id).maybeSingle();
+  if(row&&cVersion!=null&&row.version>cVersion){cVersion=row.version;applyRemote(cleanDB(row.data||{}));await refreshPlan();renderAfterCloud();toast('Données mises à jour depuis votre autre appareil')}
+  else{await refreshPlan();if(current==='journee')renderDay()}
+}
+function conflict(){
+  dialog(`<h2 id="dlgTitle">Modifié sur un autre appareil</h2><p>Votre espace a été modifié ailleurs pendant que vous travailliez ici. Quelle version garder ?</p>
+    <div class="row-btns"><button class="btn primary" type="button" id="cfRemote">Reprendre la version en ligne</button><button class="btn" type="button" id="cfLocal">Garder celle de cet appareil</button></div>`,box=>{
+    box.querySelector('#cfRemote').onclick=async()=>{closeDialog();const {data:row}=await sb.from('tampon_espaces').select('data,version').eq('user_id',cUser.id).maybeSingle();if(row){cVersion=row.version;applyRemote(cleanDB(row.data||{}));renderAfterCloud()}};
+    box.querySelector('#cfLocal').onclick=()=>{closeDialog();pushNow(true)};
+  });
+}
+
+/* Connexion, création de compte, mot de passe */
+const AUTH_ERR=m=>/invalid login/i.test(m)?'Email ou mot de passe incorrect.':/already registered|already exists/i.test(m)?'Un compte existe déjà avec cet email : connectez-vous.':/rate limit|too many/i.test(m)?'Trop de tentatives : réessayez dans quelques minutes.':/password/i.test(m)?'Mot de passe trop faible : 8 caractères minimum, évitez les mots de passe courants.':/email not confirmed/i.test(m)?'Confirmez d’abord votre email avec le lien reçu.':'Impossible de se connecter pour l’instant. Vérifiez votre connexion.';
+async function cloudSignUp(mail,pwd){
+  if(!sb)return {error:'Les comptes ne sont pas disponibles hors connexion.'};
+  const {data,error}=await sb.auth.signUp({email:mail,password:pwd,options:{emailRedirectTo:RETOUR}});
+  if(error)return {error:AUTH_ERR(error.message)};
+  if(data&&data.session)return {ok:true};
+  return {confirm:true};
+}
+function authDialog(mode){
+  if(!cloudAvailable()||!sb){toast('Les comptes en ligne ne sont pas disponibles ici. Ouvrez Tampon depuis son adresse web.');return}
+  const login=mode==='login';
+  dialog(`<h2 id="dlgTitle">${login?'Se connecter':'Créer un compte gratuit'}</h2>
+    ${login?'':'<p class="fine" style="margin:0">Vos documents seront gardés en ligne et sur tous vos appareils.</p>'}
+    <form id="auF" class="form" novalidate style="grid-template-columns:1fr"><div class="fld"><label for="auMail">Email</label><input class="in" id="auMail" type="email" autocomplete="username" value="${esc((P()&&P().email)||'')}"></div>
+    <div class="fld"><label for="auPwd">Mot de passe${login?'':' (8 caractères minimum)'}</label><input class="in" id="auPwd" type="password" autocomplete="${login?'current-password':'new-password'}"></div>
+    <span class="err" id="auErr" hidden></span><div class="row-btns"><button class="btn primary" type="submit" id="auOk">${login?'Se connecter':'Créer mon compte'}</button><button class="btn" type="button" data-dlg-close>Annuler</button></div></form>
+    <div class="row-btns">${login?'<button class="link" type="button" id="auForgot">Mot de passe oublié ?</button><button class="link" type="button" id="auSwitch">Créer un compte</button>':'<button class="link" type="button" id="auSwitch">J’ai déjà un compte</button>'}</div>`,box=>{
+    const er=m=>{const e=box.querySelector('#auErr');e.textContent=m;e.hidden=!m};
+    box.querySelector('#auSwitch').onclick=()=>authDialog(login?'signup':'login');
+    const fg=box.querySelector('#auForgot');if(fg)fg.onclick=async()=>{const mail=box.querySelector('#auMail').value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail))return er('Indiquez votre email, puis touchez « Mot de passe oublié ».');const {error}=await sb.auth.resetPasswordForEmail(mail,{redirectTo:RETOUR});er('');if(error)return er(AUTH_ERR(error.message));closeDialog();toast('Si un compte existe, un email de réinitialisation vient d’être envoyé.')};
+    box.querySelector('#auF').onsubmit=async e=>{e.preventDefault();const mail=box.querySelector('#auMail').value.trim(),pwd=box.querySelector('#auPwd').value;
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail))return er('Indiquez une adresse email valide.');
+      if(!login&&pwd.length<8)return er('Le mot de passe doit faire au moins 8 caractères.');
+      const b=box.querySelector('#auOk');b.disabled=true;
+      if(login){const {error}=await sb.auth.signInWithPassword({email:mail,password:pwd});b.disabled=false;if(error)return er(AUTH_ERR(error.message));closeDialog();toast('Connecté');if(location.hash==='#accueil'||!location.hash)location.hash='journee'}
+      else{const r=await cloudSignUp(mail,pwd);b.disabled=false;if(r.error)return er(r.error);closeDialog();toast(r.confirm?'Compte créé : confirmez votre email avec le lien reçu.':'Compte créé')}
+    };
+  });
+}
+function newPasswordDialog(){
+  dialog(`<h2 id="dlgTitle">Nouveau mot de passe</h2><div class="fld"><label for="npPwd">Mot de passe (8 caractères minimum)</label><input class="in" id="npPwd" type="password" autocomplete="new-password"></div><span class="err" id="npErr" hidden></span><div class="row-btns"><button class="btn primary" type="button" id="npOk">Enregistrer</button></div>`,box=>{
+    box.querySelector('#npOk').onclick=async()=>{const v=box.querySelector('#npPwd').value;const e=box.querySelector('#npErr');if(v.length<8){e.textContent='8 caractères minimum.';e.hidden=false;return}
+      const {error}=await sb.auth.updateUser({password:v});if(error){e.textContent=AUTH_ERR(error.message);e.hidden=false;return}closeDialog();toast('Mot de passe modifié')};
+  });
+}
+async function cloudSignOut(silent){
+  if(!sb)return;try{await sb.auth.signOut()}catch(e){}
+  cUser=null;cVersion=null;
+  if(!silent){const sec=DB.sec;DB=blank();DB.sec=sec;save();location.hash='accueil';toast('Déconnecté. Vos données restent dans votre compte.')}
+}
+function renderAccount(){
+  const el=$('#accountPanel');if(!el)return;
+  if(!cloudAvailable()){el.innerHTML='<p>Les comptes en ligne sont disponibles quand Tampon est ouvert depuis son adresse web.</p>';return}
+  if(!cUser){el.innerHTML=`<p>Sans compte, vos données ne sont que sur cet appareil. Avec un compte gratuit, elles sont gardées en ligne, en Europe, et vous les retrouvez partout.</p><div class="row-btns"><button class="btn sm primary" type="button" id="acNew">Créer un compte</button><button class="btn sm" type="button" data-login>Se connecter</button></div>`;
+    el.querySelector('#acNew').onclick=()=>authDialog('signup');return}
+  const when=cLastSync?`Synchronisé à ${String(cLastSync.getHours()).padStart(2,'0')}:${String(cLastSync.getMinutes()).padStart(2,'0')}`:'Données synchronisées';
+  el.innerHTML=`<p><b>${esc(cUser.email||'')}</b><br><span class="fine" style="margin:0"><span class="syncdot ${cErr?'off':''}"></span>${esc(cErr||when)}</span></p>
+    <div class="row-btns"><button class="btn sm" type="button" id="acSync">Synchroniser maintenant</button><button class="btn sm" type="button" id="acOut">Se déconnecter</button><button class="btn sm danger" type="button" id="acDel">Supprimer mon compte</button></div>`;
+  el.querySelector('#acSync').onclick=()=>{pushNow().then(pullIfNewer)};
+  el.querySelector('#acOut').onclick=()=>confirmBox('Se déconnecter ?','Vos données restent dans votre compte et seront retirées de cet appareil.','Se déconnecter',async()=>{await pushNow();cloudSignOut(false)});
+  el.querySelector('#acDel').onclick=()=>confirmBox('Supprimer votre compte ?','Votre compte, vos factures, devis, clients et justificatifs seront effacés définitivement, en ligne et sur cet appareil. Vous devez conserver vos factures 10 ans : téléchargez d’abord une sauvegarde.','Supprimer définitivement',async()=>{
+    const {error}=await sb.functions.invoke('tampon-supprimer-compte',{body:{}});
+    if(error){toast('Suppression impossible pour l’instant. Réessayez plus tard.');return}
+    try{await sb.auth.signOut()}catch(e){}cUser=null;cVersion=null;try{localStorage.removeItem(KEY)}catch(e){}DB=blank();location.hash='accueil';toast('Compte supprimé')},true);
+}
+
+/* Formules payantes : Stripe si configuré, sinon activation de test */
+async function choosePlanOnline(pl){
+  const p=P();
+  if(pl.prix){
+    toast('Ouverture du paiement sécurisé…');
+    const {data,error}=await sb.functions.invoke('tampon-paiement',{body:{formule:pl.id}});
+    if(data&&data.url){location.href=data.url;return}
+    let code='';try{code=error&&error.context&&(await error.context.json()).erreur}catch(e){}
+    if(code!=='paiement_non_configure'){toast('Le paiement n’a pas pu s’ouvrir. Réessayez dans un instant.');return}
+  }
+  const txt=pl.prix?`Le paiement en ligne n’est pas encore activé. Pendant la phase de test, la formule ${pl.nom} est activée gratuitement.`:'Les relances, l’estimation URSSAF et Factur-X ne seront plus disponibles.';
+  confirmBox(`Passer en ${pl.nom} ?`,txt,`Choisir ${pl.nom}`,async()=>{
+    const {error}=await sb.rpc('tampon_choisir_formule_test',{p_formule:pl.id});
+    if(error){toast('Changement impossible : '+(/paiement/.test(error.message)?'votre abonnement se gère depuis « Gérer mon abonnement ».':'réessayez plus tard.'));return}
+    await refreshPlan();log(`Formule ${pl.nom} choisie`);renderSet();toast(`Formule ${pl.nom} activée`)});
+}
+async function openPortal(){
+  const {data}=await sb.functions.invoke('tampon-paiement',{body:{action:'portail'}});
+  if(data&&data.url)location.href=data.url;else toast('La gestion de l’abonnement n’est pas disponible pour l’instant.');
+}
+
+cloudInit();
 })();
