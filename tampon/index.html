@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tampon</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cxdcmaguipvztmctxkkh.supabase.co wss://cxdcmaguipvztmctxkkh.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cxdcmaguipvztmctxkkh.supabase.co wss://cxdcmaguipvztmctxkkh.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Tampon, l'assistant administratif des indépendants et TPE : factures, devis, relances, dates limites et facture électronique 2027.">
 <link rel="manifest" href="manifest.webmanifest?v=2">
@@ -395,6 +395,7 @@ textarea.in{min-height:90px;resize:vertical}
 
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:14px;font-size:16px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:90;max-width:calc(100% - 32px)}
 .toast.show{opacity:1;transform:translateX(-50%)}
+.scanst{margin:10px 0 0;padding:9px 12px;border-radius:10px;background:var(--soft,rgba(30,77,58,.07))}.scanst.busy{color:var(--stamp)}.scanst.ok{color:var(--stamp);font-weight:600}.scanst.warn{color:var(--bad)}.in.auto{box-shadow:0 0 0 2px rgba(30,77,58,.35);background:rgba(30,77,58,.06)}
 </style>
 </head>
 <body>
@@ -492,6 +493,7 @@ textarea.in{min-height:90px;resize:vertical}
   <div class="wrap prose">
     <h1>Politique de confidentialité</h1>
     <h2>Où sont vos données ?</h2>
+    <p><b>Scanner de justificatifs</b> : la lecture des photos se fait entièrement sur votre appareil. La photo n’est envoyée à aucun service extérieur pour être lue.</p>
     <p><b>Sans compte</b>, les informations que vous saisissez (entreprise, clients, factures, photos de justificatifs) restent uniquement dans le navigateur de votre appareil. Si vous videz les données du navigateur, elles sont effacées : faites des sauvegardes depuis Réglages.</p>
     <p><b>Avec un compte</b>, elles sont aussi enregistrées chez notre hébergeur de données, Supabase, sur des serveurs situés en Allemagne (Union européenne). Chaque compte n’a accès qu’à ses propres données. Elles servent uniquement à faire fonctionner Tampon : elles ne sont ni vendues, ni utilisées à des fins publicitaires. Elles sont conservées tant que votre compte existe, et effacées quand vous le supprimez.</p>
     <h2>Paiement</h2>
@@ -561,7 +563,7 @@ textarea.in{min-height:90px;resize:vertical}
     <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><label for="docSearch" hidden>Rechercher</label><input class="in" id="docSearch" type="search" placeholder="Rechercher un client, un numéro, un montant"></div>
     <div class="filters" id="docFilters" role="group" aria-label="Filtrer"></div>
     <div class="list" id="docList"></div>
-    <div class="row-btns"><button class="btn sm" type="button" id="addRecue">Ajouter une facture reçue (photo ou PDF)</button><button class="btn sm" type="button" id="exportBtn">Exporter pour le comptable</button></div>
+    <div class="row-btns"><button class="btn sm primary" type="button" id="scanRecue">📷 Scanner une facture reçue</button><button class="btn sm" type="button" id="addRecue">Saisir à la main</button><button class="btn sm" type="button" id="exportBtn">Exporter pour le comptable</button></div>
   </div>
 </main>
 
@@ -594,6 +596,6 @@ textarea.in{min-height:90px;resize:vertical}
 <script src="vendor/jspdf-2.5.1.umd.min.js"></script>
 <script src="vendor/pdf-lib-1.17.1.min.js"></script>
 <script src="vendor/supabase-2.45.4.js"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

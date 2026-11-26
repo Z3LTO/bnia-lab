@@ -1,6 +1,6 @@
 /* Tampon : fonctionnement hors ligne. Seuls les fichiers de Tampon et les polices sont mis en cache. */
-const CACHE='tampon-v6';
-const CORE=['./','./index.html','./app.js?v=6','./vendor/jspdf-2.5.1.umd.min.js','./vendor/pdf-lib-1.17.1.min.js','./vendor/supabase-2.45.4.js','./manifest.webmanifest?v=2',
+const CACHE='tampon-v7';
+const CORE=['./','./index.html','./app.js?v=7','./vendor/jspdf-2.5.1.umd.min.js','./vendor/pdf-lib-1.17.1.min.js','./vendor/supabase-2.45.4.js','./manifest.webmanifest?v=2',
  './icons/icon.svg','./icons/icon-192.png','./icons/tampon-32.png','./icons/tampon-ios-180-v2.png'];
 const SCOPE=new URL('./',self.location).pathname;
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()))});

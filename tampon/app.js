@@ -451,7 +451,7 @@ function reply(q){
   if(/chiffre|ca |gagné|encaiss/.test(l)){const y=today().getFullYear();return {x:`Vous avez encaissé ${eur0(caEncaisse(y+'-01-01',y+'-12-31'))} hors taxes depuis le 1er janvier.`}}
   if(/date|limite|déclar|declar|échéance|quand/.test(l)){const e=echeances(p)[0];return {x:e?`${e.t}, avant le ${e.d.getDate()} ${MOISL[e.d.getMonth()]} (${dansJ(e.j)}).`:'Aucune date limite proche.'}}
   if(/électronique|electronique|2027|factur-x|plateforme/.test(l))return {x:'Depuis le 1er septembre 2026, vous devez pouvoir recevoir des factures électroniques ; à partir du 1er septembre 2027, vous devrez aussi les émettre via une plateforme agréée. Tampon ajoute déjà les nouvelles mentions et produit vos factures au format Factur-X. Regardez la liste de contrôle dans Réglages.'};
-  if(/rang|class|justif|ticket|reçu/.test(l))return {x:'Ajoutez la photo du ticket ou de la facture depuis Documents, bouton « Ajouter une facture reçue ». Quand vos emails seront connectés, je les rangerai tout seul.'};
+  if(/rang|class|justif|ticket|reçu/.test(l))return {x:'Dans Documents, touchez « Scanner une facture reçue » et prenez la photo : je lis le fournisseur, la date, le montant et la TVA, vous vérifiez, puis vous enregistrez.'};
   if(/devis/.test(l))return {x:'Dites-moi pour qui, combien et pour quoi. Par exemple : « devis de 1 200 € pour Mme Durand, pose de parquet ».'};
   return {x:'Pour l’instant, je sais préparer une facture ou un devis, vous dire qui ne vous a pas payé, estimer vos cotisations URSSAF et donner vos prochaines dates limites. Bientôt, je pourrai aussi lire vos emails et votre banque.'};
 }
@@ -931,14 +931,88 @@ function makeAvoir(id){
 }
 
 /* =====================================================================
+   Scanner : lecture de la photo sur l'appareil (aucun envoi, gratuit)
+   ===================================================================== */
+const SCAN_DIR=new URL('vendor/tesseract/',location.href).href;
+let ocrW=null,ocrLoading=null;
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function ocrWorker(onProg){
+  if(ocrW)return ocrW;
+  if(!ocrLoading)ocrLoading=(async()=>{
+    if(!window.Tesseract)await loadScript(SCAN_DIR+'tesseract.min.js');
+    ocrW=await Tesseract.createWorker('fra',1,{workerPath:SCAN_DIR+'worker.min.js',corePath:SCAN_DIR,langPath:SCAN_DIR,workerBlobURL:false,gzip:true,
+      logger:m=>{if(scanProg)scanProg(m)}});
+    return ocrW})();
+  try{return await ocrLoading}catch(e){ocrLoading=null;throw e}
+}
+let scanProg=null;
+/* Image redimensionnée et en niveaux de gris : plus rapide et plus fiable */
+async function scanCanvas(file){
+  const url=URL.createObjectURL(file);
+  try{const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});
+    const k=Math.min(1,2000/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    const x=c.getContext('2d');x.filter='grayscale(1) contrast(1.25)';x.drawImage(img,0,0,c.width,c.height);return c}
+  finally{URL.revokeObjectURL(url)}
+}
+const MOIS_RE={janv:1,'févr':2,fevr:2,mars:3,avr:4,mai:5,juin:6,juil:7,'août':8,aout:8,sept:9,oct:10,nov:11,'déc':12,dec:12};
+function amountsIn(s){
+  const out=[];const re=/(?<![\d,.])(\d{1,3}(?:[ .\u00a0\u202f]\d{3})+|\d+)\s?[,.]\s?(\d{2})(?![\d%])(?!\s?%)/g;let m;
+  while((m=re.exec(s)))out.push(parseFloat(m[1].replace(/[ .\u00a0\u202f]/g,'')+'.'+m[2]));
+  return out.filter(v=>v>0&&v<1e6);
+}
+function extractInvoice(text,todayIso){
+  const lines=text.split(/\r?\n/).map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  const r={fournisseur:'',date:'',ttc:0,tva:0,cat:''};
+  /* Montant TTC : mots-clés du plus sûr au moins sûr */
+  const KEYS=[/net\s*[àa]\s*payer|reste\s*[àa]\s*payer|total\s*[àa]\s*payer|montant\s*[àa]\s*payer/i,/total\s*t\.?\s?t\.?\s?c|montant\s*t\.?\s?t\.?\s?c|\bttc\b/i,/\btotal\b|\bmontant\b|\bcb\b|carte bancaire|esp[eè]ces/i];
+  const lineAmt=i=>{let a=amountsIn(lines[i]);if(!a.length&&lines[i+1])a=amountsIn(lines[i+1]);return a.length?a[a.length-1]:0};
+  for(const k of KEYS){const c=[];lines.forEach((l,i)=>{if(k.test(l)&&!/\bh\.?\s?t\b|hors\s*taxe|sous[- ]total|tva/i.test(l)){const v=lineAmt(i);if(v)c.push(v)}});if(c.length){r.ttc=Math.max(...c);break}}
+  const all=lines.flatMap(amountsIn);if(!r.ttc&&all.length)r.ttc=Math.max(...all);
+  /* TVA : montant (pas le taux) sur une ligne TVA, hors numéro de TVA */
+  const tv=[];lines.forEach((l,i)=>{if(/t\.?\s?v\.?\s?a/i.test(l)&&!/intra|n[°o]\s*tva|tva\s*:?\s*fr|FR\s?\d{2}\s?\d{3}/i.test(l)){const a=amountsIn(l).filter(v=>v<r.ttc);if(a.length)tv.push(a[a.length-1])}});
+  if(tv.length)r.tva=tv.reduce((s,v)=>Math.max(s,v),0);
+  if(!r.tva){let ht=0;lines.forEach((l,i)=>{if(/total\s*h\.?\s?t|\bh\.?\s?t\b|hors\s*taxe/i.test(l)){const v=lineAmt(i);if(v&&v<r.ttc)ht=Math.max(ht,v)}});if(ht){const t=Math.round((r.ttc-ht)*100)/100;if(t>0&&t/ht<0.21)r.tva=t}}
+  if(r.tva>=r.ttc*0.25)r.tva=0;
+  /* Date */
+  const today=todayIso||new Date().toISOString().slice(0,10);const lim=Number(today.slice(0,4))-3;const dates=[];
+  lines.forEach(l=>{let m;const re=/\b(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[\/.\-]\s?(\d{4}|\d{2})\b/g;
+    while((m=re.exec(l))){let y=+m[3];if(y<100)y+=2000;const d=+m[1],mo=+m[2];if(d>=1&&d<=31&&mo>=1&&mo<=12)dates.push({v:`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`,p:/date|factur|émis|emis|\ble\b/i.test(l)?0:1})}
+    const re2=/\b(\d{1,2})(?:er)?\s+(janv|f[ée]vr|mars|avr|mai|juin|juil|ao[uû]t|sept|oct|nov|d[ée]c)[a-zéû.]*\s+(\d{4})\b/gi;
+    while((m=re2.exec(l))){const mo=MOIS_RE[m[2].toLowerCase().replace('û','u')]||MOIS_RE[m[2].toLowerCase()];if(mo)dates.push({v:`${m[3]}-${String(mo).padStart(2,'0')}-${String(+m[1]).padStart(2,'0')}`,p:0})}});
+  const ok=dates.filter(d=>d.v<=today&&+d.v.slice(0,4)>=lim&&!isNaN(new Date(d.v))).sort((a,b)=>a.p-b.p);
+  if(ok.length)r.date=ok[0].v;
+  /* Fournisseur : première ligne qui ressemble à un nom */
+  const BAD=/factur|ticket|re[çc]u|date|t[ée]l|siret|siren|rcs|ape|naf|tva|adresse|www|http|@|client|devis|page|n°|^\W*$|total|caisse|bienvenue|merci/i;
+  for(const l of lines.slice(0,8)){const t=l.replace(/[^\p{L}\d&'’.\- ]/gu,'').trim();if(t.replace(/[^\p{L}]/gu,'').length>=3&&!BAD.test(t)&&!/^\d/.test(t)&&!/\d{5}/.test(t)){r.fournisseur=t.slice(0,60);break}}
+  /* Catégorie */
+  const T=text.toLowerCase();
+  const CATK=[['Carburant et déplacements',/gazole|gasoil|diesel|sp\s?95|sp\s?98|carburant|station|essence|p[ée]age|parking|sncf|total\s?energies|esso|shell|avia|adblue/],
+    ['Repas',/restaurant|brasserie|boulangerie|caf[ée]\b|menu|repas|pizz|kebab|traiteur/],
+    ['Téléphone et internet',/orange|sfr|bouygues|free mobile|forfait|internet|box|t[ée]l[ée]phon/],
+    ['Assurance',/assurance|mutuelle|cotisation annuelle|contrat n|maaf|maif|axa|macif|groupama/],
+    ['Matériel',/perceuse|visseuse|outil|machine|ordinateur|imprimante|makita|bosch|dewalt|hilti|mat[ée]riel/],
+    ['Achats et fournitures',/leroy|castorama|brico|point\.?p|cedeo|gedimat|fourniture|vis\b|ciment|peinture|plaque|carrelage|bois|quincaill/]];
+  for(const [c,re] of CATK)if(re.test(T)){r.cat=c;break}
+  r.ttc=Math.round(r.ttc*100)/100;r.tva=Math.round(r.tva*100)/100;
+  return r;
+}
+async function scanFile(file,onStep){
+  onStep('Préparation…',0);scanProg=m=>{if(m.status==='recognizing text')onStep('Lecture du document…',m.progress);else if(/load|init/.test(m.status))onStep('Première utilisation : chargement du lecteur…',null)};
+  try{const c=await scanCanvas(file);const w=await ocrWorker();const {data}=await w.recognize(c);return extractInvoice(data.text||'',iso(today()))}
+  finally{scanProg=null}
+}
+
+/* =====================================================================
    Factures reçues (photo ou PDF)
    ===================================================================== */
 let pendingFile=null;
 $('#addRecue').addEventListener('click',()=>recueDialog(null));
+$('#scanRecue').addEventListener('click',()=>{recueDialog(null);$('#fileIn').click()});
 function recueDialog(id){
   const d=id?docBy(id):null;pendingFile=null;
   dialog(`<h2 id="dlgTitle">${d?'Modifier la facture reçue':'Ajouter une facture reçue'}</h2>
-    <div class="row-btns"><button class="btn sm" type="button" id="rFile">${d&&d.file?'Changer le fichier':'Prendre une photo ou choisir un fichier'}</button><span class="fine" id="rFileName" style="margin:0">${d&&d.file?esc(d.file.name||'Fichier joint'):''}</span></div>
+    <div class="row-btns"><button class="btn sm" type="button" id="rFile">${d&&d.file?'Changer le fichier':'📷 Photo ou fichier'}</button><span class="fine" id="rFileName" style="margin:0">${d&&d.file?esc(d.file.name||'Fichier joint'):''}</span></div>
+    <p class="fine scanst" id="rScan" hidden aria-live="polite"></p>
     <div class="form"><div class="fld full"><label for="rFour">Fournisseur</label><input class="in" id="rFour" value="${esc(d?d.fournisseur:'')}"></div>
     <div class="fld"><label for="rDate">Date</label><input class="in" id="rDate" type="date" value="${d?d.date:iso(today())}"></div>
     <div class="fld"><label for="rTtc">Montant TTC</label><input class="in" id="rTtc" type="number" step="0.01" min="0" value="${d?d.ttc:''}"></div>
@@ -966,8 +1040,27 @@ $('#fileIn').addEventListener('change',async e=>{
     else if(f.size<1.5e6)pendingFile={name:f.name,type:f.type,data:await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)})};
     else{toast('PDF trop lourd (1,5 Mo maximum) : prenez plutôt une photo');return}
     const n=$('#rFileName');if(n)n.textContent=f.name;
-  }catch(err){toast('Ce fichier n’a pas pu être lu')}
+  }catch(err){toast('Ce fichier n’a pas pu être lu');return}
+  if(f.type.startsWith('image/')&&$('#rScan'))runScan(f);
+  else if($('#rScan')){const st=$('#rScan');st.hidden=false;st.textContent='Fichier joint. Le scanner lit les photos : pour un PDF, remplissez les champs.'}
 });
+let scanBusy=false;
+async function runScan(f){
+  const st=$('#rScan');if(!st||scanBusy)return;scanBusy=true;st.hidden=false;st.className='fine scanst busy';
+  const step=(t,p)=>{if($('#rScan'))$('#rScan').textContent=t+(p!=null&&p>0?` ${Math.round(p*100)} %`:'')};
+  try{
+    const r=await scanFile(f,step);const box=$('#dlgBox');if(!box.querySelector('#rFour'))return;
+    const set=(sel,v)=>{const el=box.querySelector(sel);if(v&&el&&!el.value){el.value=v;el.classList.add('auto')}};
+    set('#rFour',r.fournisseur);if(r.date){const el=box.querySelector('#rDate');el.value=r.date;el.classList.add('auto')}
+    set('#rTtc',r.ttc?String(r.ttc):'');set('#rTva',r.tva?String(r.tva):'');
+    if(r.cat){const el=box.querySelector('#rCat');el.value=r.cat;el.classList.add('auto')}
+    const n=[r.fournisseur,r.date,r.ttc,r.tva].filter(Boolean).length;
+    st.className='fine scanst '+(n?'ok':'warn');
+    st.textContent=n?'Lu par le scanner : vérifiez les champs surlignés, puis enregistrez.':'Le document n’a pas pu être lu. Reprenez la photo bien à plat et éclairée, ou remplissez les champs.';
+  }catch(e){if($('#rScan')){st.className='fine scanst warn';st.textContent='Le scanner n’a pas pu démarrer. Remplissez les champs, la photo reste jointe.'}}
+  finally{scanBusy=false}
+}
+
 function openRecue(id){
   const d=docBy(id);V={mode:'recue',id,lastFocus:(V&&V.lastFocus)||document.activeElement};const f=safeFile(d.file);
   openViewer(`Facture reçue · ${d.fournisseur}`,`<button class="btn sm" type="button" id="rcEdit">Modifier</button>${f?'<button class="btn sm" type="button" id="rcDl">Télécharger le fichier</button>':''}`,
