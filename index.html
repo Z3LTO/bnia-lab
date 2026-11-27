@@ -6,7 +6,7 @@
 <title>bnia.lab · Des agents IA qui travaillent pour vous</title>
 <meta name="description" content="bnia.lab construit sur mesure des agents IA pour les entreprises autour de La Rochelle : messages, devis, relances, réseaux sociaux, visibilité Google. L'agent prépare, vous validez.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--brume:#07080B;--blanc:#141B22;--encre:#F4F5F7;--gris:#A9B6BF;--trait:#2A3540;--menthe:#2EE6A6;--vert:#2EE6A6;--violet:#7B6CFF;--bleu:#5BC0FF;--bulle:#222C36;--nuit:#07080B}
 *{box-sizing:border-box;margin:0;padding:0;min-width:0}
@@ -16,10 +16,10 @@ body{background:var(--brume);color:var(--encre);font:400 18px/1.55 'Bricolage Gr
 a{color:inherit}
 :focus-visible{outline:3px solid var(--vert);outline-offset:3px;border-radius:6px}
 .wrap{max-width:1160px;margin:0 auto;padding:0 28px}
-h1,h2,h3{font-weight:700;font-variation-settings:'opsz' 96,'wdth' 78;letter-spacing:-.025em;line-height:.98;text-wrap:balance}
-h1{font-size:clamp(42px,6vw,84px)}
-h2{font-size:clamp(34px,4.6vw,60px);max-width:17ch}
-h3{font-size:24px;line-height:1.1;font-variation-settings:'opsz' 48,'wdth' 90;letter-spacing:-.01em}
+h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;letter-spacing:-.03em;line-height:1.06;text-wrap:balance}
+h1{font-size:clamp(38px,5.2vw,70px)}
+h2{font-size:clamp(30px,3.8vw,50px);max-width:20ch}
+h3{font-size:22px;line-height:1.15;letter-spacing:-.015em}
 p.lead{font-size:clamp(19px,1.8vw,22px);max-width:34em;color:var(--gris);margin-top:22px}
 section{padding:110px 0}
 
@@ -45,7 +45,7 @@ nav .btn{padding:11px 18px;min-height:44px;font-size:15px}
 /* Hero */
 .hero{position:relative;padding:48px 0 50px;isolation:isolate}
 .hero::before{content:"";position:absolute;inset:-80px 0 0;z-index:-1;background:radial-gradient(520px 420px at 78% 38%,#2EE6A640,transparent 70%),radial-gradient(460px 380px at 92% 85%,#7B6CFF40,transparent 70%),radial-gradient(420px 360px at 8% 95%,#5BC0FF2E,transparent 70%)}
-h1 em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--menthe);letter-spacing:-.01em}
+h1 em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--menthe);letter-spacing:0;font-size:1.12em}
 .ligne{display:flex;align-items:center;gap:14px;margin-top:30px;font-size:15px;color:var(--gris)}
 .ligne .pile{display:flex;flex:none}.ligne .pile .av{width:36px;height:36px;font-size:15px;margin-left:-10px;box-shadow:0 0 0 3px var(--brume)}
 .ligne .pile .av:first-child{margin-left:0}.ligne .pile .av::after{display:none}
