@@ -85,7 +85,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--ink)}
 <body>
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#hero">bnia<b>.</b>lab</a>
-  <a class="btn main" href="#contact">Appel gratuit</a>
+  <a class="btn main" href="#contact">Nous écrire</a>
 </div></nav>
 
 <header id="hero">
@@ -95,7 +95,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--ink)}
     <div class="pill">IA et visibilité pour TPE, PME et indépendants</div>
     <h1><span>Gagnez du temps.</span><span>Gagnez en visibilité.</span><span><i class="s">Gagnez des clients.</i></span></h1>
     <p class="lead">On automatise vos tâches répétitives avec l'IA et on vous rend visible sur le web. Vous, vous faites votre métier.</p>
-    <div class="cta"><a class="btn main" href="#contact">Réserver un appel gratuit</a><a class="btn ghost" href="#gains">Ce qu'on fait</a></div>
+    <div class="cta"><a class="btn main" href="#contact">Parlons de votre projet</a><a class="btn ghost" href="#gains">Ce qu'on fait</a></div>
   </div></div>
 </header>
 
@@ -143,9 +143,9 @@ footer a{text-decoration:none}footer a:hover{color:var(--ink)}
 <section id="contact"><div class="wrap">
   <div class="end rv">
     <h2>Combien de temps <i class="s">perdez&#8209;vous</i> chaque semaine ?</h2>
-    <p>Parlons-en 30 minutes. C'est gratuit et sans engagement.</p>
-    <!-- shortcut: contact par Instagram tant que l'email pro n'existe pas ; ajouter un bouton mailto quand il sera créé -->
-    <div class="cta"><a class="btn main" href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Écrire sur Instagram</a></div>
+    <p>Écrivez-nous sur Instagram ou par mail, quand ça vous arrange. Premier échange gratuit et sans engagement.</p>
+    <div class="cta"><a class="btn main" href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Écrire sur Instagram</a><a class="btn ghost" id="mailBtn" hidden>Par mail</a></div>
+    <p id="mailTxt" style="margin:18px 0 0;font-size:14px" hidden></p>
   </div>
 </div></section>
 </main>
@@ -153,6 +153,9 @@ footer a{text-decoration:none}footer a:hover{color:var(--ink)}
 <footer><div class="wrap"><span>© 2026 bnia<b style="color:var(--accent)">.</b>lab</span><span><a href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Instagram</a> · <a href="mentions-legales.html">Mentions légales</a></span></div></footer>
 
 <script>
+// Email pro : le bouton « Par mail » n'apparaît que quand l'adresse est renseignée ici.
+const EMAIL='';
+if(EMAIL){const b=document.getElementById('mailBtn'),t=document.getElementById('mailTxt');b.href='mailto:'+EMAIL;b.hidden=false;t.textContent=EMAIL;t.hidden=false;}
 addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('on',scrollY>20),{passive:true});
 if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{rootMargin:'0px 0px -8% 0px'});document.querySelectorAll('.rv').forEach(el=>io.observe(el));}
 else document.querySelectorAll('.rv').forEach(el=>el.classList.add('in'));
