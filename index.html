@@ -59,12 +59,12 @@ section{padding:110px 0}
 .gain li{display:flex;gap:10px}
 .gain li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--g);margin-top:.62em}
 @media (max-width:900px){.gains{grid-template-columns:minmax(0,1fr)}}
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:s}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;counter-reset:s}
 .steps li{border-top:1px solid var(--line);padding-top:22px}
 .steps li::before{counter-increment:s;content:"0" counter(s);display:block;font-family:var(--serif);font-style:italic;font-size:40px;line-height:1;color:var(--accent);margin-bottom:14px}
 .steps h3{font-size:22px;margin-bottom:6px}
 .steps p{margin:0;color:var(--soft);font-size:15.5px}
-@media (max-width:760px){.steps{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
 .work{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .work figure{margin:0;display:flex;flex-direction:column;gap:14px}
 .work img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:20px;border:1px solid var(--line);display:block}
@@ -122,11 +122,12 @@ footer a{text-decoration:none}footer a:hover{color:var(--ink)}
 </div></section>
 
 <section id="comment"><div class="wrap">
-  <div class="head rv"><h2>Simple, <i class="s">sans jargon</i>.</h2></div>
+  <div class="head rv"><h2>Du <i class="s">sur mesure</i>, pour votre entreprise.</h2><p>Pas de solution toute faite. On part de vos vrais problèmes et on construit ce dont vous avez besoin, entreprise par entreprise. Pour vos automatisations, ça se passe en quatre étapes :</p></div>
   <ol class="steps rv">
-    <li><h3>Un appel gratuit</h3><p>On repère ce qui vous fait perdre du temps et des clients.</p></li>
-    <li><h3>On met en place</h3><p>Automatisations, site, visibilité : on s'occupe de tout.</p></li>
-    <li><h3>Vous en profitez</h3><p>Vous gardez la main, on ajuste au fil de vos retours.</p></li>
+    <li><h3>Audit</h3><p>On analyse votre activité et on repère les tâches qui vous coûtent du temps et des clients.</p></li>
+    <li><h3>Développement</h3><p>On construit l'automatisation adaptée à vos outils et à votre façon de travailler.</p></li>
+    <li><h3>Test</h3><p>Vous l'essayez sur votre vrai travail. On ajuste jusqu'à ce qu'elle marche comme prévu.</p></li>
+    <li><h3>Validation définitive</h3><p>Vous validez, on la met en service. Rien ne tourne sans votre accord.</p></li>
   </ol>
 </div></section>
 
