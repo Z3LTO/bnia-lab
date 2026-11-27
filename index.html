@@ -2,207 +2,290 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>bnia.lab · Gagnez du temps, de la visibilité et des clients</title>
-<meta name="description" content="bnia.lab automatise vos tâches avec l'IA et vous rend visible sur le web : site, Google, réseaux sociaux. Pour les TPE, PME et indépendants.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>bnia.lab · Moins d'administratif, plus de clients</title>
+<meta name="description" content="bnia.lab crée des outils sur mesure pour les entreprises autour de La Rochelle : tâches répétitives automatisées, visibilité sur le web, plus de clients.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#07080B;--card:rgba(255,255,255,.04);--line:rgba(255,255,255,.1);--ink:#F4F5F7;--soft:#A4A8B3;--accent:#2EE6A6;--vio:#7B6CFF;
-  --display:'Inter Tight',system-ui,sans-serif;--serif:'Instrument Serif',Georgia,serif;--body:'Inter',system-ui,sans-serif}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;overflow-x:clip}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:clip}
+:root{--brume:#E9EDF0;--blanc:#FFFFFF;--encre:#132029;--gris:#5A6A75;--trait:#CDD5DB;--menthe:#2EE6A6;--vert:#0A7A57;--metier:#D3DBE1}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{background:var(--brume);color:var(--encre);font:400 18px/1.55 'Bricolage Grotesque',system-ui,sans-serif;font-variation-settings:'opsz' 16;-webkit-font-smoothing:antialiased}
 a{color:inherit}
-h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;letter-spacing:-.035em;text-wrap:balance}
-i.s{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;color:var(--accent)}
-.wrap{max-width:1160px;margin:0 auto;padding:0 22px}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
-.btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;border-radius:999px;padding:15px 24px;font-weight:600;font-size:16px;border:1px solid var(--line);transition:transform .15s,background .2s}
+:focus-visible{outline:3px solid var(--vert);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+h1,h2,h3{font-weight:700;font-variation-settings:'opsz' 96,'wdth' 78;letter-spacing:-.025em;line-height:.98}
+h1{font-size:clamp(44px,6.6vw,92px);max-width:14ch}
+h2{font-size:clamp(34px,5vw,64px);max-width:16ch}
+h3{font-size:24px;line-height:1.1;font-variation-settings:'opsz' 48,'wdth' 90;letter-spacing:-.01em}
+p.lead{font-size:clamp(19px,1.8vw,22px);max-width:34em;color:var(--gris);margin-top:22px}
+section{padding:120px 0}
+
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--brume) 88%,transparent);backdrop-filter:blur(10px)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:20px}
+.logo{font-weight:800;font-size:22px;text-decoration:none;letter-spacing:-.02em;font-variation-settings:'wdth' 85}
+.logo i{font-style:normal;color:var(--vert)}
+nav ul{display:flex;gap:28px;list-style:none;align-items:center;font-size:16px}
+nav ul a{text-decoration:none}
+nav ul a:hover{text-decoration:underline;text-underline-offset:4px}
+.btn{display:inline-flex;align-items:center;gap:10px;font:600 16px/1 inherit;font-family:inherit;padding:15px 22px;border-radius:999px;text-decoration:none;border:0;cursor:pointer;transition:transform .15s}
 .btn:active{transform:scale(.97)}
-.btn.main{background:var(--accent);color:#04140E;border-color:var(--accent);box-shadow:0 12px 40px -12px rgba(46,230,166,.6)}
-.btn.main:hover{background:#5BF0BC}
-.btn.ghost{background:rgba(255,255,255,.04);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.btn.ghost:hover{background:rgba(255,255,255,.1)}
-nav{position:fixed;inset:0 0 auto;z-index:20;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
-nav.on{background:rgba(7,8,11,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:var(--line)}
-nav .wrap{display:flex;justify-content:space-between;align-items:center;height:72px}
-.logo{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.03em;text-decoration:none}
-.logo b{color:var(--accent)}
-nav .btn{padding:10px 18px;font-size:15px}
-/* hero */
-#hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden;isolation:isolate}
-.galaxy{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block;background:radial-gradient(45% 55% at 72% 45%,rgba(46,230,166,.16),transparent 70%),radial-gradient(60% 70% at 75% 40%,rgba(123,108,255,.16),transparent 70%)}
-.veil{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,8,11,.94) 0%,rgba(7,8,11,.78) 45%,rgba(7,8,11,.2) 80%),linear-gradient(0deg,var(--bg) 0%,transparent 25%)}
-.hero-in{padding-top:110px;padding-bottom:80px;max-width:900px;display:flex;flex-direction:column;gap:26px}
-.pill{align-self:flex-start;font-size:13.5px;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:var(--card);backdrop-filter:blur(8px)}
-.pill::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:9px;box-shadow:0 0 10px var(--accent)}
-h1{font-size:clamp(40px,6.2vw,88px);line-height:1}
-h1 span{display:block}
-@media (min-width:761px){h1 span{white-space:nowrap}}
-.lead{margin:0;font-size:clamp(18px,2vw,21px);color:var(--soft);max-width:44ch}
-.cta{display:flex;gap:12px;flex-wrap:wrap}
-@media (max-width:760px){.veil{background:linear-gradient(0deg,var(--bg) 0%,rgba(7,8,11,.88) 45%,rgba(7,8,11,.35) 100%)}.hero-in{justify-content:flex-end;min-height:100svh;padding-bottom:56px}}
-/* sections */
-section{padding:110px 0}
-.head{max-width:680px;margin-bottom:48px}
-.head h2{font-size:clamp(32px,4.6vw,56px);line-height:1.04}
-.head p{margin:16px 0 0;color:var(--soft);font-size:18px}
-.gains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.gain{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border-radius:26px;padding:30px 28px 32px;overflow:hidden}
-.gain::before{content:"";position:absolute;width:240px;height:240px;right:-80px;top:-80px;border-radius:50%;background:radial-gradient(circle,var(--g),transparent 70%);opacity:.35}
-.gain .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--g);margin-bottom:22px}
-.gain .ic svg{width:24px;height:24px}
-.gain h3{font-size:30px;margin-bottom:10px}
-.gain p{margin:0 0 18px;color:var(--soft)}
-.gain ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:15.5px}
-.gain li{display:flex;gap:10px}
-.gain li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--g);margin-top:.62em}
-@media (max-width:900px){.gains{grid-template-columns:minmax(0,1fr)}}
-.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;counter-reset:s}
-.steps li{border-top:1px solid var(--line);padding-top:22px}
-.steps li::before{counter-increment:s;content:"0" counter(s);display:block;font-family:var(--serif);font-style:italic;font-size:40px;line-height:1;color:var(--accent);margin-bottom:14px}
-.steps h3{font-size:22px;margin-bottom:6px}
-.steps p{margin:0;color:var(--soft);font-size:15.5px}
-@media (max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
-.work{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.work figure{margin:0;display:flex;flex-direction:column;gap:14px}
-.work img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:20px;border:1px solid var(--line);display:block}
-.work b{font-family:var(--display);font-size:19px;letter-spacing:-.02em}
-.work figcaption{color:var(--soft);font-size:15px}
-.work figcaption b{display:block;color:var(--ink);margin-bottom:2px}
-@media (max-width:900px){.work{grid-template-columns:minmax(0,1fr)}}
-.end{text-align:center;border:1px solid var(--line);border-radius:34px;padding:clamp(44px,8vw,96px) 22px;background:radial-gradient(60% 90% at 50% 0%,rgba(46,230,166,.16),transparent 70%),var(--card)}
-.end h2{font-size:clamp(34px,5vw,64px);line-height:1.02;margin-bottom:18px}
-.end p{margin:0 auto 28px;color:var(--soft);max-width:46ch}
-.end .cta{justify-content:center}
-footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:34px;padding-bottom:40px;color:var(--soft);font-size:14px;border-top:1px solid var(--line)}
-footer a{text-decoration:none}footer a:hover{color:var(--ink)}
-.rv{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.2,1)}.rv.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rv{opacity:1;transform:none;transition:none}}
+.btn.plein{background:var(--encre);color:var(--blanc)}
+.btn.menthe{background:var(--menthe);color:var(--encre)}
+.btn.bord{background:transparent;box-shadow:inset 0 0 0 1.5px var(--encre)}
+nav .btn{padding:11px 18px;font-size:15px}
+
+/* Hero + semaine */
+.hero{padding:56px 0 0}
+.hero p.lead{margin-bottom:44px}
+.panneau{background:var(--blanc);border-radius:28px;padding:34px 34px 30px}
+.choix{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:30px}
+.choix span{font-weight:600;margin-right:6px}
+.choix button{font:500 16px/1 inherit;font-family:inherit;padding:11px 17px;border-radius:999px;border:0;background:var(--brume);color:var(--encre);cursor:pointer}
+.choix button[aria-pressed=true]{background:var(--encre);color:var(--blanc)}
+.semaine{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start}
+.jour{display:flex;flex-direction:column;gap:4px}
+.jour b{font-weight:600;font-size:14px;color:var(--gris);margin-bottom:6px;order:-1}
+.blk{height:calc(var(--m)*.78px);border-radius:8px;padding:5px 9px;font-size:13px;line-height:1.25;overflow:hidden;background:var(--metier);color:var(--encre);transition:height .8s cubic-bezier(.6,0,.2,1),background .6s,padding .6s}
+.blk.a{background:var(--encre);color:var(--blanc)}
+.blk span{display:block;transition:opacity .3s}
+.fait .blk.a{height:7px;padding:0 9px;background:var(--menthe)}
+.fait .blk.a span{opacity:0}
+.libre{height:0;border-radius:8px;border:0 dashed var(--vert);color:var(--vert);font-weight:600;font-size:14px;display:grid;place-items:center;overflow:hidden;opacity:0;transition:height .8s cubic-bezier(.6,0,.2,1),opacity .5s .3s}
+.fait .libre{height:calc(var(--m)*.78px);border-width:1.5px;opacity:1}
+.pied{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;margin-top:28px;padding-top:24px;border-top:1px solid var(--trait)}
+.compteur{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.compteur strong{font-size:clamp(40px,5vw,60px);font-weight:800;font-variation-settings:'opsz' 96,'wdth' 75;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.compteur p{max-width:24em;color:var(--gris);font-size:16px;line-height:1.4}
+.legende{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--gris);margin-top:16px}
+.legende i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.liste-mobile{display:none}
+
+/* Outils par métier */
+.outils{margin-top:56px;display:grid;gap:0}
+.outil{display:grid;grid-template-columns:150px 1fr 1.3fr;gap:28px;padding:30px 0;border-top:1px solid var(--trait);align-items:baseline}
+.outil:last-child{border-bottom:1px solid var(--trait)}
+.gain{font-weight:600;font-size:15px;color:var(--vert)}
+.outil p{color:var(--gris)}
+
+/* Étapes */
+.etapes{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:60px;counter-reset:e}
+.etapes li{counter-increment:e;position:relative;padding-top:74px}
+.etapes li::before{content:counter(e);position:absolute;top:0;left:0;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:22px;background:var(--blanc)}
+.etapes li:last-child::before{background:var(--menthe)}
+.etapes li:not(:last-child)::after{content:"";position:absolute;top:26px;left:64px;right:-8px;height:1.5px;background:var(--trait)}
+.etapes p{color:var(--gris);margin-top:10px;font-size:17px}
+.etapes em{display:block;font-style:normal;margin-top:14px;font-size:15px;color:var(--encre)}
+
+/* Ben */
+.ben{background:var(--encre);color:var(--blanc)}
+.ben .wrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.ben blockquote{font-size:clamp(24px,2.6vw,32px);line-height:1.3;font-variation-settings:'opsz' 32;font-weight:400;letter-spacing:-.01em}
+.ben cite{display:block;margin-top:24px;font-style:normal;font-size:16px;color:#9FB0BB}
+.ben h2{color:var(--blanc)}
+
+/* Réalisations */
+.real{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
+.real figure{background:var(--blanc);border-radius:24px;overflow:hidden}
+.real img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;object-position:top}
+.real figcaption{padding:20px 24px;font-size:16px;color:var(--gris)}
+.real figcaption b{display:block;color:var(--encre);font-size:19px}
+
+/* Contact */
+.contact{text-align:left}
+.contact .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+#mailTxt{margin-top:14px;color:var(--gris);font-size:16px}
+footer{padding:34px 0 44px;font-size:15px;color:var(--gris)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--trait);padding-top:28px}
+footer a{margin-left:20px}
+
+@media (max-width:900px){
+  .outil{grid-template-columns:1fr;gap:6px}
+  .etapes{grid-template-columns:1fr 1fr;row-gap:44px}
+  .etapes li:nth-child(2)::after{display:none}
+  .ben .wrap{grid-template-columns:1fr;gap:36px}
+  .real{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .wrap{padding:0 18px}
+  nav ul li:not(:last-child){display:none}
+  section{padding:84px 0}
+  .hero{padding-top:44px}
+  .panneau{padding:22px 16px;border-radius:22px}
+  .semaine{gap:6px;min-height:260px}
+  .blk{height:calc(var(--m)*.6px);padding:0}
+  .blk span{display:none}
+  .fait .blk.a{height:5px;padding:0}
+  .fait .libre{height:calc(var(--m)*.6px);font-size:12px}
+  .jour b{font-size:0}.jour b::after{content:attr(data-c);font-size:13px}
+  .liste-mobile{display:block;margin-top:18px;font-size:15px;color:var(--gris)}
+  .liste-mobile b{color:var(--encre)}
+  .etapes{grid-template-columns:1fr}
+  .etapes li::after{display:none}
+  footer a{margin:0 16px 0 0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<nav id="nav"><div class="wrap">
-  <a class="logo" href="#hero">bnia<b>.</b>lab</a>
-  <a class="btn main" href="#contact">Nous écrire</a>
+
+<nav><div class="wrap">
+  <a class="logo" href="#">bnia<i>.</i>lab</a>
+  <ul>
+    <li><a href="#outils">Pour votre métier</a></li>
+    <li><a href="#etapes">Comment ça se passe</a></li>
+    <li><a class="btn plein" href="#contact">Nous écrire</a></li>
+  </ul>
 </div></nav>
 
-<header id="hero">
-  <canvas class="galaxy" id="galaxy" aria-hidden="true"></canvas>
-  <div class="veil" aria-hidden="true"></div>
-  <div class="wrap"><div class="hero-in">
-    <div class="pill">IA et visibilité pour TPE, PME et indépendants</div>
-    <h1><span>Gagnez du temps.</span><span>Gagnez en visibilité.</span><span><i class="s">Gagnez des clients.</i></span></h1>
-    <p class="lead">On automatise vos tâches répétitives avec l'IA et on vous rend visible sur le web. Vous, vous faites votre métier.</p>
-    <div class="cta"><a class="btn main" href="#contact">Parlons de votre projet</a><a class="btn ghost" href="#gains">Ce qu'on fait</a></div>
-  </div></div>
-</header>
+<header class="hero"><div class="wrap">
+  <h1>Votre semaine a des heures en trop.</h1>
+  <p class="lead">Relances, devis, tableurs, messages, posts : bnia.lab crée des outils sur mesure qui font ces tâches à votre place. Vous gagnez du temps, de la visibilité sur le web et des clients. Pour les entreprises autour de La Rochelle.</p>
 
-<main>
-<section id="gains"><div class="wrap">
-  <div class="head rv"><h2>Trois choses que vous <i class="s">gagnez</i>.</h2></div>
-  <div class="gains">
-    <article class="gain rv" style="--g:#2EE6A6">
-      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></div>
-      <h3>Du temps</h3><p>Des agents IA font les tâches qui vous mangent la semaine. Vous validez, ils exécutent.</p>
-      <ul><li>Mails triés, réponses préparées</li><li>Devis et relances automatiques</li><li>Fini la ressaisie</li></ul>
-    </article>
-    <article class="gain rv" style="--g:#7B6CFF">
-      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
-      <h3>De la visibilité</h3><p>On vous met en avant sur le web, là où vos clients vous cherchent.</p>
-      <ul><li>Un site rapide et clair</li><li>Bien placé sur Google et Google Maps</li><li>Des réseaux sociaux qui tournent</li></ul>
-    </article>
-    <article class="gain rv" style="--g:#5BC0FF">
-      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
-      <h3>Des clients</h3><p>Plus de monde vous trouve, et aucune demande ne se perd en route.</p>
-      <ul><li>Plus de demandes entrantes</li><li>Chaque prospect relancé à temps</li><li>Plus de temps pour vendre</li></ul>
-    </article>
+  <div class="panneau" id="demo">
+    <div class="choix" role="group" aria-label="Choisissez votre métier">
+      <span>Vous êtes</span>
+      <button data-p="immo" aria-pressed="true">Agence immobilière</button>
+      <button data-p="artisan" aria-pressed="false">Artisan du bâtiment</button>
+      <button data-p="industrie" aria-pressed="false">PME industrielle</button>
+      <button data-p="commerce" aria-pressed="false">Commerce ou restaurant</button>
+    </div>
+    <div class="semaine" id="semaine" aria-hidden="true"></div>
+    <p class="liste-mobile" id="listeMobile"></p>
+    <div class="legende"><span><i style="background:var(--metier)"></i>Votre métier</span><span><i style="background:var(--encre)"></i>Tâches répétitives</span><span><i style="background:var(--menthe)"></i>Faites par l'outil</span></div>
+    <div class="pied">
+      <div class="compteur" aria-live="polite"><strong id="heures">0 h</strong><p id="phrase"></p></div>
+      <button class="btn menthe" id="bascule">Retirer les tâches répétitives</button>
+    </div>
   </div>
+</div></header>
+
+<section id="outils"><div class="wrap">
+  <h2 id="titreOutils">Ce qu'on construirait pour une agence immobilière</h2>
+  <p class="lead">Des exemples, pas un catalogue. Chaque outil est fait pour une entreprise précise, après avoir regardé comment elle travaille vraiment.</p>
+  <div class="outils" id="listeOutils"></div>
 </div></section>
 
-<section id="comment"><div class="wrap">
-  <div class="head rv"><h2>Du <i class="s">sur mesure</i>, pour votre entreprise.</h2><p>Pas de solution toute faite. On part de vos vrais problèmes et on construit ce dont vous avez besoin, entreprise par entreprise. Pour vos automatisations, ça se passe en quatre étapes :</p></div>
-  <ol class="steps rv">
-    <li><h3>Audit</h3><p>On analyse votre activité et on repère les tâches qui vous coûtent du temps et des clients.</p></li>
-    <li><h3>Développement</h3><p>On construit l'automatisation adaptée à vos outils et à votre façon de travailler.</p></li>
-    <li><h3>Test</h3><p>Vous l'essayez sur votre vrai travail. On ajuste jusqu'à ce qu'elle marche comme prévu.</p></li>
-    <li><h3>Validation définitive</h3><p>Vous validez, on la met en service. Rien ne tourne sans votre accord.</p></li>
+<section id="etapes" style="padding-top:20px"><div class="wrap">
+  <h2>Comment ça se passe</h2>
+  <ol class="etapes">
+    <li><h3>Audit</h3><p>On passe une semaine normale en revue, tâche par tâche, pour repérer ce qui peut partir.</p><em>Vous : vous nous racontez vos journées.</em></li>
+    <li><h3>Développement</h3><p>On construit l'outil autour de votre façon de travailler, pas l'inverse.</p><em>Vous : rien, on vous montre l'avancée.</em></li>
+    <li><h3>Test</h3><p>Vous l'utilisez en vrai, sur vos dossiers. On corrige tout ce qui gêne.</p><em>Vous : vous l'essayez et vous nous dites.</em></li>
+    <li><h3>Validation définitive</h3><p>Quand tout vous convient, l'outil tourne au quotidien et il est à vous.</p><em>Vous : vous validez.</em></li>
   </ol>
 </div></section>
 
-<section id="preuves"><div class="wrap">
-  <div class="head rv"><h2>Déjà en place <i class="s">chez nous</i>.</h2><p>Avant de le proposer, on l'utilise tous les jours.</p></div>
-  <div class="work">
-    <figure class="rv"><img src="cryptotidien.jpg" alt="Site Cryptotidien : page d'accueil sombre avec le résumé du jour" width="1200" height="900" loading="lazy"><figcaption><b>Cryptotidien</b>Un média rédigé et publié chaque matin par des agents IA.</figcaption></figure>
-    <figure class="rv"><img src="bureau.jpg" alt="Le Bureau des agents : tableau de bord d'une équipe d'agents IA" width="1200" height="900" loading="lazy"><figcaption><b>Bureau des agents</b>Une équipe d'agents qui gère mails, contenus et réseaux.</figcaption></figure>
-    <figure class="rv"><img src="horizon.jpg" alt="Démo Horizon Immobilier : site d'agence avec recherche de biens" width="1200" height="900" loading="lazy"><figcaption><b>Sites vitrines</b>Des démos par métier, prêtes à adapter à votre image.</figcaption></figure>
+<section class="ben"><div class="wrap">
+  <h2>Fait par quelqu'un qui connaît vos journées</h2>
+  <div>
+    <blockquote>« Je travaille dans l'industrie et j'ai travaillé dans l'immobilier. Les relances, les tableurs à recopier, les transmissions entre équipes, je les ai faits à la main. bnia.lab, c'est l'outil que j'aurais voulu avoir. »</blockquote>
+    <cite>Benjamin, fondateur de bnia.lab</cite>
   </div>
 </div></section>
 
-<section id="contact"><div class="wrap">
-  <div class="end rv">
-    <h2>Combien de temps <i class="s">perdez&#8209;vous</i> chaque semaine ?</h2>
-    <p>Écrivez-nous sur Instagram ou par mail, quand ça vous arrange. Premier échange gratuit et sans engagement.</p>
-    <div class="cta"><a class="btn main" href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Écrire sur Instagram</a><a class="btn ghost" id="mailBtn" hidden>Par mail</a></div>
-    <p id="mailTxt" style="margin:18px 0 0;font-size:14px" hidden></p>
+<section id="real"><div class="wrap">
+  <h2>Ce qui tourne déjà chez nous</h2>
+  <p class="lead">Avant de le proposer à d'autres, on l'utilise pour nos propres projets.</p>
+  <div class="real">
+    <figure><img src="cryptotidien.jpg" alt="Site Cryptotidien : page d'accueil avec le résumé crypto du jour" width="1200" height="900" loading="lazy"><figcaption><b>Cryptotidien</b>Un média crypto rédigé et publié chaque jour sur le site, Instagram et YouTube, sans intervention.</figcaption></figure>
+    <figure><img src="bureau.jpg" alt="Le Bureau des agents : tableau de bord d'une équipe d'agents IA" width="1200" height="900" loading="lazy"><figcaption><b>Bureau des agents</b>Une équipe d'agents qui trie les mails, prépare les contenus et vérifie qu'ils sont bien publiés.</figcaption></figure>
+    <figure><img src="horizon.jpg" alt="Démo Horizon Immobilier : site d'agence avec recherche de biens" width="1200" height="900" loading="lazy"><figcaption><b>Sites par métier</b>Des démos prêtes à adapter à votre image, comme ce site d'agence immobilière.</figcaption></figure>
   </div>
 </div></section>
-</main>
 
-<footer><div class="wrap"><span>© 2026 bnia<b style="color:var(--accent)">.</b>lab</span><span><a href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Instagram</a> · <a href="mentions-legales.html">Mentions légales</a></span></div></footer>
+<section class="contact" id="contact" style="padding-top:40px"><div class="wrap">
+  <h2>Racontez-nous une semaine normale</h2>
+  <p class="lead">Écrivez-nous sur Instagram ou par mail, quand ça vous arrange. On vous dit ce qui peut être automatisé chez vous. Premier échange gratuit et sans engagement.</p>
+  <div class="cta">
+    <a class="btn plein" href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Écrire sur Instagram</a>
+    <a class="btn bord" id="mailBtn" hidden>Écrire par mail</a>
+  </div>
+  <p id="mailTxt" hidden></p>
+</div></section>
+
+<footer><div class="wrap"><span>© 2026 bnia.lab, La Rochelle</span><span><a href="https://www.instagram.com/bnia.lab" target="_blank" rel="noopener">Instagram</a><a href="mentions-legales.html">Mentions légales</a></span></div></footer>
 
 <script>
-// Email pro : le bouton « Par mail » n'apparaît que quand l'adresse est renseignée ici.
 const EMAIL='';
 if(EMAIL){const b=document.getElementById('mailBtn'),t=document.getElementById('mailTxt');b.href='mailto:'+EMAIL;b.hidden=false;t.textContent=EMAIL;t.hidden=false;}
-addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('on',scrollY>20),{passive:true});
-if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{rootMargin:'0px 0px -8% 0px'});document.querySelectorAll('.rv').forEach(el=>io.observe(el));}
-else document.querySelectorAll('.rv').forEach(el=>el.classList.add('in'));
-</script>
-<script type="module">
-// Galaxie d'agents : le noyau (l'IA) envoie des impulsions vers vos outils, qui travaillent en même temps.
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-const cv=document.getElementById('galaxy');let R=null;try{R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){}
-if(R){
-const still=matchMedia('(prefers-reduced-motion:reduce)').matches;R.setPixelRatio(Math.min(devicePixelRatio,2));
-const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,100);cam.position.set(0,1.2,8.5);
-const world=new THREE.Group();scene.add(world);const G=new THREE.Group();world.add(G);G.rotation.x=.42;
-const MINT=new THREE.Color('#2EE6A6'),VIO=new THREE.Color('#7B6CFF'),WHITE=new THREE.Color('#F4F5F7');
-const gMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{uS:{value:3.2*R.getPixelRatio()},uT:{value:0}},
-  vertexShader:`attribute vec3 color;attribute float seed;uniform float uS;uniform float uT;varying vec3 vC;varying float vA;
-    void main(){vC=color;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;vA=.65+.35*sin(uT*1.7+seed*40.);gl_PointSize=uS*(.6+seed)*(8./-mv.z);}`,
-  fragmentShader:`varying vec3 vC;varying float vA;void main(){float a=smoothstep(.5,0.,length(gl_PointCoord-.5));gl_FragColor=vec4(vC,a*a*vA);}`});
-const N=innerWidth<700?3500:7000,pos=new Float32Array(N*3),col=new Float32Array(N*3),seed=new Float32Array(N);
-for(let i=0;i<N;i++){const r=Math.pow(Math.random(),.65)*4.6+.25,j=(1-r/5)*.55,a=(i%3)*2.094+r*1.15+(Math.random()-.5)*j*2.2;
-  pos.set([Math.cos(a)*r+(Math.random()-.5)*.25,(Math.random()-.5)*.35*(1.2-r/5),Math.sin(a)*r+(Math.random()-.5)*.25],i*3);
-  const c=WHITE.clone().lerp(r<1.4?MINT:VIO,Math.min(1,Math.abs(1.4-r)/2.2+.15)*Math.random());col.set([c.r,c.g,c.b],i*3);seed[i]=Math.random();}
-const gG=new THREE.BufferGeometry();gG.setAttribute('position',new THREE.BufferAttribute(pos,3));gG.setAttribute('color',new THREE.BufferAttribute(col,3));gG.setAttribute('seed',new THREE.BufferAttribute(seed,1));G.add(new THREE.Points(gG,gMat));
-const halo=(c,s)=>{const t=document.createElement('canvas');t.width=t.height=128;const x=t.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,`rgba(${c},1)`);g.addColorStop(1,`rgba(${c},0)`);x.fillStyle=g;x.fillRect(0,0,128,128);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(t),blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));sp.scale.setScalar(s);return sp;};
-const core=halo('46,230,166',3);G.add(core);G.add(halo('230,255,245',.9));
-const NODES=7,nodes=[],pulses=[];
-const link=(a,b,lift,color,op,pc,ps,n)=>{const m=a.clone().add(b).multiplyScalar(.5);m.y+=lift;const cu=new THREE.QuadraticBezierCurve3(a.clone(),m,b.clone());
-  G.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cu.getPoints(48)),new THREE.LineBasicMaterial({color,transparent:true,opacity:op,blending:THREE.AdditiveBlending})));
-  for(let q=0;q<n;q++){const s=halo(pc,ps);G.add(s);pulses.push({s,cu,t:Math.random(),v:.1+Math.random()*.2});}};
-for(let k=0;k<NODES;k++){const a=k/NODES*Math.PI*2+.3,r=2.3+(k%3)*.55,p=new THREE.Vector3(Math.cos(a)*r,k%2?.35:-.25,Math.sin(a)*r);
-  const n=halo(k%2?'139,124,255':'90,240,190',.75);n.position.copy(p);G.add(n);nodes.push(p);
-  link(new THREE.Vector3(),p,.9+(k%3)*.25,k%2?0x7B6CFF:0x2EE6A6,.45,'220,255,240',.32,2);}
-for(let k=0;k<NODES;k++)link(nodes[k],nodes[(k+2)%NODES],.6,0xffffff,.12,'180,170,255',.22,1);
-function size(){const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();
-  const wide=w/h>1.05;world.position.set(wide?3.9:0,wide?0:1.6,wide?0:-1.5);world.scale.setScalar(wide?1:.85);}
-new ResizeObserver(size).observe(cv);size();
-let mx=0,my=0,tx=0,ty=0;addEventListener('pointermove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5;},{passive:true});
-let vis=true;new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
-const clock=new THREE.Clock();
-function frame(){const t=clock.getElapsedTime();mx+=(tx-mx)*.05;my+=(ty-my)*.05;world.rotation.y=mx*.5;world.rotation.x=my*.25;
-  G.rotation.y=t*.06;gMat.uniforms.uT.value=t;core.scale.setScalar(3+Math.sin(t*1.6)*.25);
-  const sc=Math.min(1,scrollY/innerHeight);cam.position.z=8.5+sc*2.5;cam.position.y=1.2-sc*.8;cam.lookAt(world.position.x*.35,0,0);
-  for(const p of pulses){p.t=(p.t+p.v*.016)%1;p.s.position.copy(p.cu.getPoint(p.t));p.s.material.opacity=Math.sin(p.t*Math.PI);}
-  R.render(scene,cam);}
-if(still){frame();addEventListener('resize',()=>setTimeout(frame,50));}
-else (function loop(){requestAnimationFrame(loop);if(vis&&!document.hidden)frame();})();
+
+// [jour, tâche, minutes, automatisable]
+const P={
+ immo:{nom:'une agence immobilière',sem:[
+  [0,'Visites',150],[0,'Rédiger les annonces',60,1],[0,'Relancer les vendeurs',45,1],
+  [1,'Estimation',120],[1,'Répondre aux demandes de visite',50,1],[1,'Recopier les visites dans le tableur',40,1],
+  [2,'Visites',180],[2,'Comptes rendus aux propriétaires',45,1],
+  [3,'Rendez-vous notaire',90],[3,'Poster les biens sur Instagram',40,1],[3,'Rédiger les annonces',45,1],
+  [4,'Visites',120],[4,'Relancer les acquéreurs',40,1],[4,'Répondre aux demandes de visite',35,1]],
+  outils:[['Du temps','Les annonces écrites depuis vos notes de visite','Vous dictez trois phrases en sortant du bien, l\'annonce est prête à relire.'],
+   ['Des clients','Aucune demande sans réponse','Chaque message reçoit vos créneaux de visite, même à 22 h.'],
+   ['De la visibilité','Vos biens publiés partout','Nouveau mandat : photos et texte partent sur Instagram, Facebook et votre site.']]},
+ artisan:{nom:'un artisan du bâtiment',sem:[
+  [0,'Chantier',240],[0,'Faire les devis le soir',90,1],
+  [1,'Chantier',240],[1,'Répondre aux SMS et mails',40,1],
+  [2,'Chantier',180],[2,'Relancer les devis sans réponse',40,1],[2,'Commander le matériel',30,1],
+  [3,'Chantier',240],[3,'Faire les devis le soir',60,1],
+  [4,'Chantier',180],[4,'Factures et relances de paiement',50,1],[4,'Photos de chantier sur les réseaux',30,1]],
+  outils:[['Du temps','Le devis à partir d\'une note vocale','Vous décrivez le chantier dans le camion, le devis arrive dans votre boîte mail.'],
+   ['Des clients','Les devis relancés tout seuls','Sans réponse au bout d\'une semaine, le client reçoit un rappel poli, à votre nom.'],
+   ['De la visibilité','Vos chantiers mis en valeur','Une photo avant, une après : le post est prêt pour Instagram et votre fiche Google.']]},
+ industrie:{nom:'une PME industrielle',sem:[
+  [0,'Production',180],[0,'Compiler le reporting',90,1],
+  [1,'Production',210],[1,'Saisir les bons de production',40,1],[1,'Transmissions entre postes',30,1],
+  [2,'Maintenance',120],[2,'Relancer les fournisseurs',40,1],[2,'Chercher une procédure',30,1],
+  [3,'Production',210],[3,'Saisir les bons de production',40,1],[3,'Suivre les stocks à la main',50,1],
+  [4,'Réunion sécurité',60],[4,'Production',150],[4,'Transmissions entre postes',30,1]],
+  outils:[['Du temps','Le reporting qui se fait seul','Les chiffres de la semaine sont rassemblés et envoyés chaque vendredi, sans tableur.'],
+   ['Du temps','Un cahier de transmission clair','Chaque équipe laisse ses notes à la voix, la suivante a le résumé en prenant son poste.'],
+   ['De la visibilité','Une entreprise qu\'on trouve et qui recrute','Vos offres d\'emploi et vos actualités publiées sur LinkedIn et votre site.']]},
+ commerce:{nom:'un commerce ou un restaurant',sem:[
+  [0,'Inventaire',90],[0,'Commandes fournisseurs',40,1],[0,'Préparer les posts de la semaine',60,1],
+  [1,'Boutique',300],[1,'Répondre aux messages Instagram',30,1],
+  [2,'Boutique',300],[2,'Répondre aux avis Google',30,1],[2,'Gérer les réservations',30,1],
+  [3,'Boutique',300],[3,'Répondre aux messages Instagram',30,1],
+  [4,'Boutique',300],[4,'Gérer les réservations',30,1],[4,'Mettre à jour horaires et menus',20,1]],
+  outils:[['Des clients','Une réponse à chaque message','Horaires, disponibilités, réservations : les questions courantes ont une réponse en une minute.'],
+   ['De la visibilité','Une semaine de posts en dix minutes','Vous envoyez vos photos, les publications sont prêtes à valider.'],
+   ['Des clients','Chaque avis Google a sa réponse','Une réponse personnalisée à chaque avis, validée d\'un clic.']]}
+};
+const J=['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+const $=id=>document.getElementById(id), demo=$('demo'), btn=$('bascule');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const hm=m=>m<60?m+' min':Math.floor(m/60)+' h'+(m%60?' '+String(m%60).padStart(2,'0'):'');
+let cur='immo', fait=false;
+
+function auto(p){return P[p].sem.filter(t=>t[3]).reduce((s,t)=>s+t[2],0)}
+function texte(){
+  const m=auto(cur), jours=Math.round(m*45/60/7);
+  $('heures').textContent=hm(m);
+  $('heures').style.color=fait?'var(--vert)':'';
+  $('phrase').textContent=fait
+    ?`récupérées chaque semaine, soit environ ${jours} journées de travail par an.`
+    :`de tâches répétitives dans cette semaine type pour ${P[cur].nom}.`;
+  btn.textContent=fait?'Remettre la semaine':'Retirer les tâches répétitives';
 }
+function rendre(){
+  const s=P[cur].sem;
+  $('semaine').innerHTML=J.map((j,i)=>`<div class="jour"><b data-c="${j.slice(0,3)}.">${j}</b>${s.filter(t=>t[0]===i).map(t=>`<div class="blk${t[3]?' a':''}" style="--m:${t[2]}" title="${esc(t[1])}"><span>${esc(t[1])}</span></div>`).join('')}${(m=>`<div class="libre" style="--m:${m}">+${hm(m)}</div>`)(s.filter(t=>t[0]===i&&t[3]).reduce((a,t)=>a+t[2],0))}</div>`).join('');
+  $('listeMobile').innerHTML='<b>Tâches répétitives :</b> '+[...new Set(s.filter(t=>t[3]).map(t=>t[1][0].toLowerCase()+t[1].slice(1)))].join(', ')+'.';
+  $('titreOutils').textContent='Ce qu\'on construirait pour '+P[cur].nom;
+  $('listeOutils').innerHTML=P[cur].outils.map(o=>`<div class="outil"><span class="gain">${o[0]}</span><h3>${esc(o[1])}</h3><p>${esc(o[2])}</p></div>`).join('');
+  texte();
+}
+function basculer(v){fait=v;demo.classList.toggle('fait',fait);texte()}
+btn.onclick=()=>basculer(!fait);
+document.querySelectorAll('.choix button').forEach(b=>b.onclick=()=>{
+  cur=b.dataset.p;
+  document.querySelectorAll('.choix button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  basculer(false);rendre();
+});
+rendre();
+// Une seule animation automatique : la semaine se vide quand on la voit pour la première fois.
+const io=new IntersectionObserver(e=>{if(e[0].isIntersecting){io.disconnect();setTimeout(()=>{if(!fait)basculer(true)},900)}},{threshold:.6});
+io.observe(demo);
 </script>
 </body>
 </html>
