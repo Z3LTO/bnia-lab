@@ -140,9 +140,20 @@ footer{padding:34px 0 44px;font-size:15px;color:var(--gris)}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--trait);padding-top:28px}
 footer a{margin-left:20px}
 
+/* Et aussi */
+.aussi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:48px}
+.offre{background:var(--blanc);border-radius:26px;padding:28px;border-top:5px solid var(--c);display:flex;flex-direction:column;gap:14px}
+.offre .gain{font-weight:600;font-size:15px;color:var(--c)}
+.offre ul{list-style:none;display:grid;gap:10px}
+.offre li{padding-left:26px;position:relative;color:var(--gris);font-size:16px}
+.offre li::before{content:"";position:absolute;left:0;top:7px;width:12px;height:12px;border-radius:4px;background:var(--c)}
+.offre .ex{margin-top:auto;padding-top:16px;border-top:1px solid var(--trait);font-size:15px;color:var(--gris)}
+.offre .ex b{color:var(--encre)}
+
 @media (max-width:900px){
   .hero .wrap,.detail,.ben .wrap{grid-template-columns:1fr;gap:36px}
   .equipe,.trois,.real{grid-template-columns:1fr 1fr}
+  .aussi{grid-template-columns:1fr}
   .etapes{grid-template-columns:1fr 1fr;row-gap:44px}
   .etapes li:nth-child(2)::after{display:none}
 }
@@ -167,6 +178,7 @@ footer a{margin-left:20px}
   <a class="logo" href="#">bnia<i>.</i>lab</a>
   <ul>
     <li><a href="#equipe">Les agents</a></li>
+    <li><a href="#aussi">Sites et applis</a></li>
     <li><a href="#etapes">Comment ça se passe</a></li>
     <li><a href="#faq">Questions</a></li>
     <li><a class="btn plein" href="#contact">Demander un audit</a></li>
@@ -208,6 +220,25 @@ footer a{margin-left:20px}
   <div class="equipe" id="cartes" role="group" aria-label="Choisissez un agent"></div>
   <div class="detail" id="detail" aria-live="polite"></div>
   <p class="note">Ces agents sont des exemples : chez vous, ils portent les tâches et le ton de votre entreprise.</p>
+</div></section>
+
+<section id="aussi" style="padding-top:10px"><div class="wrap">
+  <h2>Et aussi, sur mesure</h2>
+  <p class="lead">Vos agents ont besoin d'une bonne vitrine et des bons outils. On les construit aussi.</p>
+  <div class="aussi">
+    <div class="offre" style="--c:var(--bleu)">
+      <span class="gain">De la visibilité, des clients</span>
+      <h3>Des sites qui attirent des clients</h3>
+      <ul><li>Rapide, clair, pensé pour le téléphone</li><li>Bien placé sur Google et Google Maps</li><li>Chaque demande arrive directement à vos agents</li></ul>
+      <p class="ex"><b>Exemple :</b> Horizon Immobilier, une démo de site d'agence avec recherche de biens, prête à adapter à votre image.</p>
+    </div>
+    <div class="offre" style="--c:var(--violet)">
+      <span class="gain">Du temps</span>
+      <h3>Des applications métier</h3>
+      <ul><li>Faites pour votre façon de travailler</li><li>Sur ordinateur et téléphone</li><li>Vos données au même endroit, à jour</li></ul>
+      <p class="ex"><b>Exemples réels :</b> Carnet Courtier (planning, notes d'appel, rappels) en test chez un courtier, et Tampon (factures, devis, relances, échéances) pour les indépendants.</p>
+    </div>
+  </div>
 </div></section>
 
 <section class="principe"><div class="wrap">
